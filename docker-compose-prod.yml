@@ -14,7 +14,6 @@ services:
       DATABASE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       ETHERSCAN_API: ${ETHERSCAN_API}
-      ETH_PRIVAT_KEY_OR_MNEMONIC: ${ETH_PRIVAT_KEY_OR_MNEMONIC}
     working_dir: /var/www/app
     volumes:
       - ./backend_app:/var/www/app:z
