@@ -55,29 +55,35 @@ export class ScanArbitrageCommand {
         }
 
         const processLogs = (blockNumber, logs, timeStart) => {
+            console.log('logs', logs.length);
             lastBlock = blockNumber;
 
+            let count = 0;
             for (const event of logs) {
                 try {
                     const result = this.iface.decodeEventLog('Sync', event.data, event.topics);
                     const pair = pairs.find(pair => pair.address === event.address.toLowerCase());
                     if (pair) {
                         processBlock(pair, event, result[0], result[1]);
+                        count++;
                     }
                 } catch (e) {
 
                 }
             }
-            const activePairs = pairs.filter(pair => pair.blockNumber).map((pair) =>
-                ({...pair, reserve0: pair.reserve0.toString(), reserve1: pair.reserve1.toString()}));
-            const data = JSON.stringify({
-                pairs: activePairs,
-                blockNumber,
-                timeStart
-            });
-            this.redisPublisherClient.publish('pairs', data, ()=>{
-                console.log('OK', (new Date().getTime() - timeStart.getTime()) / 1000);
-            });
+            console.log('update pairs', count);
+            if(count){
+                const activePairs = pairs.filter(pair => pair.blockNumber).map((pair) =>
+                    ({...pair, reserve0: pair.reserve0.toString(), reserve1: pair.reserve1.toString()}));
+                const data = JSON.stringify({
+                    pairs: activePairs,
+                    blockNumber,
+                    timeStart
+                });
+                this.redisPublisherClient.publish('pairs', data, ()=>{
+                    console.log('OK', (new Date().getTime() - timeStart.getTime()) / 1000);
+                });
+            }
         }
 
         const pairs = await this.pairRepository.find();
