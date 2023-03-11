@@ -69,6 +69,7 @@ export class ScanArbitrageCommand {
         }
 
         const processLogs = (blockNumber, logs) => {
+            console.log('processLogs', logs.length);
             lastBlock = blockNumber;
             const timeStart = new Date();
             for (const event of logs) {
@@ -231,6 +232,7 @@ export class ScanArbitrageCommand {
                         toBlock: blockNumber
                     });
                     if (blockNumber > lastBlock) {
+
                         processLogs(blockNumber, logs);
                     }
                 } catch (e) {

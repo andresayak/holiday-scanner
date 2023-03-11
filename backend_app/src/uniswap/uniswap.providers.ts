@@ -35,10 +35,15 @@ export const providers = [
     {
         provide: 'REDIS_SUBSCRIBER_CLIENT',
         useFactory: async (envService: EnvService) => {
+            console.log({
+                host: envService.get('REDIS_SUBSCRIBER_HOST'),
+                port: +envService.get('REDIS_SUBSCRIBER_PORT'),
+                password: envService.get('REDIS_SUBSCRIBER_PASSWORD')
+            });
             return new RedisClient({
-                host: envService.get('REDIS_HOST'),
-                port: +envService.get('REDIS_PORT'),
-                password: envService.get('REDIS_PASSWORD')
+                host: envService.get('REDIS_SUBSCRIBER_HOST'),
+                port: +envService.get('REDIS_SUBSCRIBER_PORT'),
+                password: envService.get('REDIS_SUBSCRIBER_PASSWORD')
             });
         },
         inject: [EnvService]
