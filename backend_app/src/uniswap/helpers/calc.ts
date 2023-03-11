@@ -1,10 +1,10 @@
-import ethers, {BigNumber} from "ethers";
+import {BigNumber, utils} from "ethers";
 
 const BNB_PRICE_USD = 300;
 
 const balanceHuman = (value: BigNumber | number | string) => {
-    const totalSum = BNB_PRICE_USD * parseFloat(ethers.utils.formatEther(value));
-    return ethers.utils.formatEther(value) + ' BNB, ' + totalSum + ' USD';
+    const totalSum = BNB_PRICE_USD * parseFloat(utils.formatEther(value));
+    return utils.formatEther(value) + ' BNB, ' + totalSum + ' USD';
 }
 
 const calcProfit = (buy: BigNumber, sell: BigNumber) => {

@@ -125,12 +125,7 @@ export class ScanArbitrageCommand {
             return variants;
         }
 
-
-
-
         const pairs = await this.pairRepository.find();
-
-        maxVariants = countVariants().length;
 
         const mainProvider = new providers.JsonRpcProvider('https://rpc.ankr.com/bsc/' + this.envService.get('ANKR_PROVIDER_KEY'));
         gasPrice = await mainProvider.getGasPrice();
@@ -144,11 +139,10 @@ export class ScanArbitrageCommand {
                         toBlock: blockNumber
                     });
                     if (blockNumber > lastBlock) {
-
                         processLogs(blockNumber, logs);
                     }
                 } catch (e) {
-                    //console.log('['+index+'] getLogs error ');
+                    console.log('['+index+'] getLogs error', e.toString());
                 }
             });
         });
@@ -156,6 +150,17 @@ export class ScanArbitrageCommand {
         try {
             mainProvider.on("block", async (blockNumber) => {
                 console.log(' --------- new block  [ ' + blockNumber + '] ');
+                try {
+                    const logs = await mainProvider.getLogs({
+                        fromBlock: blockNumber,
+                        toBlock: blockNumber
+                    });
+                    if (blockNumber > lastBlock) {
+                        processLogs(blockNumber, logs);
+                    }
+                } catch (e) {
+                    console.log('getLogs error', e.toString());
+                }
                 new Promise(async (done) => {
                     gasPrice = await mainProvider.getGasPrice();
                     done(true);
