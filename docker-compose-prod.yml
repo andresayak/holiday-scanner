@@ -1,9 +1,10 @@
-version: '3'
+version: '3.4'
 services:
 
   backend_app:
     build:
       context: ./backend_app
+      target: prod
       dockerfile: Dockerfile
     container_name: backend_app
     restart: unless-stopped

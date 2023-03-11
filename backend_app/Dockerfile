@@ -1,4 +1,4 @@
-FROM node:17
+FROM node:17 as base
 
 # Install dependencies
 RUN apt-get update
@@ -12,3 +12,7 @@ EXPOSE 5000
 
 
 CMD npm install; npm run start:dev
+
+FROM base as prod
+
+CMD npm install; npm run start:prod
