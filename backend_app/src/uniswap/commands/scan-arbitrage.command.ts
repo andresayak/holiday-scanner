@@ -1,6 +1,6 @@
 import {Command} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
-import {ContractFactory, BigNumber, utils, providers, Wallet} from 'ethers';
+import {ContractFactory, utils, providers, Wallet} from 'ethers';
 import {Repository} from "typeorm";
 import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
@@ -35,7 +35,6 @@ export class ScanArbitrageCommand {
     async create() {
 
         let lastBlock = 0;
-        let gasPrice;
         const processBlock = (pair, block, reserve0, reserve1) => {
             if (!pair.blockNumber
                 || (block.blockNumber > pair.blockNumber)
@@ -76,7 +75,9 @@ export class ScanArbitrageCommand {
                 blockNumber,
                 timeStart
             });
-            this.redisPublisherClient.publish('pairs', data);
+            this.redisPublisherClient.publish('pairs', data, ()=>{
+                console.log('OK', (new Date().getTime() - timeStart.getTime()) / 1000);
+            });
         }
 
         const pairs = await this.pairRepository.find();
