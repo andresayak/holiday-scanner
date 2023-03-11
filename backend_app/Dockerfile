@@ -15,4 +15,4 @@ CMD npm install; npm run start:dev
 
 FROM base as prod
 
-CMD npm install; npm run start:prod
+CMD npm install; npm run build; npm run start:prod
