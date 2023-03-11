@@ -88,7 +88,8 @@ export class ScanArbitrageCommand {
 
         const pairs = await this.pairRepository.find();
 
-        const mainProvider = new providers.JsonRpcProvider('https://rpc.ankr.com/bsc/' + this.envService.get('ANKR_PROVIDER_KEY'));
+        const wsProvider = new providers.WebSocketProvider('wss://rpc.ankr.com/bsc/ws/' + this.envService.get('ANKR_PROVIDER_KEY'));
+        const jsonProvider = new providers.JsonRpcProvider('https://rpc.ankr.com/bsc/' + this.envService.get('ANKR_PROVIDER_KEY'));
         /*urls.map((url, index) => {
             const provider = new providers.JsonRpcProvider(url);
             provider.on("block", async (blockNumber) => {
@@ -108,11 +109,11 @@ export class ScanArbitrageCommand {
         });*/
 
         try {
-            mainProvider.on("block", async (blockNumber) => {
+            wsProvider.on("block",  (blockNumber) => {
                 const timeStart = new Date();
                 console.log(' --------- new block  [ ' + blockNumber + '] ');
                 try {
-                    mainProvider.getLogs({
+                    jsonProvider.getLogs({
                         fromBlock: blockNumber,
                         toBlock: blockNumber
                     }).then(logs=>{
@@ -128,10 +129,10 @@ export class ScanArbitrageCommand {
 
         }
 
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(mainProvider);
+        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(jsonProvider);
 
         try {
-            let currentBlock = await mainProvider.getBlockNumber();
+            let currentBlock = await jsonProvider.getBlockNumber();
             for (const pair of pairs) {
                 try {
                     currentBlock = Math.max(lastBlock, currentBlock);
