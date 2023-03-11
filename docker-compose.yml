@@ -1,0 +1,81 @@
+version: '3'
+services:
+
+  backend_app:
+    build:
+      context: ./backend_app
+      dockerfile: Dockerfile
+    container_name: backend_app
+    restart: unless-stopped
+    tty: true
+    user: "1000:1000"
+    environment:
+      ANKR_PROVIDER_KEY: ${ANKR_PROVIDER_KEY}
+      DATABASE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ETHERSCAN_API: ${ETHERSCAN_API}
+      ETH_PRIVAT_KEY_OR_MNEMONIC: ${ETH_PRIVAT_KEY_OR_MNEMONIC}
+    working_dir: /var/www/app
+    volumes:
+      - ./backend_app:/var/www/app:z
+      - ./volumes/logs:/var/www/logs:z
+      - ./volumes/storage:/var/www/backend_app/storage:z
+    ports:
+      - "5000:5000"
+    links:
+      - db
+      - redis
+    networks:
+      - app-network
+
+  db:
+    image: mariadb:latest
+    container_name: db
+    restart: unless-stopped
+    tty: true
+    user: "1000:1000"
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: main
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - app-network
+    volumes:
+      - ./volumes/mysql-datavolume:/var/lib/mysql:z
+
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    networks:
+      - app-network
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: unless-stopped
+    tty: true
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: [ 'redis-server', '--appendonly yes', '--requirepass $REDIS_PASSWORD' ]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./volumes/redis-datavolume:/data:z
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
