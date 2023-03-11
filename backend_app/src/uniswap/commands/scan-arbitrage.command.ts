@@ -111,7 +111,7 @@ export class ScanArbitrageCommand {
         try {
             wsProvider.on("block",  (blockNumber) => {
                 const timeStart = new Date();
-                console.log(' --------- new block  [ ' + blockNumber + '] ');
+                console.log(' --------- new block  [ ' + blockNumber + ' / '+timeStart+'] ');
                 try {
                     jsonProvider.getLogs({
                         fromBlock: blockNumber,
