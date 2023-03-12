@@ -86,9 +86,9 @@ export class ScanArbitrageCommand {
             }
         }
 
+        const url = 'wss://rpc.ankr.com/bsc/ws/' + this.envService.get('ANKR_PROVIDER_KEY');
         const pairs = await this.pairRepository.find();
-
-        const wsProvider = new providers.WebSocketProvider('wss://rpc.ankr.com/bsc/ws/' + this.envService.get('ANKR_PROVIDER_KEY'));
+        const wsProvider = new providers.WebSocketProvider(url);
         const jsonProvider = new providers.JsonRpcProvider('https://rpc.ankr.com/bsc/' + this.envService.get('ANKR_PROVIDER_KEY'));
         /*urls.map((url, index) => {
             const provider = new providers.JsonRpcProvider(url);
@@ -107,22 +107,35 @@ export class ScanArbitrageCommand {
                 }
             });
         });*/
-
         try {
             wsProvider.on("block",  (blockNumber) => {
                 const timeStart = new Date();
                 console.log(' --------- new block  [ ' + blockNumber + ' / '+timeStart+'] ');
                 try {
-                    jsonProvider.getLogs({
-                        fromBlock: blockNumber,
-                        toBlock: blockNumber
-                    }).then(logs=>{
-                        if (blockNumber > lastBlock) {
-                            processLogs(blockNumber, logs, timeStart);
+                    new Promise(async (done)=>{
+                        let attems = 0;
+                        while (true){
+                            attems++;
+                            const logs = await jsonProvider.getLogs({
+                                fromBlock: blockNumber,
+                                toBlock: blockNumber
+                            });
+                            if(logs.length === 0){
+                                continue;
+                            }
+                            console.log('get logs '+blockNumber, logs.length, attems);
+                            if (blockNumber > lastBlock) {
+                                processLogs(blockNumber, logs, timeStart);
+                            }else{
+                                console.log('get old logs', logs.length);
+                            }
+                            break;
                         }
-                    })
+                        return done(true);
+                    });
+
                 } catch (e) {
-                    console.log('getLogs error', e.toString());
+                    console.log('getLogs error2', e.toString());
                 }
             });
         } catch (e) {
