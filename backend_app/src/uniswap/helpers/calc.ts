@@ -1,9 +1,10 @@
 import {BigNumber, utils} from "ethers";
 
 const BNB_PRICE_USD = 300;
-
-const balanceHuman = (value: BigNumber | number | string) => {
-    const totalSum = BNB_PRICE_USD * parseFloat(utils.formatEther(value));
+const BNB_CONTRACT = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+const balanceHuman = (value: BigNumber | number | string, tokenAddress?: string) => {
+    const price = !tokenAddress || tokenAddress.toLowerCase() == BNB_CONTRACT.toLowerCase()?BNB_PRICE_USD:1;
+    const totalSum = price * parseFloat(utils.formatEther(value));
     return utils.formatEther(value) + ' BNB, ' + totalSum + ' USD';
 }
 

@@ -34,6 +34,7 @@ export class ScanArbitrageCommand {
     async create() {
 
         let lastBlock = 0;
+        let liveCount = 0;
         const processBlock = (pair, block, reserve0, reserve1) => {
             const blockNumber = block.blockNumber;
             const transactionIndex = block.transactionIndex;
@@ -59,8 +60,14 @@ export class ScanArbitrageCommand {
 
         const processLogs = (blockNumber, logs, timeStart) => {
             console.log('logs', logs.length);
+            if(blockNumber === lastBlock+1){
+                liveCount++;
+            }else{
+                liveCount = 1;
+            }
             lastBlock = blockNumber;
 
+            liveCount++;
             let count = 0;
             for (const event of logs) {
                 try {
@@ -81,6 +88,7 @@ export class ScanArbitrageCommand {
                 const data = JSON.stringify({
                     pairs: activePairs,
                     blockNumber,
+                    liveCount,
                     timeStart
                 });
                 this.redisPublisherClient.publish('pairs', data, ()=>{
@@ -129,6 +137,8 @@ export class ScanArbitrageCommand {
                             }
                             console.log('get logs '+blockNumber, logs.length, attems);
                             if (blockNumber > lastBlock) {
+
+
                                 processLogs(blockNumber, logs, timeStart);
                             }else{
                                 console.log('get old logs', logs.length);
