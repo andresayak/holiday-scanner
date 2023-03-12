@@ -36,21 +36,25 @@ export class ScanArbitrageCommand {
 
         let lastBlock = 0;
         const processBlock = (pair, block, reserve0, reserve1) => {
+            const blockNumber = block.blockNumber;
+            const transactionIndex = block.transactionIndex;
+            const logIndex = block.logIndex;
             if (!pair.blockNumber
-                || (block.blockNumber > pair.blockNumber)
-                || (block.blockNumber == pair.blockNumber
-                    && pair.transactionIndex > pair.transactionIndex
+                || (blockNumber > pair.blockNumber)
+                || (blockNumber == pair.blockNumber
+                    && transactionIndex > pair.transactionIndex
                 )
-                || (block.blockNumber == pair.blockNumber
-                    && block.transactionIndex == pair.transactionIndex
-                    && block.logIndex > pair.logIndex
+                || (blockNumber == pair.blockNumber
+                    && transactionIndex == pair.transactionIndex
+                    && logIndex > pair.logIndex
                 )
             ) {
-                pair.blockNumber = block.blockNumber;
-                pair.transactionIndex = block.transactionIndex;
-                pair.logIndex = block.logIndex;
-                pair.reserve0 = reserve0;
-                pair.reserve1 = reserve1;
+                pair.blockNumber = blockNumber;
+                pair.transactionIndex = transactionIndex;
+                pair.logIndex = logIndex;
+                pair.reserve0 = reserve0.toString();
+                pair.reserve1 = reserve1.toString();
+                this.pairRepository.save(pair);
             }
         }
 
@@ -142,28 +146,28 @@ export class ScanArbitrageCommand {
         } catch (e) {
 
         }
+        /*
+                let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(jsonProvider);
 
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(jsonProvider);
-
-        try {
-            let currentBlock = await jsonProvider.getBlockNumber();
-            for (const pair of pairs) {
                 try {
-                    currentBlock = Math.max(lastBlock, currentBlock);
-                    const pairContract = ContractFactory.getContract(pair.address, pairAbi.abi, wallet);
-                    const result = await pairContract.getReserves({blockTag: currentBlock});
-                    processBlock(pair, {
-                        blockNumber: currentBlock,
-                        transactionIndex: 0,
-                        logIndex: 0,
-                    }, result[0], result[1]);
+                    let currentBlock = await jsonProvider.getBlockNumber();
+                    for (const pair of pairs) {
+                        try {
+                            currentBlock = Math.max(lastBlock, currentBlock);
+                            const pairContract = ContractFactory.getContract(pair.address, pairAbi.abi, wallet);
+                            const result = await pairContract.getReserves({blockTag: currentBlock});
+                            processBlock(pair, {
+                                blockNumber: currentBlock,
+                                transactionIndex: 0,
+                                logIndex: 0,
+                            }, result[0], result[1]);
+                        } catch (e) {
+                            console.log('getReserves error', e.toString());
+                        }
+                    }
                 } catch (e) {
-                    console.log('getReserves error', e.toString());
-                }
-            }
-        } catch (e) {
-            console.log('e', e)
-        }
+                    console.log('e', e)
+                }*/
 
         console.log('listening...');
     }
