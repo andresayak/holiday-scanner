@@ -1,10 +1,9 @@
 import {Command} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
-import {ContractFactory, utils, providers, Wallet} from 'ethers';
+import {utils, providers} from 'ethers';
 import {Repository} from "typeorm";
 import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
-import * as pairAbi from '../../contracts/UniswapV2Pair.json';
 import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
@@ -41,10 +40,10 @@ export class ScanArbitrageCommand {
             const logIndex = block.logIndex;
             if (!pair.blockNumber
                 || (blockNumber > pair.blockNumber)
-                || (blockNumber == pair.blockNumber
+                || (blockNumber === pair.blockNumber
                     && transactionIndex > pair.transactionIndex
                 )
-                || (blockNumber == pair.blockNumber
+                || (blockNumber === pair.blockNumber
                     && transactionIndex == pair.transactionIndex
                     && logIndex > pair.logIndex
                 )
