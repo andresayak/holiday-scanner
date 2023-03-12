@@ -87,6 +87,7 @@ export class ScanArbitrageCommand {
         }
 
         const url = 'wss://rpc.ankr.com/bsc/ws/' + this.envService.get('ANKR_PROVIDER_KEY');
+        console.log('url', url);
         const pairs = await this.pairRepository.find();
         const wsProvider = new providers.WebSocketProvider(url);
         const jsonProvider = new providers.JsonRpcProvider('https://rpc.ankr.com/bsc/' + this.envService.get('ANKR_PROVIDER_KEY'));
