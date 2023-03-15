@@ -94,7 +94,7 @@ export class ScanSandwichCommand {
                     callback([]);
                 });
                 this.lastVariants = null;
-                //this.lastPairs = null;
+                this.lastPairs = null;
                 this.lastBlock = blockNumber;
             }
         });
