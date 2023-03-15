@@ -22,6 +22,8 @@ services:
       - ./volumes/storage:/var/www/backend_app/storage:z
     ports:
       - "5000:5000"
+    extra_hosts:
+      - "host:host-gateway"
     links:
       - db
       - redis

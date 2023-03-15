@@ -19,7 +19,7 @@ const getHistory = async (address, page = 1, offset = 10, apiKey: string) => {
         '&endblock=99999999' +
         '&page=' + page +
         '&offset=' + offset +
-        '&sort=asc' +
+        '&sort=desc' +
         '&apikey=' + apiKey;
     console.log('url', url);
     const {data} = await axios.get(url);
@@ -63,18 +63,17 @@ export class ScanTransactionsCommand {
         })
             page: number,
     ) {
-        console.log(this.envService.get('ETHERSCAN_API'));
-
-
         const url = getBSCProviderUrl();
+
         console.log('providerUrl', url);
-        const transactions = await getHistory(walletAddress, page, 1000, this.envService.get('ETHERSCAN_API'));
+        const transactions = await getHistory(walletAddress, page, 10000, this.envService.get('ETHERSCAN_API'));
         const chunkSize = 20;
         let providers: any = {};
         let count = 0;
         for (let i = 0; i < transactions.length; i += chunkSize) {
             const chunk = transactions.slice(i, i + chunkSize);
             await Promise.all(chunk.map((transaction, index) => {
+                console.log(transaction.nonce);
                 return new Promise(async (done) => {
                     try {
                         if (!providers[index]) {
@@ -95,11 +94,14 @@ export class ScanTransactionsCommand {
 
     async processReceipt(provider, hash, incCount: () => void) {
         const receipt = await provider.getTransactionReceipt(hash);
+        console.log(hash);
         if (receipt) {
             incCount();
             for (const event of receipt.logs) {
+
                 try {
-                    this.iface.decodeEventLog('Swap', event.data, event.topics);
+                    const result = this.iface.decodeEventLog('Swap', event.data, event.topics);
+                    console.log('result', result);
                     const pairAddress = event.address.toLowerCase();
                     const pair = await this.pairRepository.findOne({
                         where: {

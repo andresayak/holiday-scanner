@@ -34,4 +34,19 @@ export class PairEntity extends BaseEntity<PairEntity> {
 
     @Column({type: 'integer', nullable: true})
     logIndex: number;
+
+    @Column({type: 'integer', nullable: true})
+    fee: string;
+
+    @Column({type: 'integer', nullable: true})
+    fee_scale: string;
+
+    @Column({type: 'boolean', default: false})
+    isTested: boolean;
+
+    @Column({type: 'boolean', default: false})
+    isVerified: boolean;
+
+    @Column({type: 'varchar', length: 128, nullable: true})
+    status: string;
 }

@@ -1,0 +1,4 @@
+/backend_app/.env
+/backend_app/access.log
+/.idea
+/.env

@@ -1,15 +1,16 @@
-import {Command} from 'nestjs-command';
+import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
-import {utils, providers} from 'ethers';
+import {utils} from 'ethers';
 import {Repository} from "typeorm";
 import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
+import {EthProviderFactoryType} from "../uniswap.providers";
 
 @Injectable()
-export class ScanArbitrageCommand {
+export class ScanReservesCommand {
     iface: Interface;
 
     constructor(private readonly envService: EnvService,
@@ -18,7 +19,10 @@ export class ScanArbitrageCommand {
                 @Inject('REDIS_PUBLISHER_CLIENT')
                 private readonly redisPublisherClient: RedisClient,
                 @Inject('PAIR_REPOSITORY')
-                private readonly pairRepository: Repository<PairEntity>) {
+                private readonly pairRepository: Repository<PairEntity>,
+                @Inject('ETH_PROVIDERS')
+                private readonly providers: EthProviderFactoryType
+    ) {
 
         const swapInterface = [
             'event Sync(uint112 reserve0, uint112 reserve1)'
@@ -28,10 +32,16 @@ export class ScanArbitrageCommand {
     }
 
     @Command({
-        command: 'scan:arbitrage',
+        command: 'scan:reserves <providerType>',
         autoExit: false
     })
-    async create() {
+    async create(
+        @Positional({
+            name: 'providerType',
+            type: 'string'
+        })
+            providerType: 'ws' | 'http' = 'ws',
+    ) {
 
         let lastBlock = 0;
         let liveCount = 0;
@@ -54,19 +64,11 @@ export class ScanArbitrageCommand {
                 pair.logIndex = logIndex;
                 pair.reserve0 = reserve0.toString();
                 pair.reserve1 = reserve1.toString();
-                this.pairRepository.save(pair);
+                //this.pairRepository.save(pair);
             }
         }
 
         const processLogs = (blockNumber, logs, timeStart) => {
-            console.log('logs', logs.length);
-            if(blockNumber === lastBlock+1){
-                liveCount++;
-            }else{
-                liveCount = 1;
-            }
-            lastBlock = blockNumber;
-
             liveCount++;
             let count = 0;
             for (const event of logs) {
@@ -81,67 +83,56 @@ export class ScanArbitrageCommand {
 
                 }
             }
-            console.log('update pairs', count);
-            if(count){
-                const activePairs = pairs.filter(pair => pair.blockNumber).map((pair) =>
-                    ({...pair, reserve0: pair.reserve0.toString(), reserve1: pair.reserve1.toString()}));
-                const data = JSON.stringify({
-                    pairs: activePairs,
-                    blockNumber,
-                    liveCount,
-                    timeStart
-                });
-                this.redisPublisherClient.publish('pairs', data, ()=>{
-                    console.log('OK', (new Date().getTime() - timeStart.getTime()) / 1000);
-                });
-            }
+
+            const activePairs = pairs.filter(pair => pair.blockNumber).map((pair) =>
+                ({...pair, reserve0: pair.reserve0.toString(), reserve1: pair.reserve1.toString()}));
+            console.log('update pairs: ' + count + ', live pairs: ' + activePairs.length);
+
+            const data = JSON.stringify({
+                pairs: activePairs,
+                blockNumber,
+                liveCount,
+                timeStart
+            });
+            this.redisPublisherClient.publish('pairs', data, () => {
+                console.log('sync time', (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
+            });
         }
 
-        const url = 'wss://rpc.ankr.com/bsc/ws/' + this.envService.get('ANKR_PROVIDER_KEY');
-        console.log('url', url);
+        const forceLogs = true;
+
         const pairs = await this.pairRepository.find();
-        const wsProvider = new providers.WebSocketProvider(url);
-        const jsonProvider = new providers.JsonRpcProvider('https://rpc.ankr.com/bsc/' + this.envService.get('ANKR_PROVIDER_KEY'));
-        /*urls.map((url, index) => {
-            const provider = new providers.JsonRpcProvider(url);
-            provider.on("block", async (blockNumber) => {
-                console.log(' --------- new block [' + index + '] [ ' + blockNumber + '] ');
-                try {
-                    const logs = await provider.getLogs({
-                        fromBlock: blockNumber,
-                        toBlock: blockNumber
-                    });
-                    if (blockNumber > lastBlock) {
-                        processLogs(blockNumber, logs);
-                    }
-                } catch (e) {
-                    console.log('['+index+'] getLogs error', e.toString());
-                }
-            });
-        });*/
+        console.log('fetch '+pairs.length+' pairs');
+        const provider = this.providers(providerType);
+
         try {
-            wsProvider.on("block",  (blockNumber) => {
+            provider.on("block", (blockNumber) => {
                 const timeStart = new Date();
-                console.log(' --------- new block  [ ' + blockNumber + ' / '+timeStart+'] ');
+                console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount);
                 try {
-                    new Promise(async (done)=>{
-                        let attems = 0;
-                        while (true){
-                            attems++;
-                            const logs = await jsonProvider.getLogs({
+                    new Promise(async (done) => {
+                        let attempt = 0;
+                        while (true) {
+                            attempt++;
+                            const logs = await provider.getLogs({
                                 fromBlock: blockNumber,
                                 toBlock: blockNumber
                             });
-                            if(logs.length === 0){
+                            if (!logs) {
+                                console.log('attems', attempt);
                                 continue;
                             }
-                            console.log('get logs '+blockNumber, logs.length, attems);
-                            if (blockNumber > lastBlock) {
-
-
+                            if(blockNumber > lastBlock){
+                                if (blockNumber === lastBlock + 1) {
+                                    liveCount++;
+                                } else {
+                                    liveCount = 1;
+                                }
+                            }
+                            lastBlock = blockNumber;
+                            console.log('fetch logs [' + blockNumber + '] count: ' + logs.length + ', attempt: ' + attempt);
+                            if (forceLogs || blockNumber > lastBlock) {
                                 processLogs(blockNumber, logs, timeStart);
-                            }else{
-                                console.log('get old logs', logs.length);
                             }
                             break;
                         }
@@ -153,17 +144,16 @@ export class ScanArbitrageCommand {
                 }
             });
         } catch (e) {
-
+            console.log('wsProvider error', e.toString());
         }
         /*
-                let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(jsonProvider);
 
                 try {
                     let currentBlock = await jsonProvider.getBlockNumber();
                     for (const pair of pairs) {
                         try {
                             currentBlock = Math.max(lastBlock, currentBlock);
-                            const pairContract = ContractFactory.getContract(pair.address, pairAbi.abi, wallet);
+                            const pairContract = ContractFactory.getContract(pair.address, pairAbi.abi, wsProvider);
                             const result = await pairContract.getReserves({blockTag: currentBlock});
                             processBlock(pair, {
                                 blockNumber: currentBlock,
