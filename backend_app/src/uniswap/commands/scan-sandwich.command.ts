@@ -1,4 +1,4 @@
-import {Command} from 'nestjs-command';
+import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {ContractFactory, ethers, Wallet} from 'ethers';
 import {Repository} from "typeorm";
@@ -50,10 +50,21 @@ export class ScanSandwichCommand {
     }
 
     @Command({
-        command: 'scan:sandwich',
+        command: 'scan:sandwich <providerType> <isTestMode>',
         autoExit: false
     })
-    async create() {
+    async create(
+        @Positional({
+            name: 'providerType',
+            type: 'string'
+        })
+            providerType: 'ws' | 'http' = 'ws',
+        @Positional({
+            name: 'isTestMode',
+            type: 'boolean'
+        })
+            isTestMode: boolean = false,
+    ) {
 
         if (this.envService.get('FACTORY_ADDRESS')) {
             routerAddresses.push(this.envService.get('ROUTER_ADDRESS'))
@@ -62,7 +73,7 @@ export class ScanSandwichCommand {
 
         const whitelist = (await this.tokenRepository.find()).map(token => token.address);
 
-        const provider = this.providers('http');
+        const provider = this.providers(providerType);
 
         const multiSwapAddress = this.envService.get('MULTI_SWAP_ADDRESS');
         console.log('multiSwapAddress', multiSwapAddress);
@@ -83,7 +94,14 @@ export class ScanSandwichCommand {
         }
         const amountMinProfit = ethers.utils.parseEther('1').mul(3).div(300);// 3 $
         provider.on("pending", (txHash) => {
-            processTxHash(txHash);
+            const timeStart = new Date();
+            if(typeof txHash == 'string'){
+                provider.getTransaction(txHash).then((target: TransactionResponse) => {
+                    processTxHash(target, timeStart);
+                });
+            }else{
+                processTxHash(txHash, timeStart);
+            }
         });
 
         provider.on("block", (blockNumber) => {
@@ -99,10 +117,7 @@ export class ScanSandwichCommand {
             }
         });
 
-        const processTxHash = (target: TransactionResponse) => {
-
-            const timeStart = new Date();
-            //provider.getTransaction(txHash).then((target: TransactionResponse) => {
+        const processTxHash = (target: TransactionResponse, timeStart) => {
             if (target && target.from !== wallet.address && routerAddresses.includes(target.to)) {
                 try {
                     processRouterTx({
@@ -110,6 +125,10 @@ export class ScanSandwichCommand {
                         amountMinProfit,
                         profitMin: 1,
                         checkBeforeStart: (tx: ContractTransaction): boolean => {
+                            if(isTestMode){
+                                console.log('isTestMode ENABLED');
+                                return false;
+                            }
                             if (!this.currentTransaction) {
                                 this.currentTransaction = tx;
                                 return true;
