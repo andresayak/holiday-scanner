@@ -13,6 +13,8 @@ import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {processRouterTx} from './helpers/processRouterTx';
 import {ContractTransaction} from "@ethersproject/contracts";
 import {EthProviderFactoryType} from "../uniswap.providers";
+import {RouterEntity} from "../entities/router.entity";
+import {TransactionEntity} from "../entities/transaction.entity";
 
 const factories = {
     '0x10ED43C718714eb63d5aA57B78B54704E256024E': '0xca143ce32fe78f1f7019d7d551a6402fc5350c73',
@@ -41,29 +43,33 @@ export class ScanSandwichCommand {
     constructor(private readonly envService: EnvService,
                 @Inject('TOKEN_REPOSITORY')
                 private readonly tokenRepository: Repository<TokenEntity>,
+                @Inject('TRANSACTION_REPOSITORY')
+                private readonly transactionRepository: Repository<TransactionEntity>,
                 @Inject('REDIS_SUBSCRIBER_CLIENT')
                 private readonly redisSubscriberClient: RedisClient,
                 @Inject('PAIR_REPOSITORY')
                 private readonly pairRepository: Repository<PairEntity>,
+                @Inject('ROUTER_REPOSITORY')
+                private readonly routerRepository: Repository<RouterEntity>,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType) {
     }
 
     @Command({
-        command: 'scan:sandwich <providerType> <isTestMode>',
+        command: 'scan:sandwich <isTestMode> <providerName>',
         autoExit: false
     })
     async create(
-        @Positional({
-            name: 'providerType',
-            type: 'string'
-        })
-            providerType: 'ws' | 'http' = 'ws',
         @Positional({
             name: 'isTestMode',
             type: 'boolean'
         })
             isTestMode: boolean = false,
+        @Positional({
+            name: 'providerName',
+            type: 'string'
+        })
+            providerName: string = 'node',
     ) {
 
         if (this.envService.get('FACTORY_ADDRESS')) {
@@ -71,10 +77,13 @@ export class ScanSandwichCommand {
             factories[this.envService.get('ROUTER_ADDRESS')] = this.envService.get('FACTORY_ADDRESS');
         }
 
-        const whitelist = (await this.tokenRepository.find()).map(token => token.address);
+        const whitelist = (await this.tokenRepository.find({
+            network: this.envService.get('ETH_NETWORK')
+        })).map(token => token.address);
 
-        const provider = this.providers(providerType);
-
+        console.log('whitelist', whitelist.length);
+        const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), providerName);
+        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), providerName);
         const multiSwapAddress = this.envService.get('MULTI_SWAP_ADDRESS');
         console.log('multiSwapAddress', multiSwapAddress);
         //let wallet = new Wallet(this.envService.get('ETH_PRIVATE_KEY'), provider);
@@ -83,28 +92,28 @@ export class ScanSandwichCommand {
         console.log(' - account address: ' + wallet.address);
         console.log(' - account balance: ' + balanceHuman(balance));
 
-        console.log('multiSwapAddress=', multiSwapAddress);
-
         const multiSwapContract = ContractFactory.getContract(multiSwapAddress, MultiSwapAbi.abi, wallet);
 
         const amountMaxIn = ethers.utils.parseEther('0.1');
-        if(balance.lt(amountMaxIn)){
+        if(!isTestMode && balance.lt(amountMaxIn)){
             console.log('not enough balance');
             return;
         }
-        const amountMinProfit = ethers.utils.parseEther('1').mul(3).div(300);// 3 $
-        provider.on("pending", (txHash) => {
+        const amountMinProfit = ethers.utils.parseEther('1').mul(1).div(300);// 3 $
+        wsProvider.on("pending", (txHash) => {
             const timeStart = new Date();
             if(typeof txHash == 'string'){
                 provider.getTransaction(txHash).then((target: TransactionResponse) => {
-                    processTxHash(target, timeStart);
-                });
+                    processTxHash(txHash, target, timeStart);
+                }).catch(error=>{
+                    console.log('error', error);
+                })
             }else{
-                processTxHash(txHash, timeStart);
+                processTxHash(txHash.hash, txHash, timeStart);
             }
         });
 
-        provider.on("block", (blockNumber) => {
+        wsProvider.on("block", (blockNumber) => {
             if (blockNumber > this.lastBlock) {
                 const timeStart = new Date();
                 console.log(timeStart, ' --------- new block [' + blockNumber + ']');
@@ -117,10 +126,12 @@ export class ScanSandwichCommand {
             }
         });
 
-        const processTxHash = (target: TransactionResponse, timeStart) => {
-            if (target && target.from !== wallet.address && routerAddresses.includes(target.to)) {
+        const processTxHash = (hash:string, target: TransactionResponse, timeStart) => {
+            if (target && target.from !== wallet.address){//} && routerAddresses.includes(target.to)) {
                 try {
                     processRouterTx({
+                        routerRepository: this.routerRepository,
+                        network: this.envService.get('ETH_NETWORK'),
                         amountMaxIn,
                         amountMinProfit,
                         profitMin: 1,
@@ -169,13 +180,11 @@ export class ScanSandwichCommand {
                 } catch (e) {
                     console.log('ERROR');
                 }
-
             } else {
-                console.log(colors.grey('txHash'), colors.grey(target.hash));
+                //console.log(colors.grey('txHash'),
+                //    colors.grey(hash+' '+ ((new Date().getTime() - timeStart.getTime()) / 1000) + ' sec')
+                //    + (target?'+':colors.red('-')));
             }
-            //}).catch(error => {
-            //    console.log('txHash', txHash, 'error', error);
-            //});
         }
 
         this.redisSubscriberClient.subscribe('pairs');

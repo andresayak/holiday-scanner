@@ -5,8 +5,9 @@ import {PairEntity} from "./entities/pair.entity";
 import {TokenEntity} from "./entities/token.entity";
 import {RedisClient} from 'redis';
 import {ethers} from "ethers";
+import {RouterEntity} from "./entities/router.entity";
 
-export type EthProviderFactoryType = (type: 'ws' | 'http', network?: string) => ethers.providers.BaseProvider;
+export type EthProviderFactoryType = (type: 'ws' | 'http', network?: string, provider?: string) => ethers.providers.BaseProvider;
 
 export const providers = [
     {
@@ -25,12 +26,22 @@ export const providers = [
         inject: ['DATABASE_CONNECTION'],
     },
     {
+        provide: 'ROUTER_REPOSITORY',
+        useFactory: (connection: Connection) => connection.getRepository(RouterEntity),
+        inject: ['DATABASE_CONNECTION'],
+    },
+    {
         provide: 'ETH_WS_PROVIDER_FACTORY',
         useFactory: (envService: EnvService) => {
-            return (network?: string) => {
+            return (network?: string, provider?: string) => {
                 network = network?network:envService.get('ETH_NETWORK');
                 if (network === 'bsc_mainnet') {
-                    const url = 'wss://rpc.ankr.com/bsc/ws/' + envService.get('ANKR_PROVIDER_KEY');
+                    let url;
+                    if(provider == 'ankr'){
+                        url = 'wss://rpc.ankr.com/bsc/ws/' + envService.get('ANKR_PROVIDER_KEY');
+                    }else{
+                        url = 'ws://65.21.195.47:8545';
+                    }
                     console.log('PROVIDER: '+url);
                     return new ethers.providers.WebSocketProvider(url);
                 }
@@ -47,10 +58,16 @@ export const providers = [
     {
         provide: 'ETH_JSON_PROVIDER_FACTORY',
         useFactory: (envService: EnvService) => {
-            return (network?: string) => {
+            return (network?: string, provider?: string) => {
                 network = network?network:envService.get('ETH_NETWORK');
                 if (network === 'bsc_mainnet') {
-                    const url = 'https://rpc.ankr.com/bsc/' + envService.get('ANKR_PROVIDER_KEY');
+                    let url;
+                    if(provider == 'ankr'){
+                        url = 'https://rpc.ankr.com/bsc/' + envService.get('ANKR_PROVIDER_KEY');
+                    }else{
+                        url = 'http://65.21.195.47:8545';
+                    }
+
                     console.log('PROVIDER: '+url);
                     return new ethers.providers.JsonRpcProvider(url);
                 }
@@ -67,11 +84,11 @@ export const providers = [
     {
         provide: 'ETH_PROVIDERS',
         useFactory: (httpFactory, wsFactory): EthProviderFactoryType => {
-            return (type: 'ws' | 'http', network?: string) => {
+            return (type: 'ws' | 'http', network?: string, provider?: string) => {
                 if(type === 'ws'){
-                    return wsFactory(network);
+                    return wsFactory(network, provider);
                 }else{
-                    return httpFactory(network);
+                    return httpFactory(network, provider);
                 }
             }
         },

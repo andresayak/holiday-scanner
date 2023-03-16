@@ -9,6 +9,7 @@ import axios from 'axios';
 import {getBSCProviderUrl} from '../helpers/provider';
 import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
+import {EthProviderFactoryType} from "../uniswap.providers";
 
 const getHistory = async (address, page = 1, offset = 10, apiKey: string) => {
     const url = 'https://api.bscscan.com/api' +
@@ -37,7 +38,9 @@ export class ScanTransactionsCommand {
                 @Inject('TOKEN_REPOSITORY')
                 private readonly tokenRepository: Repository<TokenEntity>,
                 @Inject('PAIR_REPOSITORY')
-                private readonly pairRepository: Repository<PairEntity>) {
+                private readonly pairRepository: Repository<PairEntity>,
+                @Inject('ETH_PROVIDERS')
+                private readonly providers: EthProviderFactoryType) {
 
         const swapInterface = [
             'event Swap(address indexed sender, uint256 amount0In, uint256 amount1In, uint256 amount0Out, uint256 amount1Out, address indexed to)',
@@ -63,24 +66,19 @@ export class ScanTransactionsCommand {
         })
             page: number,
     ) {
-        const url = getBSCProviderUrl();
+        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), 'ankr');
 
-        console.log('providerUrl', url);
         const transactions = await getHistory(walletAddress, page, 10000, this.envService.get('ETHERSCAN_API'));
+        console.log('transactions', transactions);
         const chunkSize = 20;
-        let providers: any = {};
         let count = 0;
         for (let i = 0; i < transactions.length; i += chunkSize) {
             const chunk = transactions.slice(i, i + chunkSize);
             await Promise.all(chunk.map((transaction, index) => {
-                console.log(transaction.nonce);
                 return new Promise(async (done) => {
                     try {
-                        if (!providers[index]) {
-                            providers[index] = new ethers.providers.JsonRpcProvider(url);
-                        }
-                        await this.processReceipt(providers[index], transaction.hash, () => {
-                            console.log((++count) + '/' + transactions.length);
+                        await this.processReceipt(provider, transaction.hash, () => {
+                            console.log((++count) + '/' + transactions.length + ' ' + transaction.hash);
                         });
                     } catch (e) {
                         console.log('processReceipt error', e.toString())
@@ -94,14 +92,13 @@ export class ScanTransactionsCommand {
 
     async processReceipt(provider, hash, incCount: () => void) {
         const receipt = await provider.getTransactionReceipt(hash);
-        console.log(hash);
+        console.log('receipt', hash, receipt);
         if (receipt) {
             incCount();
             for (const event of receipt.logs) {
 
                 try {
-                    const result = this.iface.decodeEventLog('Swap', event.data, event.topics);
-                    console.log('result', result);
+                    this.iface.decodeEventLog('Swap', event.data, event.topics);
                     const pairAddress = event.address.toLowerCase();
                     const pair = await this.pairRepository.findOne({
                         where: {
@@ -116,6 +113,7 @@ export class ScanTransactionsCommand {
 
                         try {
                             await this.pairRepository.save(new PairEntity({
+                                network: this.envService.get('ETH_NETWORK'),
                                 address: pairAddress,
                                 factory,
                                 token0,
@@ -126,6 +124,7 @@ export class ScanTransactionsCommand {
                         }
                         try {
                             await this.tokenRepository.save(new TokenEntity({
+                                network: this.envService.get('ETH_NETWORK'),
                                 address: token0,
                             }));
                         } catch (e) {
@@ -133,6 +132,7 @@ export class ScanTransactionsCommand {
                         }
                         try {
                             await this.tokenRepository.save(new TokenEntity({
+                                network: this.envService.get('ETH_NETWORK'),
                                 address: token1,
                             }));
                         } catch (e) {

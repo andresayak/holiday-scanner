@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "UniswapBot",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -20,7 +20,6 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js --config src/ormconfig.ts",
-    "seed": "node dist/seed",
     "cli": "DEBUG=cli CLI_PATH=./dist/cli.js npx nestjs-command"
   },
   "dependencies": {
@@ -56,6 +55,7 @@
     "colors": "^1.4.0",
     "crypto": "^1.0.1",
     "crypto-js": "^4.0.0",
+    "csv-parse": "^5.3.6",
     "ethereum-waffle": "^3.4.4",
     "ethers": "^5.6.2",
     "express-session": "^1.17.1",

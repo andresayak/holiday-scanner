@@ -7,26 +7,27 @@ async function main() {
         throw new Error('wrong env')
     }
 
-    const [owner, account] = await ethers.getSigners();
+    const swapAddress = process.env['MULTI_SWAP_ADDRESS'];
+    const wethAddress = process.env['WETH_ADDRESS'];
+    const [owner] = await ethers.getSigners();
 
     const balance = await owner.getBalance();
     console.log(' - account address: ' + owner.address);
     console.log(' - account balance: ' + balanceHuman(balance));
 
-    const WETH = await ethers.getContractAt('WETH9', process.env['WETH_ADDRESS'], owner);
+    const WETH = await ethers.getContractAt('WETH9', wethAddress, owner);
 
     console.log(await WETH.name());
 
-    const balanceSwapBefore = await WETH.balanceOf(process.env['MULTI_SWAP_ADDRESS']);
+    const balanceSwapBefore = await WETH.balanceOf(swapAddress);
     console.log(' - multiSwap balance: ' + balanceHuman(balanceSwapBefore));
 
-
-    const multiSwap = await ethers.getContractAt('MultiSwap', process.env['MULTI_SWAP_ADDRESS'], owner);
-    const tx1 = await multiSwap.connect(account).withdraw(WETH.address, balanceSwapBefore);
+    const multiSwap = await ethers.getContractAt('MultiSwap', swapAddress, owner);
+    const tx1 = await multiSwap.withdraw(WETH.address, balanceSwapBefore);
 
     await tx1.wait();
 
-    const balanceSwapAfter = await WETH.balanceOf(process.env['MULTI_SWAP_ADDRESS']);
+    const balanceSwapAfter = await WETH.balanceOf(swapAddress);
     console.log(' - multiSwap balance after: ' + balanceHuman(balanceSwapAfter));
 }
 

@@ -8,4 +8,14 @@ export class TokenEntity extends BaseEntity<TokenEntity> {
 
     @Column({type: 'varchar', length: 42, unique: true})
     address: string;
+
+    @Column({type: 'varchar', length: 64, nullable: true})
+    network: string;
+
+    @Column({type: 'boolean', default: false})
+    isTested: boolean;
+
+    @Column({type: 'boolean', default: false})
+    isVerified: boolean;
+
 }

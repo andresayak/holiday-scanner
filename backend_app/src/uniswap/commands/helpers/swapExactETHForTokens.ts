@@ -2,6 +2,7 @@ import {balanceHuman, calculate, getAmountOut} from "../../helpers/calc";
 import {BigNumber, ethers} from "ethers";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {PairEntity} from "../../entities/pair.entity";
+import * as colors from "colors";
 
 type PropsType = {
     target: TransactionResponse;
@@ -9,7 +10,6 @@ type PropsType = {
     token0: string;
     token1: string;
     timeStart: Date;
-    whitelist: string[];
     pairs: PairEntity[];
     pair: PairEntity;
     amountMaxIn: BigNumber;
@@ -17,17 +17,13 @@ type PropsType = {
 export const swapExactETHForTokens = async (props: PropsType) => {
     const {
         target, result,
-        token0, token1, timeStart, whitelist,
+        token0, token1, timeStart,
         pairs, pair, amountMaxIn
     } = props;
     console.log(' - gasPrice:', target.gasPrice.toString());
     console.log(' - gasLimit:', target.gasLimit.toString());
     console.log(' - token0:', token0);//bnb
     console.log(' - token1:', token1);
-
-    if (!whitelist.includes(token0) || !whitelist.includes(token1)) {
-        throw Error('not in whitelist');
-    }
 
     const amountOutMin = result.amountOutMin;
     const amountIn = target.value;
@@ -36,7 +32,7 @@ export const swapExactETHForTokens = async (props: PropsType) => {
 
     const fee = parseInt(pair.fee);
     const fee_scale = parseInt(pair.fee_scale);
-    console.log('pair.token0 == token0', pair.token0, token0, pair.token0 === token0);
+    console.log('pair', pair.address);
     const reserves = pair.token1 === token0
         ? [BigNumber.from(pair.reserve0), BigNumber.from(pair.reserve1)] : [BigNumber.from(pair.reserve1), BigNumber.from(pair.reserve0)];
     console.log('reserve0=' + reserves[0]);
@@ -113,7 +109,10 @@ export const swapExactETHForTokens = async (props: PropsType) => {
 
         const profitAmount = amountSell.sub(amountBuy);
         const profit = amountBuy.eq(0) ? 0 : (parseInt(profitAmount.mul(10000).div(amountBuy).toString()) / 100);
-        console.log('profit=' + profit + '%, ' + balanceHuman(profitAmount));
+        if(profit>0)
+            console.log(colors.bgGreen('profit=' + profit + '%, ' + balanceHuman(profitAmount)));
+        else
+            console.log(colors.bgRed('profit=' + profit + '%, ' + balanceHuman(profitAmount)));
         if (!sell || profit > sell.profit) {
             sell = {
                 pair: actualPair,
@@ -126,7 +125,7 @@ export const swapExactETHForTokens = async (props: PropsType) => {
         }
     }
     const variants = [];
-    for (const pairY of pairs) {
+    /*for (const pairY of pairs) {
         if (pairY.address == pair.address) {
             continue
         }
@@ -141,7 +140,7 @@ export const swapExactETHForTokens = async (props: PropsType) => {
                 blockNumbers: [pair.blockNumber, pairY.blockNumber]
             });
         }
-    }
+    }*/
 
     return {
         variants,

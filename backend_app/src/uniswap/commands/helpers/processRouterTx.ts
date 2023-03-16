@@ -7,6 +7,10 @@ import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {ContractTransaction} from "@ethersproject/contracts";
 import * as ERC20Abi from "../../../contracts/ERC20.json";
 import {PairEntity} from "../../entities/pair.entity";
+import * as colors from 'colors';
+import {Repository} from "typeorm";
+import {RouterEntity} from "../../entities/router.entity";
+import * as SwapRouter02Abi from "../../../contracts/SwapRouter02.json";
 
 const swapInterface = [
     'function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)',
@@ -18,6 +22,7 @@ const swapInterface = [
     'event Swap(address indexed sender, uint256 amount0In, uint256 amount1In, uint256 amount0Out, uint256 amount1Out, address indexed to)',
 ];
 
+const methods = ['swapExactETHForTokens', 'swapETHForExactTokens', 'swapExactETHForTokensSupportingFeeOnTransferTokens', 'swapExactTokensForETHSupportingFeeOnTransferTokens'];
 const iface = new utils.Interface(swapInterface);
 
 type PropsType = {
@@ -33,6 +38,8 @@ type PropsType = {
     amountMaxIn: BigNumber;
     amountMinProfit: BigNumber;
     profitMin: number;
+    routerRepository: Repository<RouterEntity>;
+    network: string;
 }
 
 export const processRouterTx = (props: PropsType) => {
@@ -42,23 +49,63 @@ export const processRouterTx = (props: PropsType) => {
                 target, timeStart, whitelist, factories,
                 callbackBuy, callbackSell, multiSwapContract,
                 getPairs, amountMaxIn, checkBeforeStart,
-                amountMinProfit
+                amountMinProfit, routerRepository, network
             } = props;
-            console.log('txHash', target.hash, 'Swap');
-            console.log(' - from: ', target.from);
-            console.log(' - to: ', target.to);
-            console.log(' - value: ' + target.value);
-            if (!target.value) {
-                console.log('empty value');
+            if (target.value.eq(0)) {
+                //console.log((colors.red('empty value')));
                 return;
             }
-            let result;
-            try {
-                result = iface.decodeFunctionData('swapExactETHForTokens', target.data);
-            } catch (e) {
-                console.log('wrong method');
+
+            const getMethod = () =>{
+                for(const method of methods){
+                    let result;
+                    try {
+                        result = iface.decodeFunctionData(method, target.data);
+                        return {
+                            result, method
+                        };
+                    } catch (e) {
+                    }
+                }
+                return null;
             }
-            if (result) {
+            const json = getMethod();
+            if (json) {
+                const routerAddress = target.to.toLowerCase();
+                let router = await routerRepository.findOne({
+                    where: {
+                        address: routerAddress
+                    }
+                });
+                if(!router){
+                    try{
+                        const routerContract = ContractFactory.getContract(routerAddress, SwapRouter02Abi.abi, multiSwapContract.signer);
+                        const WETH = await routerContract.WETH();
+                        const factory = await routerContract.factory();
+                        router = await routerRepository.save(new RouterEntity({
+                            address: routerAddress,
+                            factory: factory.toLowerCase(),
+                            weth: WETH.toLowerCase(),
+                            network
+                        }));
+                    }catch (e) {
+                        console.log(e);
+                        return;
+                    }
+                }
+
+
+                const {result, method} = json;
+                console.log('method', method);
+                console.log('txHash', target.hash, 'Swap');
+                console.log(' - from: ', target.from);
+                console.log(' - to: ', target.to);
+                console.log(' - value: ' + target.value);
+                console.log(' - method: '+method);
+                if(method != 'swapExactETHForTokens' && method!='swapExactETHForTokensSupportingFeeOnTransferTokens'){
+                    console.log(colors.red('wrong method'));
+                }
+
                 console.log(' - amountOutMin: ' + result.amountOutMin, ', ' + ethers.utils.formatEther(result.amountOutMin));
                 console.log(' - amountIn: ' + target.value + ', ', balanceHuman(target.value));
                 console.log(' - path:', result.path);
@@ -66,16 +113,28 @@ export const processRouterTx = (props: PropsType) => {
                 console.log(' - deadline:', result.deadline.toString());
 
                 if (result.path.length !== 2) {
-                    console.log('not 2 tokens');
+                    console.log(colors.red('not 2 tokens'));
                     return;
                 }
                 const token0 = result.path[0].toLowerCase();
                 const token1 = result.path[1].toLowerCase();
-                const factoryAddress = factories[target.to];
+                if(token0 !== '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c'){
+                    console.log(colors.red('wrong WETH '+token0));
+                //    return
+                }
+                if (!whitelist.includes(token0)) {
+                    console.log(colors.red('not in whitelist '+token0));
+                    //return
+                }
+                if (!whitelist.includes(token1)) {
+                    console.log(colors.red('not in whitelist '+token1));
+                    //return
+                }
+                const factoryAddress = router.factory;
 
                 const pairs = await getPairs();
                 if (!pairs) {
-                    console.log('empty pairs');
+                    console.log(colors.red('empty pairs'));
                     return;
                 }
                 const pair = pairs.find(pair => pair.factory == factoryAddress
@@ -83,14 +142,19 @@ export const processRouterTx = (props: PropsType) => {
                         (pair.token0 == token1 && pair.token1 == token0) || (pair.token1 == token1 && pair.token0 == token0)
                     )
                 );
-                if (!(pair && pair.fee && pair.fee_scale)) {
-                    throw Error('pair not found or without fee');
+                if (!pair) {
+                    console.log(colors.red('pair not found'));
+                    return;
+                }
+                if (!(pair.fee && pair.fee_scale)) {
+                    console.log(colors.red('pair without fee'));
+                    return;
                 }
 
                 const data = await swapExactETHForTokens({
                         target, pair, pairs,
                         result, token0, token1, timeStart,
-                        whitelist, amountMaxIn
+                        amountMaxIn
                     }
                 );
                 console.log('Calculate: ' + ((new Date().getTime() - timeStart.getTime()) / 1000) + ' sec');
@@ -107,7 +171,7 @@ export const processRouterTx = (props: PropsType) => {
                     return;
                 }*/
                 if (sell.profitAmount.lt(amountMinProfit)) {
-                    console.log('small profit amount');
+                    console.log(colors.red('small profit amount'));
                     return;
                 }
                 if (!checkBeforeStart(target)) {

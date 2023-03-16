@@ -196,7 +196,6 @@ async function main() {
 
     const [owner] = await ethers.getSigners();
     gasPrice = await ethers.provider.getGasPrice();
-    //const url = 'https://rpc.ankr.com/bsc/ae34d626dfb166a8007f6fd218cfb2b89a233601f34801f7b2a3462f950b487b';
     urls.map((url, index)=>{
         const provider = new ethers.providers.JsonRpcProvider(url);
         provider.on("block", async (blockNumber) => {

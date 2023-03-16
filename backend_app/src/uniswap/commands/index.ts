@@ -6,6 +6,7 @@ import {WalletCheckCommand} from "./wallet-check.command";
 import {ScanSandwichCommand} from "./scan-sandwich.command";
 import {ProvidersCheckCommand} from "./providers-check.command";
 import {ScanPairsCommand} from "./scan-pairs.command";
+import {ImportTokensCommand} from "./import-tokens.command";
 
 export default [
     ScanTransactionsCommand,
@@ -15,5 +16,6 @@ export default [
     WalletCheckCommand,
     ScanSandwichCommand,
     ProvidersCheckCommand,
-    ScanPairsCommand
+    ScanPairsCommand,
+    ImportTokensCommand
 ];

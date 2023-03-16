@@ -1,4 +1,4 @@
-import {MigrationInterface, QueryRunner, Table} from "typeorm";
+import {MigrationInterface, QueryRunner, Table, TableIndex} from "typeorm";
 
 export class createTransactions1633424229067 implements MigrationInterface {
 
@@ -17,10 +17,18 @@ export class createTransactions1633424229067 implements MigrationInterface {
                     {
                         name: 'address',
                         type: 'varchar(66)',
-                        isUnique: true
+                    },
+                    {
+                        name: 'network',
+                        type: 'varchar(66)',
                     },
                 ]
             }));
+
+        await queryRunner.createIndex(
+            'tokens',
+            new TableIndex({ isUnique: true, columnNames: ['network', 'address'] })
+        );
 
         await queryRunner.createTable(
             new Table({
@@ -36,7 +44,10 @@ export class createTransactions1633424229067 implements MigrationInterface {
                     {
                         name: 'address',
                         type: 'varchar(66)',
-                        isUnique: true
+                    },
+                    {
+                        name: 'network',
+                        type: 'varchar(66)',
                     },
                     {
                         name: 'factory',
@@ -83,7 +94,10 @@ export class createTransactions1633424229067 implements MigrationInterface {
                     },
                 ]
             }));
-
+        await queryRunner.createIndex(
+            'pairs',
+            new TableIndex({ isUnique: true, columnNames: ['network', 'address'] })
+        );
         await queryRunner.createTable(
             new Table({
                 name: 'transactions',
@@ -98,7 +112,11 @@ export class createTransactions1633424229067 implements MigrationInterface {
                     {
                         name: 'hash',
                         type: 'varchar(66)',
-                        isUnique: true
+                    },
+                    {
+                        name: 'network',
+                        type: 'varchar(32)',
+                        isNullable: true,
                     },
                     {
                         name: 'blockNumber',
@@ -255,9 +273,19 @@ export class createTransactions1633424229067 implements MigrationInterface {
                         type: 'decimal(11,2)',
                         isNullable: true,
                     },
+                    {
+                        name: 'created_at',
+                        type: 'timestamp',
+                        default: 'now()',
+                    },
                 ],
             }),
             true);
+
+        await queryRunner.createIndex(
+            'transactions',
+            new TableIndex({ isUnique: true, columnNames: ['network', 'hash'] })
+        );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {

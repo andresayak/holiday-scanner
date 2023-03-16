@@ -33,6 +33,7 @@ export class ScanPairsCommand {
         })
             routerAddress: string
     ) {
+        const network = this.envService.get('ETH_NETWORK');
         const provider = this.providers('http');
 
         let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
@@ -58,18 +59,20 @@ export class ScanPairsCommand {
 
             try {
                 await this.pairRepository.save(new PairEntity({
+                    network,
                     address: pairAddress,
                     factory: factoryAddress,
                     token0,
                     token1,
-                    fee: '3',
-                    fee_scale: '1000'
+                    fee: network=='local'?'3':null,
+                    fee_scale: network=='local'?'1000':null
                 }));
             } catch (e) {
                 console.log('save pair error', e.toString());
             }
             try {
                 await this.tokenRepository.save(new TokenEntity({
+                    network: this.envService.get('ETH_NETWORK'),
                     address: token0,
                 }));
             } catch (e) {
@@ -77,6 +80,7 @@ export class ScanPairsCommand {
             }
             try {
                 await this.tokenRepository.save(new TokenEntity({
+                    network: this.envService.get('ETH_NETWORK'),
                     address: token1,
                 }));
             } catch (e) {

@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn} from 'typeorm';
+import {Entity, Column, PrimaryGeneratedColumn, CreateDateColumn} from 'typeorm';
 import {BaseEntity} from "../../common/base.entity";
 
 @Entity('transactions')
@@ -7,8 +7,12 @@ export class TransactionEntity extends BaseEntity<TransactionEntity> {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({type: 'varchar', length: 66, unique: true})
+    @Column({type: 'varchar', length: 66})
     hash: string;
+
+
+    @Column({type: 'varchar', length: 32})
+    network: string;
 
     @Column({type: 'integer', nullable: true})
     blockNumber: string;
@@ -50,6 +54,9 @@ export class TransactionEntity extends BaseEntity<TransactionEntity> {
     type: number;
 
     @Column({type: 'varchar', length: 42, nullable: true})
+    routerAddress: string;
+
+    @Column({type: 'varchar', length: 42, nullable: true})
     pairAddress: string;
 
     @Column({type: 'varchar', length: 128, nullable: true})
@@ -61,6 +68,9 @@ export class TransactionEntity extends BaseEntity<TransactionEntity> {
     @Column({type: 'decimal', precision: 11, scale: 2, nullable: true})
     profit: number;
 
+    @Column({type: 'decimal', precision: 11, scale: 2, nullable: true})
+    profitReal: number;
+
     @Column({type: 'varchar', length: 128, nullable: true})
     method: string;
 
@@ -69,18 +79,6 @@ export class TransactionEntity extends BaseEntity<TransactionEntity> {
 
     @Column({type: 'varchar', length: 128, nullable: true})
     reserves1: string;
-
-    @Column({type: 'varchar', length: 128, nullable: true})
-    reservesAfter0: string;
-
-    @Column({type: 'varchar', length: 128, nullable: true})
-    reservesAfter1: string;
-
-    @Column({type: 'varchar', length: 128, nullable: true})
-    reservesAfter0estimate: string;
-
-    @Column({type: 'varchar', length: 128, nullable: true})
-    reservesAfter1estimate: string;
 
     @Column({type: 'varchar', length: 42, nullable: true})
     token0: string;
@@ -99,5 +97,11 @@ export class TransactionEntity extends BaseEntity<TransactionEntity> {
 
     @Column({type: 'decimal', precision: 11, scale: 2, nullable: true})
     amount1Usd: number;
+
+    @Column({type: 'text', nullable: true})
+    logs: number;
+
+    @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+    createdAt: Date;
 
 }

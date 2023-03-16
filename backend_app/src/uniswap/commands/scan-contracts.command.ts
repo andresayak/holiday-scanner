@@ -1,4 +1,4 @@
-import {Command} from 'nestjs-command';
+import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {ContractFactory, Wallet} from 'ethers';
 import {Repository} from "typeorm";
@@ -49,15 +49,16 @@ export class ScanContractsCommand {
 
         const pairs = await this.pairRepository.find({
             where: {
+                network: this.envService.get('ETH_NETWORK'),
                 fee: null
             }
         });
 
         let index = 0;
         for (const pair of pairs) {
-            console.log(++index+'/'+pairs.length, pair.address);
+            console.log(++index + '/' + pairs.length, pair.address);
             const contractSource = await getContractSource(pair.address, this.envService.get('ETHERSCAN_API'));
-            if (contractSource[0] && contractSource[0].ABI!=='Contract source code not verified') {
+            if (contractSource[0] && contractSource[0].ABI !== 'Contract source code not verified') {
                 const source = contractSource[0].SourceCode;
                 const ABI = JSON.parse(contractSource[0].ABI);
                 const matches = source.matchAll(/balance(\d)Adjusted = \(?balance\d\.mul\((\d+)\)\.sub\(amount\dIn\.mul\((\d+)\)\)/ig);
@@ -65,20 +66,20 @@ export class ScanContractsCommand {
                 for (const match of matches) {
                     fees.push([parseInt(match[2]), parseInt(match[3])]);
                 }
-                if(!fees.length){
+                if (!fees.length) {
                     const match = source.match(/uint balance0Adjusted = balance0\.mul\((\d+)\)\.sub\(amount0In\.mul\(_swapFee\)\);/);
-                    if(match){
+                    if (match) {
                         const pairContract = ContractFactory.getContract(pair.address, ABI, wallet);
                         const scale = parseInt(match[1]);
                         const swapFee = parseInt(await pairContract.swapFee());
                         console.log('swap fee', swapFee);
                         fees.push([scale, swapFee]);
                         fees.push([scale, swapFee]);
-                    }else{
+                    } else {
                         const match1 = source.match(/mul\(1e4\)\.sub\(amount0In\.mul\(IMdexFactory\(factory\)\.getPairFees\(address\(this\)/);
-                        if(match1){
+                        if (match1) {
                             const factorySource = await getContractSource(pair.factory, this.envService.get('ETHERSCAN_API'));
-                            if(factorySource[0] && factorySource[0].ABI!=='Contract source code not verified') {
+                            if (factorySource[0] && factorySource[0].ABI !== 'Contract source code not verified') {
                                 const factoryABI = JSON.parse(factorySource[0].ABI);
                                 const factoryContract = ContractFactory.getContract(pair.factory, factoryABI, wallet);
                                 const fee = parseInt((await factoryContract.getPairFees(pair.address)).toString());
@@ -90,25 +91,25 @@ export class ScanContractsCommand {
                     }
                 }
                 console.log('fees', fees);
-                if(!fees.length){
+                if (!fees.length) {
                     console.log('fee not found');
-                }else{
+                } else {
                     const notAllowed = source.match(/Not Allowed/);
-                    if(notAllowed){
+                    if (notAllowed) {
                         pair.status = 'NotAllowed';
-                    }else{
+                    } else {
                         pair.status = 'Success';
                     }
-                    if(fees[0][1] == fees[1][1]){
+                    if (fees[0][1] == fees[1][1]) {
                         pair.isVerified = true;
                         pair.fee = fees[0][1];
                         pair.fee_scale = fees[0][0];
                         await this.pairRepository.save(pair);
-                    }else{
+                    } else {
                         console.log('diff fees');
                     }
                 }
-            }else{
+            } else {
                 pair.isVerified = false;
                 await this.pairRepository.save(pair);
                 console.log('not have source');

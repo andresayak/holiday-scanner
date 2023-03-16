@@ -3,7 +3,7 @@ const {balanceHuman} = require("./helpers/calc");
 
 async function main() {
 
-    const [ownerm, account] = await ethers.getSigners();
+    const [ account] = await ethers.getSigners();
 
     const balance = await account.getBalance();
     console.log(' - account address: ' + account.address);

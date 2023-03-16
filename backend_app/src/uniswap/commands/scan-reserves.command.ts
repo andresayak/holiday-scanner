@@ -101,8 +101,10 @@ export class ScanReservesCommand {
 
         const forceLogs = true;
 
-        const pairs = await this.pairRepository.find();
-        console.log('fetch '+pairs.length+' pairs');
+        const pairs = await this.pairRepository.find({
+            network: this.envService.get('ETH_NETWORK')
+        });
+        console.log('fetch ' + pairs.length + ' pairs');
         const provider = this.providers(providerType);
 
         try {
@@ -122,7 +124,7 @@ export class ScanReservesCommand {
                                 console.log('attems', attempt);
                                 continue;
                             }
-                            if(blockNumber > lastBlock){
+                            if (blockNumber > lastBlock) {
                                 if (blockNumber === lastBlock + 1) {
                                     liveCount++;
                                 } else {

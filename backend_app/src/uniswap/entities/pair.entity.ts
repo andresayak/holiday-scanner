@@ -49,4 +49,8 @@ export class PairEntity extends BaseEntity<PairEntity> {
 
     @Column({type: 'varchar', length: 128, nullable: true})
     status: string;
+
+    @Column({type: 'varchar', length: 64, nullable: true})
+    network: string;
+
 }

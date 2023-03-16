@@ -48,21 +48,12 @@ const calculate = (reserveIn: BigNumber, reserveOut: BigNumber, amountOutMin: Bi
     if (amountOutMy.gt(reserveIn)) {
         amountOutMy = reserveIn.sub(1).sub(amountOutMin).div(2);
     }
-    console.log('amountIn='+amountIn);
-    console.log('amountOut=' + amountOut);
-
-    console.log('amountOutMy=' + amountOutMy);
-    console.log('amountOutMin=' + amountOutMin);
 
     if (amountOutMy.lt(0)) {
         throw Error('amountOutMy less zero');
     }
 
-    console.log('reserveIn=' + reserveIn);
-    console.log('reserveIn=' + reserveOut);
     let amountInMy = getAmountIn(amountOutMy, reserveOut, reserveIn, fee, fee_scale);//ETH
-    console.log('amountInMy=' + amountInMy);
-    console.log('amountOutMy=' + amountOutMy);
 
     const amountInMyMax = amountInMy;
     const amountOutMyMax = amountOutMy;

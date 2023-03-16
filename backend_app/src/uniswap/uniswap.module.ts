@@ -5,9 +5,7 @@ import commands from './commands';
 
 @Module({
     imports: [DatabaseModule],
-    providers: [...providers, ...commands,
-    ],
+    providers: [...providers, ...commands],
     controllers: [],
 })
-export class UniswapModule {
-}
+export class UniswapModule {}
