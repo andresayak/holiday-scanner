@@ -34,7 +34,7 @@ export class ScanReservesCommand {
 
     @Timeout(5000)
     async cron(){
-        await this.create('ws', 'ankr');
+        await this.create('http', 'ankr');
     }
 
     @Command({
