@@ -104,7 +104,7 @@ export class ScanReservesCommand {
                                 fromBlock: blockNumber,
                                 toBlock: blockNumber
                             });
-                            if (!logs) {
+                            if (!logs || !logs.length) {
                                 console.log('attems', attempt);
                                 continue;
                             }
