@@ -110,7 +110,7 @@ export class ScanReservesCommand {
                             }
                             if (blockNumber > lastBlock) {
                                 if (blockNumber === lastBlock + 1) {
-                                    liveCount++;
+                                    //liveCount++;
                                 } else {
                                     liveCount = 1;
                                 }
