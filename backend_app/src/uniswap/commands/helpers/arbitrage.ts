@@ -120,11 +120,11 @@ export const calculate = async (swap: {
         if (items.length) {
             const success = items[0];
             console.log(' TIME DIFF1 = ', (new Date().getTime() - timeStart.getTime())/1000);
-            //const hash = await calculateswap(success, multiSwapContract);
+            const hash = await calculateswap(success, multiSwapContract);
             console.log(' TIME DIFF2 = ', (new Date().getTime() - timeStart.getTime())/1000);
             const data = {
                 block: currentBlock,
-                //hash,
+                hash,
                 target: {
                     hash: swap.target.hash,
                     from: swap.target.from,
