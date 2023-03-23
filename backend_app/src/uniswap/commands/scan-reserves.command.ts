@@ -86,7 +86,7 @@ export class ScanReservesCommand {
             })
         }
 
-        const forceLogs = true;
+        const forceLogs = false;
         const wsProvider = this.providers('ws', this.envService.get('ETH_HOST'), providerName);
         const provider = this.providers('http', this.envService.get('ETH_HOST'), providerName);
         this.redisPublisherClient.del('reserves');
