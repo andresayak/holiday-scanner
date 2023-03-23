@@ -54,7 +54,7 @@ export class ScanReservesCommand {
             providerName: string,
     ) {
 
-
+        const startWork = new Date();
         let lastBlock = 0;
         let liveCount = 0;
 
@@ -98,7 +98,8 @@ export class ScanReservesCommand {
         try {
             provider.on("block", (blockNumber) => {
                 const timeStart = new Date();
-                console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount);
+                console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount,
+                    ' live work: '+((new Date().getTime() - startWork.getTime())/1000)+' sec');
                 try {
                     new Promise(async (done) => {
                         let attempt = 0;

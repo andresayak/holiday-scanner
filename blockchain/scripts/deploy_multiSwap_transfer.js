@@ -7,8 +7,8 @@ async function main() {
         throw new Error('wrong env')
     }
 
-    const swapAddress = '0x68e6548F3E6975AE78959a46620240D71c3B8A27';//process.env['MULTI_SWAP_ADDRESS'];
-    const wethAddress = '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c';//process.env['WETH_ADDRESS'];
+    const swapAddress = process.env['MULTI_SWAP_ADDRESS'];
+    const wethAddress = '0xe9e7cea3dedca5984780bafc599bd69add087d56';//process.env['WETH_ADDRESS'];
     const [owner, account] = await ethers.getSigners();
 
     const balance = await owner.getBalance();
@@ -18,14 +18,16 @@ async function main() {
     const WETH = await ethers.getContractAt('WETH9', wethAddress, owner);
 
     console.log(await WETH.name());
-
+    const balanceAccountBefore = await WETH.balanceOf(owner.address);
+    console.log(' - multiSwap balance: ' + balanceHuman(balanceAccountBefore));
     console.log(' - swapAddress: '+swapAddress);
     const balanceSwapBefore = await WETH.balanceOf(swapAddress);
     console.log(' - multiSwap balance: ' + balanceHuman(balanceSwapBefore));
     //return;
-    const amountIn = ethers.utils.parseEther("0.3");
+    const amountIn = ethers.utils.parseEther("200");
 
     console.log('amountIn='+amountIn);
+    //return;
 /*
 
     const tx1 = await WETH.deposit({
