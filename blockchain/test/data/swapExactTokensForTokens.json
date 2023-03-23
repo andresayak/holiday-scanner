@@ -1,0 +1,109 @@
+{
+  "block": 26683894,
+  "target": {
+    "from": "0x5c1D8d6B29ca99DE9c583371b87341d59b1A4C7A",
+    "to": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+    "gasPrice": "5000000000",
+    "gasLimit": "215186",
+    "method": "swapExactTokensForTokens",
+    "params": {
+      "amountIn": "100000000000000000000",
+      "amountOut": "0",
+      "amountOutMin": "106334384855758694801",
+      "amountInMax": "0",
+      "path": [
+        "0xA73164DB271931CF952cBaEfF9E8F5817b42fA5C",
+        "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+        "0x9D986A3f147212327Dd658F712d5264a73a1fdB0"
+      ],
+      "deadline": "1679484902"
+    }
+  },
+  "before": {
+    "pair0": {
+      "id": 1948233,
+      "address": "0x13f80c53b837622e899e1ac0021ed3d1775caefa",
+      "factory": "0xca143ce32fe78f1f7019d7d551a6402fc5350c73",
+      "token0": "0xa73164db271931cf952cbaeff9e8f5817b42fa5c",
+      "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+      "reserve0": "233569964762106747174969",
+      "reserve1": "1130051269202331303249",
+      "blockNumber": 26683873,
+      "transactionIndex": null,
+      "logIndex": null,
+      "fee": 25,
+      "fee_scale": 10000,
+      "isTested": false,
+      "isVerified": false,
+      "status": null,
+      "network": "bsc_mainnet"
+    },
+    "pair1": {
+      "id": 1033635,
+      "address": "0x468cde4ad48cbafa3cdfb68fd9f2c114ddfe6c08",
+      "factory": "0xca143ce32fe78f1f7019d7d551a6402fc5350c73",
+      "token0": "0x9d986a3f147212327dd658f712d5264a73a1fdb0",
+      "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+      "reserve0": "24295678870735189584248",
+      "reserve1": "109026351159504781907",
+      "blockNumber": 26683885,
+      "transactionIndex": null,
+      "logIndex": null,
+      "fee": 25,
+      "fee_scale": 10000,
+      "isTested": false,
+      "isVerified": false,
+      "status": null,
+      "network": "bsc_mainnet"
+    }
+  },
+  "after": {
+    "amountRealIn0": "100000000000000000000",
+    "amountRealOut0": "482401470886771110",
+    "reserves0": [
+      "233669964762106747174969",
+      "1129568867731444532139"
+    ],
+    "amountRealIn1": "482401470886771110",
+    "amountRealOut1": "106759496541626513175",
+    "reserves1": [
+      "24188919374193563071073",
+      "109508752630391553017"
+    ]
+  },
+  "success": {
+    "amountIn": "300000000000000000",
+    "amountOut": "917227687419805583",
+    "amountOutsMin": [
+      "209975655906434854596",
+      "917227687419805583"
+    ],
+    "reservers0": [
+      "61325883184663692680",
+      "43240694271582835298116"
+    ],
+    "reservers1": [
+      "10148445859233867416263",
+      "45337089911533520911"
+    ],
+    "pairs": [
+      "0x468cde4ad48cbafa3cdfb68fd9f2c114ddfe6c08",
+      "0xb15f34082baa4e3515a49e05d4d1d40ce933da0b"
+    ],
+    "path": [
+      "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+      "0x9d986a3f147212327dd658f712d5264a73a1fdb0",
+      "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c"
+    ],
+    "fees": [
+      25,
+      2
+    ],
+    "feeScales": [
+      10000,
+      1000
+    ],
+    "profit": 205.74,
+    "profit_real": "6.1722 BNB, 1851.66 USD"
+  }
+}

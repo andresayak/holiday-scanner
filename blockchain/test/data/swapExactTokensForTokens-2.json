@@ -1,0 +1,84 @@
+{
+  "block": 26696401,
+  "target": {
+    "from": "0x7524a5Ef0C73fBb656B4fEaBae68FbE3799288f9",
+    "to": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+    "gasPrice": "5000000000",
+    "gasLimit": "225062",
+    "method": "swapExactETHForTokens",
+    "params": {
+      "amountIn": "27574524317813856",
+      "amountOut": "0",
+      "amountOutMin": "14997767539537249414",
+      "amountInMax": "0",
+      "path": [
+        "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+        "0xA57ac35CE91Ee92CaEfAA8dc04140C8e232c2E50"
+      ],
+      "deadline": "1679522762"
+    }
+  },
+  "before": {
+    "pair0": {
+      "id": 681391,
+      "address": "0xfff58a50fdde55f5b5626bb66de476f63155e078",
+      "factory": "0xca143ce32fe78f1f7019d7d551a6402fc5350c73",
+      "token0": "0xa57ac35ce91ee92caefaa8dc04140c8e232c2e50",
+      "token1": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+      "reserve0": "134477724643902444728022",
+      "reserve1": "234857540782459570938",
+      "blockNumber": 26696362,
+      "transactionIndex": null,
+      "logIndex": null,
+      "fee": 25,
+      "fee_scale": 10000,
+      "isTested": false,
+      "isVerified": false,
+      "status": null,
+      "network": "bsc_mainnet"
+    }
+  },
+  "after": {
+    "amountRealIn0": "27574524317813856",
+    "amountRealOut0": "15747655916514111885",
+    "reserves0": [
+      "134461976987985930616137",
+      "234885115306777384794"
+    ]
+  },
+  "success": {
+    "amountIn": "300000000000000000",
+    "amountOut": "307718229419670603",
+    "amountOutsMin": [
+      "171090227707816279015",
+      "307718229419670603"
+    ],
+    "reservers0": [
+      "234885115306777384794",
+      "134461976987985930616137"
+    ],
+    "reservers1": [
+      "5146592201021649331952502",
+      "9275378590943023797395"
+    ],
+    "pairs": [
+      "0xfff58a50fdde55f5b5626bb66de476f63155e078",
+      "0xb450cbf17f6723ef9c1bf3c3f0e0aba368d09bf5"
+    ],
+    "path": [
+      "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+      "0xa57ac35ce91ee92caefaa8dc04140c8e232c2e50",
+      "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c"
+    ],
+    "fees": [
+      25,
+      2
+    ],
+    "feeScales": [
+      10000,
+      1000
+    ],
+    "profit": 2.57,
+    "profit_real": "0.0771 BNB, 23.13 USD"
+  }
+}
