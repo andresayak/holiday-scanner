@@ -1,8 +1,12 @@
 import {tokens} from "../../helpers/calc";
 import {processFindSuccess} from "./processFindSuccess";
 import {BigNumber} from "ethers";
-import {VariantType} from "./getVariants";
 
+export type VariantType = {
+    path: string[],
+    pairs: string[],
+    //blockNumbers: number[]
+}
 export type PairsType = {
     id: number,
     address: string,
@@ -11,17 +15,22 @@ export type PairsType = {
     token1: string,
     reserve0: string,
     reserve1: string,
-    blockNumber: number,
+   // blockNumber: number,
     transactionIndex: number,
     logIndex: number,
     fee: number | null,
     fee_scale: number | null
 }[];
-export const processVariants = (props: {
-    pairs: PairsType, gasPrice: BigNumber, gasLimit: BigNumber
-}) => {
-    const {pairs, gasPrice, gasLimit} = props;
+export const getVariants = (pairs: {
+    address: string,
+    token0: string,
+    token1: string,
+    //blockNumber: number;
+    fee: string,
+    fee_scale: string
+}[]): VariantType[] => {
     const variants: VariantType[] = [];
+    let i = 0;
     for (const tokenIn of tokens) {
         for (const x in pairs) {
             const pairX = pairs[x];
@@ -35,7 +44,6 @@ export const processVariants = (props: {
                 }
                 const pairY = pairs[y];
                 if (
-                    pairY.fee && pairY.fee_scale &&
                     ((pairY.token0 === tokenOut && pairY.token1 === tokenIn)
                         || (pairY.token1 === tokenOut && pairY.token0 === tokenIn))
                 ) {
@@ -49,8 +57,4 @@ export const processVariants = (props: {
         }
     }
     return variants;
-    console.log('variants', variants.length);
-    //return processFindSuccess({variants, pairs, gasPrice, gasLimit});
-
-
 }

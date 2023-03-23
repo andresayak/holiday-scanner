@@ -8,7 +8,7 @@ async function main() {
     }
 
     const swapAddress = process.env['MULTI_SWAP_ADDRESS'];
-    const wethAddress = process.env['WETH_ADDRESS'];
+    const wethAddress = '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c';//process.env['WETH_ADDRESS'];
     const [owner] = await ethers.getSigners();
 
     const balance = await owner.getBalance();

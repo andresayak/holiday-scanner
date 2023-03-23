@@ -44,7 +44,7 @@ export class ImportTokensCommand {
         const allTokens = fs.readFileSync("/var/www/backend_app/storage/" + filename, 'utf-8');
         const lines = allTokens.split(/\r?\n/);
 
-        const chunkSize = 2;
+        const chunkSize = 50;
         for (let i = 0; i < lines.length; i += chunkSize) {
             const chunk = lines.slice(i, i + chunkSize);
             await Promise.all(chunk.map((line, index) => {

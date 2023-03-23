@@ -1,6 +1,6 @@
 const typeorm = require("typeorm");
 const dataSource = new typeorm.DataSource({
-    type: "postgres",
+    type: "mysql",
     host: "localhost",
     port: 5432,
     username: "root",

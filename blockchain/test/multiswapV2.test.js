@@ -229,6 +229,8 @@ describe("MultiSwap", () => {
         let success = [];
         for (const variant of variants) {
             let amountOutsMin = [];
+            let fees = [];
+            let feeScales = [];
             let status = true;
             let reserves = [];
             for (const index in variant.pairs) {
@@ -246,6 +248,8 @@ describe("MultiSwap", () => {
                     }
                     reserves[index] = [reserve0, reserve1];
                     amountOutsMin.push(getAmountOut(amountInCurrent, reserve0, reserve1, fee, feeScale));
+                    fees.push(fee);
+                    feeScales.push(feeScale);
                 }
             }
             if (status) {
@@ -257,6 +261,8 @@ describe("MultiSwap", () => {
                     amountOutsMin: amountOutsMin.map(amountOutMin => amountOutMin.toString()),
                     pairs: variant.pairs,
                     reserves,
+                    fees,
+                    feeScales,
                     path: variant.path,
                     profit
                 });
@@ -374,7 +380,7 @@ describe("MultiSwap", () => {
             if (!success) {
                 continue;
             }
-            const multiSwap = await (await ethers.getContractFactory("MultiSwap")).connect(user1).deploy();
+            const multiSwap = await (await ethers.getContractFactory("MultiSwapV2")).connect(user1).deploy();
             await multiSwap.deployed();
             try {
                 const amountIn = success.amountIn;
@@ -403,10 +409,19 @@ describe("MultiSwap", () => {
                 const balanceBefore = (await token.balanceOf(multiSwap.address));
                 console.log(' - multiSwap balanceBefore: ' + balanceHuman(balanceBefore));
 
-                const tx = await multiSwap.connect(user1).swap(
+                console.log([
+                    amountIn,
                     success.pairs,
                     success.path,
-                    [amountIn, ...success.amountOutsMin],
+                    success.fees,
+                    success.feeScales,
+                ]);
+                const tx = await multiSwap.connect(user1).swap(
+                    amountIn,
+                    success.pairs,
+                    success.path,
+                    success.fees,
+                    success.feeScales,
                     {
                         gasPrice,
                         gasLimit
@@ -526,6 +541,8 @@ const processSuccess = (variant, activePairs) => {
     //5gwei
     const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? ethers.utils.parseEther("0.3") : ethers.utils.parseEther("300");
     let amountOutsMin = [];
+    let fees = [];
+    let feeScales = [];
     let reservers = [];
     let status = true;
     for (const index in variant.pairs) {
@@ -537,11 +554,14 @@ const processSuccess = (variant, activePairs) => {
         }
         if (status && pair && pair.fee) {
             const token0 = variant.path[index];
+            console.log('pair', pair);
             const reserve0 = token0 == pair.token0 ? pair.reserve0 : pair.reserve1;
             const reserve1 = token0 == pair.token0 ? pair.reserve1 : pair.reserve0;
             const amountInCurrent = index == 0 ? amountIn : amountOutsMin[index - 1];
             amountOutsMin.push(getAmountOut(amountInCurrent, reserve0, reserve1, parseInt(pair.fee), parseInt(pair.fee_scale)));
             reservers.push([reserve0, reserve1]);
+            fees.push(pair.fee);
+            feeScales.push(pair.fee_scale);
         } else {
             status = false;
         }
@@ -565,6 +585,8 @@ const processSuccess = (variant, activePairs) => {
             //amountInsMax: [amountInMax],
             amountOutsMin: amountOutsMin.map(amountOutMin => amountOutMin.toString()),
             reservers,
+            fees,
+            feeScales,
             pairs: variant.pairs,
             path: variant.path,
             gasPrice: gasPrice,

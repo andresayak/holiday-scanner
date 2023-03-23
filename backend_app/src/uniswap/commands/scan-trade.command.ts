@@ -67,12 +67,12 @@ export class ScanTradeCommand {
                 console.log(success[0]);
                 if (!openTrade) {
                     openTrade = true;
-                    MakeTrade({
+                    /*MakeTrade({
                         success: success[0], blockNumber: json.blockNumber, liveCount: json.liveCount,
                         pairs: json.pairs, multiSwapContract
                     }).then(() => {
                         openTrade = false;
-                    });
+                    });*/
                 }
             }
         });
