@@ -249,7 +249,7 @@ export class ScanArbitrageCommand {
             this.lastVariants = null;
             this.lastPairs = null;
             this.transactions = [];
-            provider.getBlockWithTransactions(blockNumber).then((info) => {
+            /*provider.getBlockWithTransactions(blockNumber).then((info) => {
                 let transactions = info.transactions.map(item => item.hash);
                 const items = info.transactions.filter(item => item.gasPrice.gt(0));
                 const minGasPrice = items.reduce((a: BigNumber, item) => (a === null)
@@ -275,7 +275,7 @@ export class ScanArbitrageCommand {
                 });
                 //renderTable();
                 console.log('end block', blockNumber, (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
-            });
+            });*/
         });
 
         this.redisSubscriberClient.subscribe('pairs');
