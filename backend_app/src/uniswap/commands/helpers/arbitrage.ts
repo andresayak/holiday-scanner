@@ -16,6 +16,10 @@ const blacklist = [
     '0x477bc8d23c634c154061869478bce96be6045d12',
     '0xa57ac35ce91ee92caefaa8dc04140c8e232c2e50'
 ];
+const whitelist = [
+    BNB_CONTRACT.toLowerCase(),
+    '0xe9e7cea3dedca5984780bafc599bd69add087d56'
+]
 const swapInterface = [
     'event Sync(uint112 reserve0, uint112 reserve1)',
 ];
@@ -115,8 +119,8 @@ export const calculate = async (swap: {
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
         const variants: VariantType[] = getVariants(pairs);
-        const items = processFindSuccess({variants, pairs});
-            //.filter(item=>item.path[0]==BNB_CONTRACT.toLowerCase() && !blacklist.includes(item.path[1]));
+        const items = processFindSuccess({variants, pairs})
+            .filter((item)=>whitelist.includes(item.path[0]) && !blacklist.includes(item.path[1]));
         if (items.length) {
             const success = items[0];
             console.log(' TIME DIFF1 = ', (new Date().getTime() - timeStart.getTime())/1000);
