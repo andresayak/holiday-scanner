@@ -109,6 +109,7 @@ export class ScanReservesCommand {
                                 continue;
                             }
                             if (blockNumber > lastBlock) {
+                                console.log('blockNumber', blockNumber, lastBlock + 1, blockNumber === lastBlock + 1);
                                 if (blockNumber === lastBlock + 1) {
                                     //liveCount++;
                                 } else {
