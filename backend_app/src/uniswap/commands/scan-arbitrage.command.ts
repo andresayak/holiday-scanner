@@ -1,4 +1,4 @@
-import {Command} from 'nestjs-command';
+import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {BigNumber, Contract, ContractFactory, utils, Wallet} from 'ethers';
 import {In, Repository, MoreThan, Not, IsNull} from "typeorm";
@@ -71,10 +71,16 @@ export class ScanArbitrageCommand {
     }
 
     @Command({
-        command: 'scan:arbitrage',
+        command: 'scan:arbitrage <providerName>',
         autoExit: false
     })
-    async create() {
+    async create(
+        @Positional({
+            name: 'providerName',
+            type: 'string'
+        })
+            providerName: string,
+    ) {
 
         let txIndex = 0;
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
@@ -84,10 +90,9 @@ export class ScanArbitrageCommand {
         let closeRequest = 0;
         let timeoudRequest = 0;
         let successTxs = 0;
-        const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), 'node');
-        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), 'node');
-        const ankr = this.providers('ws', this.envService.get('ETH_NETWORK'), 'ankr');
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(ankr);
+        const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), providerName);
+        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), providerName);
+        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(wsProvider);
 
         const balance = await wallet.getBalance();
         console.log(' - account address: ' + wallet.address);
