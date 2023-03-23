@@ -8,6 +8,7 @@ import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
 import {EthProviderFactoryType} from "../uniswap.providers";
+import { Timeout } from '@nestjs/schedule';
 
 @Injectable()
 export class ScanReservesCommand {
@@ -31,8 +32,13 @@ export class ScanReservesCommand {
         this.iface = new utils.Interface(swapInterface);
     }
 
+    @Timeout(5000)
+    async cron(){
+        await this.create('ws', 'ankr');
+    }
+
     @Command({
-        command: 'scan:reserves <providerType>',
+        command: 'scan:reserves <providerType> <providerName>',
         autoExit: false
     })
     async create(
@@ -41,7 +47,13 @@ export class ScanReservesCommand {
             type: 'string'
         })
             providerType: 'ws' | 'http' = 'ws',
+        @Positional({
+            name: 'providerName',
+            type: 'string'
+        })
+            providerName: string,
     ) {
+
 
         let lastBlock = 0;
         let liveCount = 0;
@@ -81,7 +93,7 @@ export class ScanReservesCommand {
 
         const forceLogs = true;
 
-        const provider = this.providers(providerType, this.envService.get('ETH_HOST'), 'node');
+        const provider = this.providers(providerType, this.envService.get('ETH_HOST'), providerName);
         this.redisPublisherClient.del('reserves');
         try {
             provider.on("block", (blockNumber) => {
