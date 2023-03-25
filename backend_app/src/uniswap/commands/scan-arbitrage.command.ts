@@ -62,6 +62,8 @@ export class ScanArbitrageCommand {
                 private readonly tokenRepository: Repository<TokenEntity>,
                 @Inject('REDIS_SUBSCRIBER_CLIENT')
                 private readonly redisSubscriberClient: RedisClient,
+                @Inject('REDIS_PUBLISHER_CLIENT')
+                private readonly redisPublisherClient: RedisClient,
                 @Inject('PAIR_REPOSITORY')
                 private readonly pairRepository: Repository<PairEntity>,
                 @Inject('ROUTER_REPOSITORY')
@@ -85,14 +87,10 @@ export class ScanArbitrageCommand {
         let txIndex = 0;
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
         const startWork = new Date();
-        let removed = [];
-        let openRequest = 0;
-        let closeRequest = 0;
-        let timeoudRequest = 0;
-        let successTxs = 0;
-        const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), providerName);
-        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), providerName);
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(wsProvider);
+        const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), 'ankr');
+        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), 'ankr');
+        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
+
 
         const balance = await wallet.getBalance();
         console.log(' - account address: ' + wallet.address);
@@ -106,15 +104,11 @@ export class ScanArbitrageCommand {
             let attems = 0;
             while (true) {
                 try {
-                    openRequest++;
                     const target: TransactionResponse | null = await wsProvider.getTransaction(hash);
-                    openRequest--;
-                    if (target && target.to && target.nonce) {
-                        closeRequest++;
-                        successTxs++;
-                        //this.transactions = this.transactions.filter((tx) => !(tx && tx.from == target.from && tx.nonce == target.nonce));
+                    if (target && target.to && target.nonce!==null) {
                         const router = routers.find((router) => router.address.toLowerCase() === target.to.toLowerCase())
                         if (target.gasPrice.gt('1000000000') && router) {
+                            console.log('t', (new Date().getTime() - timeStart.getTime())/1000);
                             const getMethod = () => {
                                 for (const method of methods) {
                                     let result;
@@ -130,48 +124,37 @@ export class ScanArbitrageCommand {
                             }
                             const json = getMethod();
                             if (json && !json.method.match(/Supporting/)) {
+                                const isWhitelist = await new Promise((done)=> {
+                                    this.redisPublisherClient.get('token_'+json.result.path[1].toLowerCase(), (err, reply)=>{
+                                        done(reply);
+                                    });
+                                });
+                                console.log('t0', (new Date().getTime() - timeStart.getTime())/1000);
+                                if(!isWhitelist){
+                                    console.log('not isWhitelist');
+                                    return ;
+                                }
                                 const deadline = (parseInt(json.result.deadline) - Math.floor(new Date().getTime() / 1000));
                                 const swap = {
                                     target, json,
                                     factory: router.factory,
                                     deadline
                                 };
-                                //if(!this.openTrading) {
-                                //    this.openTrading = true;
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
-                                        multiSwapContract, wallet, timeStart);
+                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient);
                                 }catch (e) {
                                     console.log(e)
                                 }
-
-                                //    this.openTrading = false;
-                                //}
-                                /*this.transactions = this.transactions.map((tx)=>tx.hash == target.hash?{...tx, ...target, json,
-                                    factory: router.factory,
-                                    deadline}:tx);
-                                renderTable();*/
                             }
                         }
                         return;
                     } else {
                         attems++;
-                        if (new Date().getTime() - timeStart.getTime() > 1000) {
-                            //console.log('not found ' + hash, (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
-                            this.transactions = this.transactions.filter(item => item.hash !== hash);
-                            removed.push(hash);
-                            return null
-                        }
-                        //}
-                        //console.log('target', target)
                     }
                 } catch (e) {
                     console.log('error', e.toString());
-                    timeoudRequest++;
-                    openRequest--;
-                    closeRequest++;
                 }
-                //    console.log('target', target)
             }
         }
         const renderTable = () => {

@@ -51,8 +51,8 @@ module.exports = {
         hardhat: {
             allowUnlimitedContractSize: true,
             forking: {
-                url: 'https://bsc-dataseed.binance.org/',// `https://rpc.ankr.com/bsc/${process.env.ANKR_PROVIDER_KEY}`,
-                blockNumber: 26720000
+                url: 'https://bsc-dataseed.binance.org',// `https://rpc.ankr.com/bsc/${process.env.ANKR_PROVIDER_KEY}`,
+                blockNumber: 26743886
             },
             mining: {
               auto: true,

@@ -34,7 +34,7 @@ export class ScanReservesCommand {
 
     @Timeout(5000)
     async cron(){
-        await this.create('ankr');
+        await this.create('node');
     }
 
     @Command({
@@ -66,13 +66,24 @@ export class ScanReservesCommand {
                 }
             }
             Promise.all(Object.entries(pairs).map(([pairAddress, result])=>{
-                return this.pairRepository.update({
-                    address: pairAddress
-                }, {
-                    blockNumber,
-                    reserve0: result[0].toString(),
-                    reserve1: result[1].toString(),
+                return new Promise(async (done)=>{
+                    const pair = await this.pairRepository.findOne({
+                        where: {
+                            address: pairAddress
+                        }
+                    });
+                    if(pair && pair.fee){
+                        pair.fill({
+                            blockNumber,
+                            reserve0: result[0].toString(),
+                            reserve1: result[1].toString(),
+                        })
+                        await this.pairRepository.save(pair);
+                        await new Promise((save)=>this.redisPublisherClient.set('pair_'+pair.token0+'_'+pair.token1, JSON.stringify(pair), save));
+                    }
+                    done(true);
                 });
+
             })).then(()=>{
                 const data = JSON.stringify({
                     pairs,
@@ -87,8 +98,8 @@ export class ScanReservesCommand {
         }
 
         const forceLogs = false;
-        const wsProvider = this.providers('ws', this.envService.get('ETH_HOST'), providerName);
-        const provider = this.providers('http', this.envService.get('ETH_HOST'), providerName);
+        const wsProvider = this.providers('ws', this.envService.get('ETH_HOST'), 'ankr');
+        const provider = this.providers('http', this.envService.get('ETH_HOST'), 'node');
         this.redisPublisherClient.del('reserves');
         try {
             wsProvider.on("block", (blockNumber) => {
@@ -100,27 +111,33 @@ export class ScanReservesCommand {
                         let attempt = 0;
                         while (true) {
                             attempt++;
-                            const logs = await provider.getLogs({
-                                fromBlock: blockNumber,
-                                toBlock: blockNumber
-                            });
-                            if (!logs || !logs.length) {
-                                console.log('attems', attempt);
+                            try {
+                                const logs = await Promise.race([provider.getLogs({
+                                    fromBlock: blockNumber,
+                                    toBlock: blockNumber
+                                })]);
+                                if (!logs || !logs.length) {
+                                    console.log('attems', attempt);
+                                    continue;
+                                }
+                                if (blockNumber > lastBlock) {
+                                    console.log('blockNumber', blockNumber, lastBlock + 1, blockNumber === lastBlock + 1);
+                                    if (blockNumber === lastBlock + 1) {
+                                        //liveCount++;
+                                    } else {
+                                        liveCount = 1;
+                                    }
+                                }
+                                console.log('fetch logs [' + blockNumber + '] count: ' + logs.length + ', attempt: ' + attempt);
+                                if (forceLogs || blockNumber > lastBlock) {
+                                    processLogs(blockNumber, logs, timeStart);
+                                }
+                                lastBlock = blockNumber;
+                            }catch (e) {
+                                console.log(e);
                                 continue;
                             }
-                            if (blockNumber > lastBlock) {
-                                console.log('blockNumber', blockNumber, lastBlock + 1, blockNumber === lastBlock + 1);
-                                if (blockNumber === lastBlock + 1) {
-                                    //liveCount++;
-                                } else {
-                                    liveCount = 1;
-                                }
-                            }
-                            console.log('fetch logs [' + blockNumber + '] count: ' + logs.length + ', attempt: ' + attempt);
-                            if (forceLogs || blockNumber > lastBlock) {
-                                processLogs(blockNumber, logs, timeStart);
-                            }
-                            lastBlock = blockNumber;
+
                             break;
                         }
                         return done(true);

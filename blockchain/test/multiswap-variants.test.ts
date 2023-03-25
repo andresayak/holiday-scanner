@@ -2,13 +2,12 @@ import { BigNumber } from "ethers";
 import {ethers} from "hardhat";
 const helpers =  require("@nomicfoundation/hardhat-network-helpers");
 const {checkAmounts} = require('./checkAmounts.js');
-
-import * as swapData from './data/swapExactTokensForTokens-2.json';
+import * as fs from 'fs';
 
 const BNB_CONTRACT = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
 const holders = {
     [BNB_CONTRACT.toLowerCase()]: '0xf977814e90da44bfa03b6295a0616a897441acec',
-    '0xe9e7cea3dedca5984780bafc599bd69add087d56': '0xd2f93484f2d319194cba95c5171b18c1d8cfd6c4',
+    '0xe9e7cea3dedca5984780bafc599bd69add087d56': '0x8894e0a0c962cb723c1976a4421c95949be2d4e3',
     '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d': '0x8894e0a0c962cb723c1976a4421c95949be2d4e3',
 };
 
@@ -20,8 +19,13 @@ describe.only("MultiSwap", () => {
         if (!process.env['WETH_ADDRESS'] || !process.env['MULTI_SWAP_ADDRESS']) {
             throw new Error('wrong env')
         }
+        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/1679665266458', 'utf-8'));
+        console.log('swapData', swapData);
+        //await helpers.reset('https://bsc-dataseed.binance.org/', swapData.block);
+
         console.log('swapExactTokensForTokensData', swapData);
         await checkAmounts(swapData);
+
 
         const [owner, user1] = await ethers.getSigners();
         const {success, block, target, after, before} = swapData;
@@ -45,9 +49,9 @@ describe.only("MultiSwap", () => {
             await tx1.wait();
             const tx2 = await token.connect(user1).transfer(multiSwapContract.address, amountIn.toString());
             await tx2.wait();
-
         } else {
             const address = holders[success.path[0]];
+            console.log('holder = '+address);
             await helpers.impersonateAccount(address);
             const impersonatedSigner = await ethers.getSigner(address);
 
@@ -58,7 +62,7 @@ describe.only("MultiSwap", () => {
 
         const balance1 = await token.balanceOf(multiSwapContract.address);
         console.log('success', success);
-
+/*
         const b0 = '78531332176747735216';
         const b1 = '9374666979737106315222';
 
@@ -83,10 +87,10 @@ describe.only("MultiSwap", () => {
         console.log('right='+right)
         if(left.gte(right)){
             console.log('K');
-        }
+        }*/
 
         //return;
-
+console.log('swap');
         const tx = await multiSwapContract.swap(
             success.amountIn,
             success.pairs,

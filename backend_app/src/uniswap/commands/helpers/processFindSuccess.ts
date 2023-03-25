@@ -201,7 +201,8 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         //const gas = _gasPrice.mul(gasLimit);
         const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
         const real = amountIn.mul(profit).div(1000);
-        if (status) {
+        const profitNumber = parseInt(profit.toString()) / 100;
+        if (status && profitNumber > 0) {
             success.push({
                 amountIn: amountIn.toString(),
                 amountOut: amountOut.toString(),
@@ -215,12 +216,11 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                 feeScales,
                 //gasPrice: _gasPrice,
                 //gasLimit: gasLimit,
-                profit: parseInt(profit.toString()) / 100,
+                profit: profitNumber,
                 profit_real: balanceHuman(real, variant.path[0])
             });
         }
     }
     return success
-        .filter(item => item.profit > 0)
         .sort((a, b) => (b.profit - a.profit));
 }

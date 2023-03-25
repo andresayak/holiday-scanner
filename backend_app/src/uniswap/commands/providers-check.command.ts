@@ -25,12 +25,12 @@ export class ProvidersCheckCommand {
     })
     async create() {
 
-        const url1 = 'wss://rpc.ankr.com/bsc/ws/' + this.envService.get('ANKR_PROVIDER_KEY');
+        const url1 = 'http://65.21.195.47:8545';//wss://rpc.ankr.com/bsc/ws/' + this.envService.get('ANKR_PROVIDER_KEY');
         console.log('url1', url1);
         //const url2 = 'wss://frequent-purple-fire.bsc.discover.quiknode.pro/' + this.envService.get('QUIKNODE_PROVIDER_KEY') + '/';
-        const url2 = 'ws://65.21.195.47:8545';
+        const url2 = 'http://65.21.192.28:58545';
         const jsonProvider1 = new providers.WebSocketProvider(url1);
-        const jsonProvider2 = new providers.WebSocketProvider(url2);
+        const jsonProvider2 = new providers.JsonRpcProvider(url2);
 
         let lastBlock = {
             block: 0,
@@ -54,10 +54,10 @@ export class ProvidersCheckCommand {
                 console.log(new Date(), colors.red(text + ' OLD ' + (timeStart - new Date().getTime()) / 1000 + 'sec'));
             }
         }
-        jsonProvider2.on("block", (blockNumber) => {
+        jsonProvider1.on("block", (blockNumber) => {
             check('ANKR', blockNumber);
         });
-        jsonProvider1.on("block", (blockNumber) => {
+        jsonProvider2.on("block", (blockNumber) => {
             check('NODE', blockNumber);
         });
     }

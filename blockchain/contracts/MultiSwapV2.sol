@@ -2,7 +2,7 @@
 pragma solidity =0.6.6;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 
 interface IERC20 {
     function balanceOf(address owner) external view returns (uint);
@@ -78,8 +78,8 @@ contract MultiSwapV2 {
             IUniswapV2Pair(pairs[i]).swap(
                 amount0Out, amount1Out, to, new bytes(0)
             );
-            console.log('balance0', IERC20(path[1]).balanceOf(pairs[1]));
-            console.log('balance1', IERC20(path[2]).balanceOf(pairs[1]));
+            //console.log('balance0', IERC20(path[1]).balanceOf(pairs[1]));
+            //console.log('balance1', IERC20(path[2]).balanceOf(pairs[1]));
         }
     }
 

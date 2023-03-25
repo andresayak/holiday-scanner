@@ -1,5 +1,5 @@
 import {BigNumber, Contract, ContractFactory, Signer, utils} from "ethers";
-import {balanceHuman, BNB_CONTRACT, getAmountIn, getAmountOut, tokens} from "../../helpers/calc";
+import {balanceHuman, BNB_CONTRACT, getAmountIn, getAmountOut, sortTokens, tokens} from "../../helpers/calc";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {processFindSuccess, Swap} from "./processFindSuccess";
 import {In, IsNull, MoreThan, Not, Repository} from "typeorm";
@@ -8,6 +8,7 @@ import {PairEntity} from "../../entities/pair.entity";
 import {updateReserves} from "./updateReserves";
 import * as process from "process";
 import * as fs from 'fs';
+import {RedisClient} from "redis";
 
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
@@ -16,7 +17,7 @@ const blacklist = [
     '0x477bc8d23c634c154061869478bce96be6045d12',
     '0xa57ac35ce91ee92caefaa8dc04140c8e232c2e50'
 ];
-const whitelist = [
+const baselist = [
     BNB_CONTRACT.toLowerCase(),
     '0xe9e7cea3dedca5984780bafc599bd69add087d56'
 ]
@@ -33,9 +34,8 @@ export const calculate = async (swap: {
         method: string;
     }
 }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
-                                multiSwapContract: Contract, wallet: Signer, timeStart: Date) => {
+        multiSwapContract: Contract, wallet: Signer, timeStart: Date, redisPublisherClient: RedisClient) => {
     const {target} = swap;
-    console.log('path', swap.json.result.path);
     const token0 = swap.json.result.path[0].toLowerCase();
     const token1 = swap.json.result.path[1].toLowerCase();
     const token2 = swap.json.result.path[2]?.toLowerCase();
@@ -44,13 +44,14 @@ export const calculate = async (swap: {
     if (!tokens.includes(token0)) {
         tokenInner.push(token0);
     }
-    if (!tokens.includes(token1)) {
+    if (token1 && !tokens.includes(token1)) {
         tokenInner.push(token1);
     }
-    if (!tokens.includes(token2)) {
+    if (token2 && !tokens.includes(token2)) {
         tokenInner.push(token2);
     }
-    const pairs = await pairRepository.find({
+    console.log('t1', (new Date().getTime() - timeStart.getTime())/1000);
+    /*const pairs = await pairRepository.find({
         where: [{
             network,
             blockNumber: MoreThan(startBlock),
@@ -64,7 +65,28 @@ export const calculate = async (swap: {
             token1: In(tokens),
             token0: In(tokenInner),
         }]
-    });
+    });*/
+    const pairs = [];
+    const promises = [];
+    for(const t1 of baselist){
+        for(const t2 of tokenInner){
+            const [token0, token1] = sortTokens(t1, t2);
+            promises.push(new Promise((done)=> {
+                redisPublisherClient.get('pair_'+token0+'_'+token1, (err, reply)=>{
+                    if(reply){
+                        const data = JSON.parse(reply);
+                        if(data && data.blockNumber>=startBlock){
+                            pairs.push(data);
+                            return done(true);
+                        }
+                    }
+                    done(true);
+                });
+            }));
+        }
+    }
+    await Promise.all(promises);
+    console.log('t2', (new Date().getTime() - timeStart.getTime())/1000);
     console.log('pairs', pairs.length);
     if (pairs.length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
         const pair1 = pairs.find((pair) => pair.factory == swap.factory && (
@@ -74,11 +96,9 @@ export const calculate = async (swap: {
             console.log('target pair1 not found');
             return;
         }
-        console.log('swap.json.result', swap);
-
 
         const before: any = {
-            pair0: pair1.toJSON()
+            pair0: JSON.parse(JSON.stringify(pair1))
         };
         const after: any = {}
 
@@ -99,7 +119,7 @@ export const calculate = async (swap: {
                 console.log('target pair2 not found');
                 return;
             }
-            before.pair1 = pair2.toJSON();
+            before.pair1 = JSON.parse(JSON.stringify(pair2));
             const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0}
                 = updateReserves(pair1, token0, amountIn, BigNumber.from(0), amountInMax, BigNumber.from(0));
             after.amountRealIn0 = amountRealIn0.toString();
@@ -119,12 +139,14 @@ export const calculate = async (swap: {
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
         const variants: VariantType[] = getVariants(pairs);
-        const items = processFindSuccess({variants, pairs})
-            .filter((item)=>whitelist.includes(item.path[0]) && !blacklist.includes(item.path[1]));
+        console.log('t3', (new Date().getTime() - timeStart.getTime())/1000);
+        const items = processFindSuccess({variants, pairs});
+            //.filter((item)=>baselist.includes(item.path[0]));
+        console.log(' TIME DIFF0 = ', (new Date().getTime() - timeStart.getTime())/1000);
         if (items.length) {
             const success = items[0];
             console.log(' TIME DIFF1 = ', (new Date().getTime() - timeStart.getTime())/1000);
-            const hash = await calculateswap(success, multiSwapContract);
+            const hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice);
             console.log(' TIME DIFF2 = ', (new Date().getTime() - timeStart.getTime())/1000);
             const data = {
                 block: currentBlock,
@@ -196,11 +218,11 @@ export const calculate = async (swap: {
 }
 
 
-export const calculateswap = async (success, multiSwapContract: Contract) => {
+export const calculateswap = async (success, multiSwapContract: Contract, gasPrice: BigNumber) => {
     try {
         let params = {
-            gasLimit: BigNumber.from('170000'),
-            gasPrice: success.gasPrice,
+            gasLimit: BigNumber.from('2600000'),
+            gasPrice: gasPrice,
         };
         let fee1 = success.fees[0];
         let fee2 = success.fees[1];

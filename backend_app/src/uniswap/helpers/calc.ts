@@ -6,8 +6,8 @@ export const BNB_CONTRACT = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
 export const tokens = [
     BNB_CONTRACT.toLowerCase(),
     '0xe9e7cea3dedca5984780bafc599bd69add087d56',
-    '0x55d398326f99059ff775485246999027b3197955',
-    '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d'
+    //'0x55d398326f99059ff775485246999027b3197955',
+    //'0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d'
 ];
 export const sortTokens = (tokenA: string, tokenB: string): [string, string] => {
     return BigNumber.from(tokenA).lt(tokenB)  ? [tokenA, tokenB] : [tokenB, tokenA];
