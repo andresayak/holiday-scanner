@@ -73,22 +73,27 @@ export class ScanArbitrageCommand {
     }
 
     @Command({
-        command: 'scan:arbitrage <providerName>',
+        command: 'scan:arbitrage <provider1Name> <provider2Name>',
         autoExit: false
     })
     async create(
         @Positional({
-            name: 'providerName',
+            name: 'provider1Name',
             type: 'string'
         })
-            providerName: string,
+            provider1Name: string,
+        @Positional({
+            name: 'provider2Name',
+            type: 'string'
+        })
+            provider2Name: string,
     ) {
 
         let txIndex = 0;
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
         const startWork = new Date();
-        const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), 'ankr');
-        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), 'ankr');
+        const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), provider1Name);
+        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), provider2Name);
         let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
 
 

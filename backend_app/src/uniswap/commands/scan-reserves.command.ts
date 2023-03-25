@@ -34,19 +34,24 @@ export class ScanReservesCommand {
 
     @Timeout(5000)
     async cron(){
-        await this.create('node');
+        await this.create('node2', 'node2');
     }
 
     @Command({
-        command: 'scan:reserves <providerName>',
+        command: 'scan:reserves <provider1Name> <provider2Name>',
         autoExit: false
     })
     async create(
         @Positional({
-            name: 'providerName',
+            name: 'provider1Name',
             type: 'string'
         })
-            providerName: string,
+            provider1Name: string,
+        @Positional({
+            name: 'provider2Name',
+            type: 'string'
+        })
+            provider2Name: string,
     ) {
 
         const startWork = new Date();
@@ -98,8 +103,8 @@ export class ScanReservesCommand {
         }
 
         const forceLogs = false;
-        const wsProvider = this.providers('ws', this.envService.get('ETH_HOST'), 'ankr');
-        const provider = this.providers('http', this.envService.get('ETH_HOST'), 'node');
+        const wsProvider = this.providers('ws', this.envService.get('ETH_HOST'), provider1Name);
+        const provider = this.providers('http', this.envService.get('ETH_HOST'), provider2Name);
         this.redisPublisherClient.del('reserves');
         try {
             wsProvider.on("block", (blockNumber) => {
