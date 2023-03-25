@@ -51,7 +51,7 @@ export const calculate = async (swap: {
         tokenInner.push(token2);
     }
     console.log('t1', (new Date().getTime() - timeStart.getTime())/1000);
-    /*const pairs = await pairRepository.find({
+    const pairs = await pairRepository.find({
         where: [{
             network,
             blockNumber: MoreThan(startBlock),
@@ -65,7 +65,7 @@ export const calculate = async (swap: {
             token1: In(tokens),
             token0: In(tokenInner),
         }]
-    });*/
+    });/*
     const pairs = [];
     const promises = [];
     for(const t1 of baselist){
@@ -85,7 +85,7 @@ export const calculate = async (swap: {
             }));
         }
     }
-    await Promise.all(promises);
+    await Promise.all(promises);*/
     console.log('t2', (new Date().getTime() - timeStart.getTime())/1000);
     console.log('pairs', pairs.length);
     if (pairs.length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {

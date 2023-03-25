@@ -150,7 +150,6 @@ export const processSwap = (props: SwapPropsType): SuccessType[] => {
                 return [];
             }
         }
-        console.log('updatePairs', updatePairs);
         const items = processFindSuccess({variants, pairs: prev, onlyPairs: updatePairs});
         for (const item of items) {
             success.push({
@@ -176,6 +175,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
     const {variants, pairs} = props;
     let success: SuccessType[] = [];
     for (const variant of variants) {
+
         const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther("0.3") : utils.parseEther("200");
         let amountOutsMin = [];
         let fees = [];
