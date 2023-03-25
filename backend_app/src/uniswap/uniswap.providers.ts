@@ -39,8 +39,12 @@ export const providers = [
                     let url;
                     if(provider == 'ankr'){
                         url = 'wss://rpc.ankr.com/bsc/ws/' + envService.get('ANKR_PROVIDER_KEY');
-                    }else{
+                    }else if(provider == 'quiknode') {
+                        url = 'wss://frequent-purple-fire.bsc.discover.quiknode.pro/' + envService.get('QUIKNODE_KEY');
+                    }else if(provider == 'node') {
                         url = 'ws://65.21.195.47:8545';
+                    }else if(provider == 'node2'){
+                        url = 'ws://65.21.192.28:58545';
                     }
                     console.log('PROVIDER: '+url);
                     return new ethers.providers.WebSocketProvider(url);
@@ -62,8 +66,10 @@ export const providers = [
                 network = network?network:envService.get('ETH_NETWORK');
                 if (network === 'bsc_mainnet') {
                     let url;
-                    if(provider == 'ankr'){
+                    if(provider == 'ankr') {
                         url = 'https://rpc.ankr.com/bsc/' + envService.get('ANKR_PROVIDER_KEY');
+                    }else if(provider == 'quiknode'){
+                        url = 'https://frequent-purple-fire.bsc.discover.quiknode.pro/' + envService.get('QUIKNODE_KEY');
                     }else if(provider == 'node'){
                         url = 'http://65.21.195.47:8545';
                     }else if(provider == 'node2'){
