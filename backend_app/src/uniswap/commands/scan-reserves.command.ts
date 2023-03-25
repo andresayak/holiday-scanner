@@ -133,6 +133,7 @@ export class ScanReservesCommand {
                                         liveCount = 1;
                                     }
                                 }
+                                attempt=0;
                                 console.log('fetch logs [' + blockNumber + '] count: ' + logs.length + ', attempt: ' + attempt);
                                 if (forceLogs || blockNumber > lastBlock) {
                                     processLogs(blockNumber, logs, timeStart);

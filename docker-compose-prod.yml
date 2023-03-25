@@ -18,6 +18,7 @@ services:
     volumes:
       - ./backend_app:/var/www/app:z
       - ./volumes/logs:/var/www/logs:z
+      - ./volumes/storage:/var/www/backend_app/storage:z
     links:
       - db
       - redis
