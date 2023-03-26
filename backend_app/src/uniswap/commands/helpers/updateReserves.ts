@@ -25,7 +25,7 @@ export const updateReserves = (pair, token0: string, amountIn: BigNumber, amount
         }
     }else if (amountOut && amountOut.gt(0)) {
         amountRealOut = amountOut;
-        amountRealIn = getAmountIn(amountOut, reserves[1], reserves[0], pair.fee, pair.fee_scale);
+        amountRealIn = getAmountIn(amountOut, reserves[0], reserves[1], pair.fee, pair.fee_scale);
         if (amountInMax && amountInMax.gt(0) && amountInMax.lt(amountRealIn)) {
             throw new Error('amountInReal more amountInMax');
             return;

@@ -157,7 +157,7 @@ export const calculate = async (swap: {
             const success = items[0];
             const timeDiff1 = (new Date().getTime() - timeStart.getTime())/1000;
             console.log(' TIME DIFF1 = ', timeDiff1);
-            const hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice, wallet);
+            //const hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice, wallet);
             const timeDiff2 = (new Date().getTime() - timeStart.getTime())/1000;
             console.log(' TIME DIFF2 = ', timeDiff2);
             const data = {
@@ -165,7 +165,7 @@ export const calculate = async (swap: {
                     timeDiff0, timeDiff1, timeDiff2
                 },
                 block: currentBlock,
-                hash,
+                //hash,
                 target: {
                     hash: swap.target.hash,
                     from: swap.target.from,

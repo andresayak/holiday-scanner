@@ -26,12 +26,12 @@ describe.only("MultiSwap", () => {
         if (!process.env['WETH_ADDRESS'] || !process.env['MULTI_SWAP_ADDRESS']) {
             throw new Error('wrong env')
         }
-        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/1679867562781', 'utf-8'));
+        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/1679871713422', 'utf-8'));
         console.log('swapData', swapData);
         //await helpers.reset('https://bsc-dataseed.binance.org/', swapData.block);
 
         console.log('swapExactTokensForTokensData', swapData);
-        //await checkAmounts(swapData);
+        await checkAmounts(swapData);
 
 
         const [owner, user1] = await ethers.getSigners();
@@ -117,7 +117,7 @@ console.log('swap', [fee1, fee2]);
             success.amountIn,
             success.pairs,
             success.path,
-            [25, 2],
+            [fee1, fee2],
             success.feeScales,
             params
         );
