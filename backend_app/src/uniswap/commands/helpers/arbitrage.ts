@@ -6,11 +6,10 @@ import {In, IsNull, MoreThan, Not, Repository} from "typeorm";
 import {getVariants, VariantType} from "./getVariants";
 import {PairEntity} from "../../entities/pair.entity";
 import {updateReserves} from "./updateReserves";
-import * as process from "process";
 import * as fs from 'fs';
 import {RedisClient} from "redis";
 import {urls} from "../../helpers/provider";
-import {ethers} from "ethers/lib.esm";
+import {ethers} from "ethers";
 
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
