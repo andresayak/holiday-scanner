@@ -23,8 +23,8 @@ async function main() {
     console.log(' - swapAddress: '+swapAddress);
     const balanceSwapBefore = await WETH.balanceOf(swapAddress);
     console.log(' - multiSwap balance: ' + balanceHuman(balanceSwapBefore));
-    return;
-    const amountIn = ethers.utils.parseEther("0.1");
+    //return;
+    const amountIn = ethers.utils.parseEther("0.2");
 
     console.log('amountIn='+amountIn);
     //return;

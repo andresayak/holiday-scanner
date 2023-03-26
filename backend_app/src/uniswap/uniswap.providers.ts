@@ -45,6 +45,8 @@ export const providers = [
                         url = 'ws://65.21.195.47:8545';
                     }else if(provider == 'node2'){
                         url = 'ws://65.21.192.28:58545';
+                    }else{
+                        url = provider;
                     }
                     console.log('PROVIDER: '+url);
                     return new ethers.providers.WebSocketProvider(url);
@@ -74,6 +76,8 @@ export const providers = [
                         url = 'http://65.21.195.47:8545';
                     }else if(provider == 'node2'){
                         url = 'http://65.21.192.28:58545';
+                    }else{
+                        url = provider;
                     }
 
                     console.log('PROVIDER: '+url);

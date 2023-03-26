@@ -9,6 +9,8 @@ import {updateReserves} from "./updateReserves";
 import * as process from "process";
 import * as fs from 'fs';
 import {RedisClient} from "redis";
+import {urls} from "../../helpers/provider";
+import {ethers} from "ethers/lib.esm";
 
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
@@ -233,7 +235,7 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
         if(fee2 >= 10){
             fee2++;
         }
-        const tx = await multiSwapContract.swap(
+        const txNotSigned = await multiSwapContract.populateTransaction.swap(
             success.amountIn,
             success.pairs,
             success.path,
@@ -242,6 +244,17 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
             //[success[0].amountIn, ...success[0].amountOutsMin],
             params
         );
+        const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
+        console.log('signedTx', signedTx);
+        const providers = [];
+        for(const url of urls){
+            providers.push(new ethers.providers.JsonRpcProvider(url));
+        }
+        const tx = await Promise.race(providers.map(provider=>{
+            return provider.sendTransaction(signedTx);
+        })).catch(error=>{
+            console.log('error', error);
+        })
         console.log('tx send', tx.hash);
         return tx.hash;
         //swap.hash = tx.hash;
