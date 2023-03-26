@@ -117,16 +117,17 @@ export class ScanReservesCommand {
         }
 
         new Promise(async ()=>{
-            for(let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++){
-                const logs = await Promise.race([provider.getLogs({
-                    fromBlock: blockNumber,
-                    toBlock: blockNumber
-                }), provider2.getLogs({
-                    fromBlock: blockNumber,
-                    toBlock: blockNumber
-                })]);
-                processLogs(blockNumber, logs, new Date());
-            }
+            if(lastBlock > 0)
+                for(let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++){
+                    const logs = await Promise.race([provider.getLogs({
+                        fromBlock: blockNumber,
+                        toBlock: blockNumber
+                    }), provider2.getLogs({
+                        fromBlock: blockNumber,
+                        toBlock: blockNumber
+                    })]);
+                    processLogs(blockNumber, logs, new Date());
+                }
             isSyncOld = true;
             console.log('SYNC OK');
         });
