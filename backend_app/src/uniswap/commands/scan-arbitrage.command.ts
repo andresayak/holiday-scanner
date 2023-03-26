@@ -129,16 +129,6 @@ export class ScanArbitrageCommand {
                             }
                             const json = getMethod();
                             if (json && !json.method.match(/Supporting/)) {
-                                const isWhitelist = await new Promise((done)=> {
-                                    this.redisPublisherClient.get('token_'+json.result.path[1].toLowerCase(), (err, reply)=>{
-                                        done(reply);
-                                    });
-                                });
-                                console.log('t0', (new Date().getTime() - timeStart.getTime())/1000);
-                                if(!isWhitelist){
-                                    console.log('not isWhitelist');
-                                    return ;
-                                }
                                 const deadline = (parseInt(json.result.deadline) - Math.floor(new Date().getTime() / 1000));
                                 const swap = {
                                     target, json,
@@ -266,12 +256,16 @@ export class ScanArbitrageCommand {
             });*/
         });
 
-        this.redisSubscriberClient.subscribe('pairs');
-        this.redisSubscriberClient.on('message', async (channel, data) => {
-            const json = JSON.parse(data);
+        this.startBlock = parseInt(this.envService.get('START_BLOCK'));
+        if(!this.startBlock || isNaN(this.startBlock)){
+            throw Error('START_BLOCK not set');
+        }
+        //this.redisSubscriberClient.subscribe('pairs');
+        //this.redisSubscriberClient.on('message', async (channel, data) => {
+        //    const json = JSON.parse(data);
             //console.log('json.pairs', json.pairs);
-            this.startBlock = json.blockNumber - json.liveCount;
-        });
+            //this.startBlock = json.blockNumber - json.liveCount;
+        //});
     }
 
 }

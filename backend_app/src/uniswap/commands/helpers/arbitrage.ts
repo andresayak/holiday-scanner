@@ -27,6 +27,13 @@ const swapInterface = [
 ];
 const iface = new utils.Interface(swapInterface);
 
+const checkisWhitelist = (tokenAddress: string, redisPublisherClient: RedisClient) => {
+    return new Promise((done)=> {
+        redisPublisherClient.get('token_'+tokenAddress.toLowerCase(), (err, reply)=>{
+            done(reply);
+        });
+    });
+}
 export const calculate = async (swap: {
     factory: string;
     target: TransactionResponse,
@@ -42,14 +49,17 @@ export const calculate = async (swap: {
     const token2 = swap.json.result.path[2]?.toLowerCase();
 
     const tokenInner = [];
-    if (!tokens.includes(token0)) {
+    if (!tokens.includes(token0) && await checkisWhitelist(token0, redisPublisherClient)) {
         tokenInner.push(token0);
     }
-    if (token1 && !tokens.includes(token1)) {
+    if (token1 && !tokens.includes(token1) && await checkisWhitelist(token1, redisPublisherClient)) {
         tokenInner.push(token1);
     }
-    if (token2 && !tokens.includes(token2)) {
+    if (token2 && !tokens.includes(token2) && await checkisWhitelist(token2, redisPublisherClient)) {
         tokenInner.push(token2);
+    }
+    if(!tokenInner.length){
+        return;
     }
     console.log('t1', (new Date().getTime() - timeStart.getTime())/1000);
     const pairs = await pairRepository.find({

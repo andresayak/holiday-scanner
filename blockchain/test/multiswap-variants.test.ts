@@ -11,6 +11,13 @@ const holders = {
     '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d': '0x8894e0a0c962cb723c1976a4421c95949be2d4e3',
 };
 
+const swapInterface = [
+    'event Transfer(address indexed from, address indexed to, uint256 value)',
+    'event Swap(address indexed sender, uint256 amount0In, uint256 amount1In, uint256 amount0Out, uint256 amount1Out, address indexed to)',
+    'event Sync(uint112 reserve0, uint112 reserve1)'
+];
+
+const iface = new ethers.utils.Interface(swapInterface);
 
 describe.only("MultiSwap", () => {
 
@@ -19,12 +26,12 @@ describe.only("MultiSwap", () => {
         if (!process.env['WETH_ADDRESS'] || !process.env['MULTI_SWAP_ADDRESS']) {
             throw new Error('wrong env')
         }
-        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/1679798941073', 'utf-8'));
+        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/1679867562781', 'utf-8'));
         console.log('swapData', swapData);
         //await helpers.reset('https://bsc-dataseed.binance.org/', swapData.block);
 
         console.log('swapExactTokensForTokensData', swapData);
-        await checkAmounts(swapData);
+        //await checkAmounts(swapData);
 
 
         const [owner, user1] = await ethers.getSigners();
@@ -110,13 +117,24 @@ console.log('swap', [fee1, fee2]);
             success.amountIn,
             success.pairs,
             success.path,
-            [fee1, fee2],
+            [25, 2],
             success.feeScales,
             params
         );
 
         const receipt = await tx.wait();
-        //console.log('receipt', receipt);
+        for (const event of receipt.events) {
+            //    console.log('event', event);
+            try {
+                const result = iface.decodeEventLog('Transfer', event.data, event.topics);
+                console.log({
+                    from: result.from.toLowerCase(),
+                    to: result.to.toLowerCase(),
+                    value: result.value.toString()
+                });
+            } catch (e) {
+            }
+        }
         const balance2 = await token.balanceOf(multiSwapContract.address);
 
         console.log('balance1='+balance1);

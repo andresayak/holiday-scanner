@@ -11,6 +11,15 @@ import * as WETH9Abi from '../../contracts/WETH9.json';
 import * as SwapRouter02Abi from '../../contracts/SwapRouter02.json';
 import * as process from "process";
 
+
+const swapInterface = [
+    'event Transfer(address indexed from, address indexed to, uint256 value)',
+    'event Swap(address indexed sender, uint256 amount0In, uint256 amount1In, uint256 amount0Out, uint256 amount1Out, address indexed to)',
+    'event Sync(uint112 reserve0, uint112 reserve1)'
+];
+
+const iface = new ethers.utils.Interface(swapInterface);
+
 @Injectable()
 export class TestTokensCommand {
 
@@ -51,10 +60,11 @@ export class TestTokensCommand {
             '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e'
         ];
         let count = 0;
-        while(true){
+        //while(true){
             const tokens = await this.tokenRepository.find({
                 where:{
                     isTested: IsNull()
+                    //address: '0xa57ac35ce91ee92caefaa8dc04140c8e232c2e50',
                 },
                 take: 100
             });
@@ -65,6 +75,7 @@ export class TestTokensCommand {
             const chunkSize = 20;
             for (let i = 0; i < tokens.length; i += chunkSize) {
                 const chunk = tokens.slice(i, i + chunkSize);
+                console.log('chunk', chunk, i, i + chunkSize);
                 await Promise.all(chunk.map((token, index) => {
                     const account = new Wallet(private_keys[index], provider)
                         .connect(provider);
@@ -93,7 +104,7 @@ export class TestTokensCommand {
                     })
                 }));
             }
-        }
+        //}
     }
 }
 
@@ -133,6 +144,19 @@ const testToken = async (account: Wallet, token1Address: string) => {
                 });
 
         await tx.wait();
+        const receipt = await tx.wait();
+        for (const event of receipt.events) {
+            //    console.log('event', event);
+            try {
+                const result = iface.decodeEventLog('Transfer', event.data, event.topics);
+                console.log({
+                    from: result.from.toLowerCase(),
+                    to: result.to.toLowerCase(),
+                    value: result.value.toString()
+                });
+            } catch (e) {
+            }
+        }
         const balance2 = await account.getBalance();
         console.log('balance='+balance2);
         const balance10 = await token0.balanceOf(account.address);
