@@ -45,6 +45,7 @@ export class ScanArbitrageCommand {
     openTrading = false;
     pairs: PairEntity[] = [];
     transactions = [];
+    blockUpdated: boolean;
     lastVariants: any[] | null;
     variants: any[] = [];
     lastPairs: PairsType | null;
@@ -215,7 +216,7 @@ export class ScanArbitrageCommand {
                 hash,
                 added: new Date().getTime()
             });
-            if (typeof hash == 'string') {
+            if (typeof hash == 'string' && this.blockUpdated) {
                 getTransaction(hash, this.currentBlock);
             }
         });
@@ -224,9 +225,7 @@ export class ScanArbitrageCommand {
             console.log('block', blockNumber);
             this.currentBlock = blockNumber;
             this.lastBlockTime = timeStart.getTime();
-            this.lastVariants = null;
-            this.lastPairs = null;
-            this.transactions = [];
+            this.blockUpdated = false;
             /*provider.getBlockWithTransactions(blockNumber).then((info) => {
                 let transactions = info.transactions.map(item => item.hash);
                 const items = info.transactions.filter(item => item.gasPrice.gt(0));
@@ -260,12 +259,15 @@ export class ScanArbitrageCommand {
         if(!this.startBlock || isNaN(this.startBlock)){
             throw Error('START_BLOCK not set');
         }
-        //this.redisSubscriberClient.subscribe('pairs');
-        //this.redisSubscriberClient.on('message', async (channel, data) => {
-        //    const json = JSON.parse(data);
+        this.redisSubscriberClient.subscribe('pairs');
+        this.redisSubscriberClient.on('message', async (channel, data) => {
+            const json = JSON.parse(data);
+            console.log('block', json.blockNumber, 'update', ((new Date().getTime() - this.lastBlockTime)/1000)+' sec');
+            //this.transactions = [];
+            this.blockUpdated = true;
             //console.log('json.pairs', json.pairs);
             //this.startBlock = json.blockNumber - json.liveCount;
-        //});
+        });
     }
 
 }
