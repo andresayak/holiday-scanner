@@ -224,7 +224,7 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
         const nonce = await wallet.provider.getTransactionCount(wallet.address);
         let params = {
             nonce,
-            gasLimit: BigNumber.from('2600000'),
+            gasLimit: BigNumber.from('2500000'),
             gasPrice: gasPrice,
         };
         let fee1 = success.fees[0];
@@ -236,27 +236,14 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
         if(fee2 >= 10){
             fee2++;
         }
-        const txNotSigned = await multiSwapContract.populateTransaction.swap(
+        const tx = await multiSwapContract.swap(
             success.amountIn,
             success.pairs,
             success.path,
             [fee1, fee2],
             success.feeScales,
-            //[success[0].amountIn, ...success[0].amountOutsMin],
             params
         );
-        const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
-        console.log('signedTx', signedTx);
-        const providers = [];
-        for(const url of urls){
-            providers.push(new ethers.providers.JsonRpcProvider(url));
-        }
-        const tx = await Promise.any(providers.map(provider=>{
-            return provider.sendTransaction(signedTx);
-        })).catch(error=>{
-            console.log('error', error);
-        })
-        console.log('tx send', tx.hash);
         return tx.hash;
         //swap.hash = tx.hash;
         //swap.gasPrice = success[0].gasPrice.toString();
@@ -267,4 +254,28 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
     } catch (e) {
         console.log('swap ERROR', e.toString());
     }
+}
+
+const sendRaw = async (multiSwapContract:Contract, success, fee1, fee2, params) =>{
+    const txNotSigned = await multiSwapContract.populateTransaction.swap(
+        success.amountIn,
+        success.pairs,
+        success.path,
+        [fee1, fee2],
+        success.feeScales,
+        params
+    );
+    const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
+    console.log('signedTx', signedTx);
+    const providers = [];
+    for(const url of urls){
+        providers.push(new ethers.providers.JsonRpcProvider(url));
+    }
+    const tx = await Promise.any(providers.map(provider=>{
+        return provider.sendTransaction(signedTx);
+    })).catch(error=>{
+        console.log('error', error);
+    })
+    console.log('tx send', tx.hash);
+    return tx.hash;
 }

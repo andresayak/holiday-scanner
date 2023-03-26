@@ -53,10 +53,23 @@ export class ScanReservesCommand {
         })
             provider2Name: string,
     ) {
+        const wsProvider = this.providers('ws', this.envService.get('ETH_HOST'), 'node2');
+        const provider = this.providers('http', this.envService.get('ETH_HOST'), 'chainstack');
+        const provider2 = this.providers('http', this.envService.get('ETH_HOST'), 'node2');
 
         const startWork = new Date();
-        let lastBlock = 0;
+        let lastBlock:number = await new Promise(done=>this.redisPublisherClient.get('lastBlock', (err, reply)=>{
+            const number = parseInt(reply);
+            if(number){
+                return done(number);
+            }
+            done(0);
+        }));
+        console.log('lastBlock', lastBlock);
         let liveCount = 0;
+        let lastProcessBlock = 0;
+        let currentBlock = await provider.getBlockNumber();
+        let isSyncOld = false;
 
         const processLogs = (blockNumber, logs, timeStart) => {
             liveCount++;
@@ -97,27 +110,41 @@ export class ScanReservesCommand {
                     timeStart
                 });
                 this.redisPublisherClient.publish('pairs', data, () => {
-                    console.log('sync time, pairs: '+Object.keys(pairs).length+' / '+ (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
+                    console.log('sync time, blockNumber: '+blockNumber+'; pairs: '+Object.keys(pairs).length+'; '+ (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
                 });
+                this.redisPublisherClient.set('lastBlock', blockNumber);
             })
         }
 
+        new Promise(async ()=>{
+            for(let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++){
+                const logs = await Promise.race([provider.getLogs({
+                    fromBlock: blockNumber,
+                    toBlock: blockNumber
+                }), provider2.getLogs({
+                    fromBlock: blockNumber,
+                    toBlock: blockNumber
+                })]);
+                processLogs(blockNumber, logs, new Date());
+            }
+            isSyncOld = true;
+            console.log('SYNC OK');
+        });
+
         const forceLogs = false;
-        const wsProvider = this.providers('ws', this.envService.get('ETH_HOST'), provider1Name);
-        const provider = this.providers('http', this.envService.get('ETH_HOST'), provider2Name);
-        this.redisPublisherClient.del('reserves');
-        try {
-            wsProvider.on("block", (blockNumber) => {
-                const timeStart = new Date();
-                console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount,
-                    ' live work: '+((new Date().getTime() - startWork.getTime())/1000)+' sec');
+
+        const processBlock = (blockNumber: number, timeStart: Date) => {
+            lastProcessBlock = blockNumber;
                 try {
                     new Promise(async (done) => {
                         let attempt = 0;
-                        while (true) {
+                        while (attempt <= 10) {
                             attempt++;
                             try {
                                 const logs = await Promise.race([provider.getLogs({
+                                    fromBlock: blockNumber,
+                                    toBlock: blockNumber
+                                }), provider2.getLogs({
                                     fromBlock: blockNumber,
                                     toBlock: blockNumber
                                 })]);
@@ -125,11 +152,7 @@ export class ScanReservesCommand {
                                     console.log('attems', attempt);
                                     continue;
                                 }
-                                if(attempt == 10){
-                                    break;
-                                }
                                 if (blockNumber > lastBlock) {
-                                    console.log('blockNumber', blockNumber, lastBlock + 1, blockNumber === lastBlock + 1);
                                     if (blockNumber === lastBlock + 1) {
                                         //liveCount++;
                                     } else {
@@ -155,10 +178,22 @@ export class ScanReservesCommand {
                 } catch (e) {
                     console.log('getLogs error2', e.toString());
                 }
+        };
+        this.redisPublisherClient.del('reserves');
+        try {
+            wsProvider.on("block", (blockNumber) => {
+                currentBlock = blockNumber;
+                const timeStart = new Date();
+                console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount,
+                    ' live work: '+((new Date().getTime() - startWork.getTime())/1000)+' sec');
+                if(blockNumber > lastProcessBlock && isSyncOld)
+                    processBlock(blockNumber, timeStart)
             });
         } catch (e) {
             console.log('wsProvider error', e.toString());
         }
         console.log('listening...');
     }
+
+
 }
