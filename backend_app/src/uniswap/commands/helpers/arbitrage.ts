@@ -150,16 +150,20 @@ export const calculate = async (swap: {
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
         const variants: VariantType[] = getVariants(pairs);
-        console.log('t3', (new Date().getTime() - timeStart.getTime())/1000);
         const items = processFindSuccess({variants, pairs});
-            //.filter((item)=>baselist.includes(item.path[0]));
-        console.log(' TIME DIFF0 = ', (new Date().getTime() - timeStart.getTime())/1000);
+        const timeDiff0 = (new Date().getTime() - timeStart.getTime())/1000;
+        console.log(' TIME DIFF0 = ', timeDiff0);
         if (items.length) {
             const success = items[0];
-            console.log(' TIME DIFF1 = ', (new Date().getTime() - timeStart.getTime())/1000);
+            const timeDiff1 = (new Date().getTime() - timeStart.getTime())/1000;
+            console.log(' TIME DIFF1 = ', timeDiff1);
             const hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice, wallet);
-            console.log(' TIME DIFF2 = ', (new Date().getTime() - timeStart.getTime())/1000);
+            const timeDiff2 = (new Date().getTime() - timeStart.getTime())/1000;
+            console.log(' TIME DIFF2 = ', timeDiff2);
             const data = {
+                times: {
+                    timeDiff0, timeDiff1, timeDiff2
+                },
                 block: currentBlock,
                 hash,
                 target: {
@@ -231,21 +235,21 @@ export const calculate = async (swap: {
 
 export const calculateswap = async (success, multiSwapContract: Contract, gasPrice: BigNumber, wallet: Wallet) => {
     try {
-        const nonce = await wallet.provider.getTransactionCount(wallet.address);
+        //const nonce = await wallet.provider.getTransactionCount(wallet.address);
         let params = {
-            nonce,
+            //nonce,
             gasLimit: BigNumber.from('2500000'),
             gasPrice: gasPrice,
         };
         let fee1 = success.fees[0];
         let fee2 = success.fees[1];
-
+/*
         if(fee1 >= 10){
             fee1++;
         }
         if(fee2 >= 10){
             fee2++;
-        }
+        }*/
         const tx = await multiSwapContract.swap(
             success.amountIn,
             success.pairs,
