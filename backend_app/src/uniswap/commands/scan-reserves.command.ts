@@ -125,6 +125,9 @@ export class ScanReservesCommand {
                                     console.log('attems', attempt);
                                     continue;
                                 }
+                                if(attempt == 10){
+                                    break;
+                                }
                                 if (blockNumber > lastBlock) {
                                     console.log('blockNumber', blockNumber, lastBlock + 1, blockNumber === lastBlock + 1);
                                     if (blockNumber === lastBlock + 1) {

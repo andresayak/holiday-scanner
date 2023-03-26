@@ -251,7 +251,7 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
         for(const url of urls){
             providers.push(new ethers.providers.JsonRpcProvider(url));
         }
-        const tx = await Promise.race(providers.map(provider=>{
+        const tx = await Promise.any(providers.map(provider=>{
             return provider.sendTransaction(signedTx);
         })).catch(error=>{
             console.log('error', error);
