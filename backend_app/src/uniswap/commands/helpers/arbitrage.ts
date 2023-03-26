@@ -1,4 +1,4 @@
-import {BigNumber, Contract, ContractFactory, Signer, utils} from "ethers";
+import {BigNumber, Contract, ContractFactory, Signer, utils, Wallet} from "ethers";
 import {balanceHuman, BNB_CONTRACT, getAmountIn, getAmountOut, sortTokens, tokens} from "../../helpers/calc";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {processFindSuccess, Swap} from "./processFindSuccess";
@@ -35,7 +35,7 @@ export const calculate = async (swap: {
         method: string;
     }
 }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
-        multiSwapContract: Contract, wallet: Signer, timeStart: Date, redisPublisherClient: RedisClient) => {
+        multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient) => {
     const {target} = swap;
     const token0 = swap.json.result.path[0].toLowerCase();
     const token1 = swap.json.result.path[1].toLowerCase();
@@ -147,7 +147,7 @@ export const calculate = async (swap: {
         if (items.length) {
             const success = items[0];
             console.log(' TIME DIFF1 = ', (new Date().getTime() - timeStart.getTime())/1000);
-            const hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice);
+            const hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice, wallet);
             console.log(' TIME DIFF2 = ', (new Date().getTime() - timeStart.getTime())/1000);
             const data = {
                 block: currentBlock,
@@ -219,9 +219,11 @@ export const calculate = async (swap: {
 }
 
 
-export const calculateswap = async (success, multiSwapContract: Contract, gasPrice: BigNumber) => {
+export const calculateswap = async (success, multiSwapContract: Contract, gasPrice: BigNumber, wallet: Wallet) => {
     try {
+        const nonce = await wallet.provider.getTransactionCount(wallet.address);
         let params = {
+            nonce,
             gasLimit: BigNumber.from('2600000'),
             gasPrice: gasPrice,
         };
