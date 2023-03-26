@@ -176,7 +176,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
     let success: SuccessType[] = [];
     for (const variant of variants) {
 
-        const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther("0.3") : utils.parseEther("200");
+        const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther("0.3") : utils.parseEther("30");
         let amountOutsMin = [];
         let fees = [];
         let feeScales = [];
