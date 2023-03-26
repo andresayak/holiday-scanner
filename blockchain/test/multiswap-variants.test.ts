@@ -19,7 +19,7 @@ describe.only("MultiSwap", () => {
         if (!process.env['WETH_ADDRESS'] || !process.env['MULTI_SWAP_ADDRESS']) {
             throw new Error('wrong env')
         }
-        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/1679665266458', 'utf-8'));
+        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/1679798941073', 'utf-8'));
         console.log('swapData', swapData);
         //await helpers.reset('https://bsc-dataseed.binance.org/', swapData.block);
 
@@ -30,8 +30,17 @@ describe.only("MultiSwap", () => {
         const [owner, user1] = await ethers.getSigners();
         const {success, block, target, after, before} = swapData;
 
+        //0x68e6548F3E6975AE78959a46620240D71c3B8A27
+
+        //const multiSwapContract = await ethers.getContractAt('MultiSwapV2', '0x68e6548F3E6975AE78959a46620240D71c3B8A27', user1);
+        //const ownerOfContract = await multiSwapContract.owner();
+
+        //await helpers.impersonateAccount(ownerOfContract);
+        //const ownerSigner = await ethers.getSigner(ownerOfContract);
+
         const multiSwapContract = await (await ethers.getContractFactory("MultiSwapV2")).connect(owner).deploy();
         await multiSwapContract.deployed();
+
 
         const params = {
             gasLimit: BigNumber.from('700000'),
@@ -89,13 +98,19 @@ describe.only("MultiSwap", () => {
             console.log('K');
         }*/
 
+        let fee1 = success.fees[0];
+        let fee2 = success.fees[1];
+
+
         //return;
-console.log('swap');
-        const tx = await multiSwapContract.swap(
+console.log('swap', [fee1, fee2]);
+        const tx = await multiSwapContract
+            //.connect(ownerSigner)
+            .swap(
             success.amountIn,
             success.pairs,
             success.path,
-            [2, 26],//success.fees,
+            [fee1, fee2],
             success.feeScales,
             params
         );
