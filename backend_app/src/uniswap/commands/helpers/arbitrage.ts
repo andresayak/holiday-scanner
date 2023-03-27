@@ -45,6 +45,7 @@ export const calculate = async (swap: {
         providers: JsonRpcProvider[],
         nonce: number, upNonce: ()=>void
 ) => {
+    const timeProcessing = (new Date().getTime() - timeStart.getTime())/1000;
     const {target} = swap;
     const token0 = swap.json.result.path[0].toLowerCase();
     const token1 = swap.json.result.path[1].toLowerCase();
@@ -63,7 +64,6 @@ export const calculate = async (swap: {
     if(!tokenInner.length){
         return;
     }
-    console.log('t1', (new Date().getTime() - timeStart.getTime())/1000);
     const pairs = await pairRepository.find({
         where: [{
             network,
@@ -80,7 +80,8 @@ export const calculate = async (swap: {
         }]
     });
 
-    const timeFetch = (new Date().getTime() - timeStart.getTime())/1000;/*
+    const timeFetch = (new Date().getTime() - timeStart.getTime())/1000;
+    /*
     const pairs = [];
     const promises = [];
     for(const t1 of baselist){
@@ -174,9 +175,14 @@ export const calculate = async (swap: {
                 }
             }
             const timeDiff2 = (new Date().getTime() - timeStart.getTime())/1000;
-            console.log(' TIME DIFF2 = ', timeDiff2);
+            console.log('times:', {
+                timeProcessing,
+                timeFetch,
+                timeDiff0, timeDiff1, timeDiff2, timing
+            });
             const data = {
                 times: {
+                    timeProcessing,
                     timeFetch,
                     timeDiff0, timeDiff1, timeDiff2, timing
                 },
