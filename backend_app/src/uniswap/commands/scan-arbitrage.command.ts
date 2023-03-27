@@ -1,6 +1,6 @@
 import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
-import {BigNumber, Contract, ContractFactory, utils, Wallet} from 'ethers';
+import {BigNumber, Contract, ContractFactory, ethers, utils, Wallet} from 'ethers';
 import {In, Repository, MoreThan, Not, IsNull} from "typeorm";
 import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
@@ -13,6 +13,7 @@ import {RouterEntity} from "../entities/router.entity";
 import {PairsType, VariantType} from "./helpers/getVariants";
 import * as MultiSwapAbi from "../../contracts/MultiSwapV2.json";
 import {calculate} from './helpers/arbitrage';
+import {urls} from "../helpers/provider";
 
 
 const swapInterface = [
@@ -107,6 +108,11 @@ export class ScanArbitrageCommand {
         console.log(' - account address: ' + wallet.address);
         console.log(' - account balance: ' + balanceHuman(balance));
 
+        const providers = [];
+        for(const url of urls){
+            providers.push(new ethers.providers.JsonRpcProvider(url));
+        }
+
         const multiSwapAddress = this.envService.get('MULTI_SWAP_ADDRESS');
         const multiSwapContract = ContractFactory.getContract(multiSwapAddress, MultiSwapAbi.abi, wallet);
         console.log('multiSwapAddress=', multiSwapAddress);
@@ -143,7 +149,7 @@ export class ScanArbitrageCommand {
                                 };
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
-                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode);
+                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers);
                                 }catch (e) {
                                     console.log(e)
                                 }

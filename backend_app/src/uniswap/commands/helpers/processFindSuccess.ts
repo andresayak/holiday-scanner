@@ -175,7 +175,6 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
     const {variants, pairs} = props;
     let success: SuccessType[] = [];
     for (const variant of variants) {
-
         const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther("0.3") : utils.parseEther("30");
         let amountOutsMin = [];
         let fees = [];
@@ -202,11 +201,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
         const real = amountIn.mul(profit).div(1000);
         const profitNumber = parseInt(profit.toString()) / 100;
-        console.log({
-            profit: profitNumber,
-            profit_real: balanceHuman(real, variant.path[0])
-        });
-        if (status && profitNumber >= 1) {
+        if (status && profitNumber >= 0.5) {
             success.push({
                 amountIn: amountIn.toString(),
                 amountOut: amountOut.toString(),

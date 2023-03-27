@@ -8,8 +8,7 @@ import {PairEntity} from "../../entities/pair.entity";
 import {updateReserves} from "./updateReserves";
 import * as fs from 'fs';
 import {RedisClient} from "redis";
-import {urls} from "../../helpers/provider";
-import {ethers} from "ethers";
+import { JsonRpcProvider } from "@ethersproject/providers";
 
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
@@ -42,7 +41,9 @@ export const calculate = async (swap: {
         method: string;
     }
 }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
-        multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean) => {
+        multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean,
+        providers: JsonRpcProvider[]
+) => {
     const {target} = swap;
     const token0 = swap.json.result.path[0].toLowerCase();
     const token1 = swap.json.result.path[1].toLowerCase();
@@ -158,16 +159,21 @@ export const calculate = async (swap: {
             const timeDiff1 = (new Date().getTime() - timeStart.getTime())/1000;
             console.log(' TIME DIFF1 = ', timeDiff1);
             let hash = '';
+            let timing;
             if(isTestMode){
                 console.log('TEST MODE ENABLED');
             }else{
-                hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice, wallet);
+                const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, wallet, providers);
+                if(sendResult){
+                    hash = sendResult.hash;
+                    timing = sendResult.timing;
+                }
             }
             const timeDiff2 = (new Date().getTime() - timeStart.getTime())/1000;
             console.log(' TIME DIFF2 = ', timeDiff2);
             const data = {
                 times: {
-                    timeDiff0, timeDiff1, timeDiff2
+                    timeDiff0, timeDiff1, timeDiff2, timing
                 },
                 block: currentBlock,
                 hash,
@@ -238,11 +244,11 @@ export const calculate = async (swap: {
 }
 
 
-export const calculateswap = async (success, multiSwapContract: Contract, gasPrice: BigNumber, wallet: Wallet) => {
+export const calculateswap = async (success, multiSwapContract: Contract, gasPrice: BigNumber, wallet: Wallet, providers: JsonRpcProvider[]) => {
     try {
-        //const nonce = await wallet.provider.getTransactionCount(wallet.address);
+        const nonce = await wallet.provider.getTransactionCount(wallet.address);
         let params = {
-            //nonce,
+            nonce,
             gasLimit: BigNumber.from('2500000'),
             gasPrice: gasPrice,
         };
@@ -275,7 +281,22 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
     }
 }
 
-const sendRaw = async (multiSwapContract:Contract, success, fee1, fee2, params) =>{
+const calculateswapRaw = async (success, multiSwapContract: Contract, gasPrice: BigNumber, wallet: Wallet, providers: JsonRpcProvider[]) =>{
+
+    const timeStart = new Date().getTime();
+    const nonce = await wallet.provider.getTransactionCount(wallet.address);
+    const timing:any = {
+        nonce: (new Date().getTime() - timeStart)/1000
+    };
+    let params = {
+        nonce,
+        gasLimit: BigNumber.from('2500000'),
+        gasPrice: gasPrice,
+    };
+
+    let fee1 = success.fees[0];
+    let fee2 = success.fees[1];
+
     const txNotSigned = await multiSwapContract.populateTransaction.swap(
         success.amountIn,
         success.pairs,
@@ -285,16 +306,15 @@ const sendRaw = async (multiSwapContract:Contract, success, fee1, fee2, params) 
         params
     );
     const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
-    console.log('signedTx', signedTx);
-    const providers = [];
-    for(const url of urls){
-        providers.push(new ethers.providers.JsonRpcProvider(url));
-    }
+    timing.sign = (new Date().getTime() - timeStart)/1000;
     const tx = await Promise.any(providers.map(provider=>{
         return provider.sendTransaction(signedTx);
     })).catch(error=>{
         console.log('error', error);
-    })
-    console.log('tx send', tx.hash);
-    return tx.hash;
+    });
+    if(tx){
+        console.log('tx send', tx.hash);
+        timing.send = (new Date().getTime() - timeStart)/1000;
+        return {hash: tx.hash, timing};
+    }
 }
