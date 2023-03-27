@@ -189,7 +189,7 @@ export const calculate = async (swap: {
                 }, before, after, success
             };
             console.log('data', JSON.stringify(data));
-            fs.writeFileSync("/var/www/backend_app/storage/swaps/" + (new Date().getTime()), JSON.stringify(data, null, "\t"));
+            fs.writeFileSync("/var/www/backend_app/storage/swaps/"+currentBlock+ "-" + (new Date().getTime()), JSON.stringify(data, null, "\t"));
             console.log('success', success);
 
             console.log('gasPrice=' + swap.target.gasPrice);
