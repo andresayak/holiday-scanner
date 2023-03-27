@@ -64,23 +64,22 @@ export const calculate = async (swap: {
     if(!tokenInner.length){
         return;
     }
-    const pairs = await pairRepository.find({
+    const timeFetchRedis = (new Date().getTime() - timeStart.getTime())/1000;
+    const pairs = (await pairRepository.find({
         where: [{
             network,
             blockNumber: MoreThan(startBlock),
-            fee: Not(IsNull()),
             token0: In(tokens),
-            token1: In(tokenInner)
+            token1: In(tokenInner),
         }, {
             network,
             blockNumber: MoreThan(startBlock),
-            fee: Not(IsNull()),
             token1: In(tokens),
             token0: In(tokenInner),
         }]
-    });
+    })).filter(item=>item.fee);
 
-    const timeFetch = (new Date().getTime() - timeStart.getTime())/1000;
+    const timeFetchDb = (new Date().getTime() - timeStart.getTime())/1000;
     /*
     const pairs = [];
     const promises = [];
@@ -102,7 +101,8 @@ export const calculate = async (swap: {
         }
     }
     await Promise.all(promises);*/
-    console.log('t2', (new Date().getTime() - timeStart.getTime())/1000);
+    console.log('timeFetchRedis', timeFetchRedis)
+    console.log('timeFetchRedis', timeFetchDb)
     console.log('pairs', pairs.length);
     if (pairs.length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
         const pair1 = pairs.find((pair) => pair.factory == swap.factory && (
@@ -177,13 +177,15 @@ export const calculate = async (swap: {
             const timeDiff2 = (new Date().getTime() - timeStart.getTime())/1000;
             console.log('times:', {
                 timeProcessing,
-                timeFetch,
+                timeFetchRedis,
+                timeFetchDb,
                 timeDiff0, timeDiff1, timeDiff2, timing
             });
             const data = {
                 times: {
                     timeProcessing,
-                    timeFetch,
+                    timeFetchRedis,
+                    timeFetchDb,
                     timeDiff0, timeDiff1, timeDiff2, timing
                 },
                 block: currentBlock,
