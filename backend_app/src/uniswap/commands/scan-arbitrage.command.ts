@@ -103,7 +103,11 @@ export class ScanArbitrageCommand {
         const provider = this.providers('http', this.envService.get('ETH_NETWORK'), provider2Name);
         let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
 
+        let nonce = await wallet.provider.getTransactionCount(wallet.address);
 
+        const upNonce = () => {
+            nonce++;
+        }
         const balance = await wallet.getBalance();
         console.log(' - account address: ' + wallet.address);
         console.log(' - account balance: ' + balanceHuman(balance));
@@ -149,7 +153,7 @@ export class ScanArbitrageCommand {
                                 };
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
-                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers);
+                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce);
                                 }catch (e) {
                                     console.log(e)
                                 }
@@ -221,14 +225,6 @@ export class ScanArbitrageCommand {
 
         }
         wsProvider.on("pending", (hash) => {
-            const timeStart = new Date();
-            /*
-            this.transactions.push({
-                txIndex: ++txIndex,
-                currentBlock: this.currentBlock,
-                hash,
-                added: new Date().getTime()
-            });*/
             if (typeof hash == 'string' && this.blockUpdated) {
                 getTransaction(hash, this.currentBlock);
             }

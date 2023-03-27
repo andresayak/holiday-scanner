@@ -42,7 +42,8 @@ export const calculate = async (swap: {
     }
 }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
         multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean,
-        providers: JsonRpcProvider[]
+        providers: JsonRpcProvider[],
+        nonce: number, upNonce: ()=>void
 ) => {
     const {target} = swap;
     const token0 = swap.json.result.path[0].toLowerCase();
@@ -77,7 +78,9 @@ export const calculate = async (swap: {
             token1: In(tokens),
             token0: In(tokenInner),
         }]
-    });/*
+    });
+
+    const timeFetch = (new Date().getTime() - timeStart.getTime())/1000;/*
     const pairs = [];
     const promises = [];
     for(const t1 of baselist){
@@ -163,8 +166,9 @@ export const calculate = async (swap: {
             if(isTestMode){
                 console.log('TEST MODE ENABLED');
             }else{
-                const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, wallet, providers);
+                const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers);
                 if(sendResult){
+                    upNonce();
                     hash = sendResult.hash;
                     timing = sendResult.timing;
                 }
@@ -173,6 +177,7 @@ export const calculate = async (swap: {
             console.log(' TIME DIFF2 = ', timeDiff2);
             const data = {
                 times: {
+                    timeFetch,
                     timeDiff0, timeDiff1, timeDiff2, timing
                 },
                 block: currentBlock,
@@ -244,9 +249,8 @@ export const calculate = async (swap: {
 }
 
 
-export const calculateswap = async (success, multiSwapContract: Contract, gasPrice: BigNumber, wallet: Wallet, providers: JsonRpcProvider[]) => {
+export const calculateswap = async (success, multiSwapContract: Contract, gasPrice: BigNumber, nonce: number, providers: JsonRpcProvider[]) => {
     try {
-        const nonce = await wallet.provider.getTransactionCount(wallet.address);
         let params = {
             nonce,
             gasLimit: BigNumber.from('2500000'),
@@ -281,12 +285,10 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
     }
 }
 
-const calculateswapRaw = async (success, multiSwapContract: Contract, gasPrice: BigNumber, wallet: Wallet, providers: JsonRpcProvider[]) =>{
+const calculateswapRaw = async (success, multiSwapContract: Contract, gasPrice: BigNumber, nonce: number, providers: JsonRpcProvider[]) =>{
 
     const timeStart = new Date().getTime();
-    const nonce = await wallet.provider.getTransactionCount(wallet.address);
     const timing:any = {
-        nonce: (new Date().getTime() - timeStart)/1000
     };
     let params = {
         nonce,
