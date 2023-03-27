@@ -202,7 +202,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
         const real = amountIn.mul(profit).div(1000);
         const profitNumber = parseInt(profit.toString()) / 100;
-        if (status && profitNumber > 0) {
+        if (status && profitNumber >= 1) {
             success.push({
                 amountIn: amountIn.toString(),
                 amountOut: amountOut.toString(),

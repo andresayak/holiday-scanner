@@ -13,6 +13,7 @@ import {ImportPairsCommand} from "./import-pairs.command";
 import {ScanTokensContractsCommand} from "./scan-tokens-contracts.command";
 import {TestTokensCommand} from "./test-tokens.command";
 import {SyncTokensCommand} from "./sync-tokens.command";
+import {TestSwapCommand} from "./test-swap.command";
 
 export default [
     ScanTransactionsCommand,
@@ -29,5 +30,6 @@ export default [
     ScanTestCommand,
     ScanTokensContractsCommand,
     TestTokensCommand,
-    SyncTokensCommand
+    SyncTokensCommand,
+    TestSwapCommand
 ];

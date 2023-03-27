@@ -26,7 +26,11 @@ describe.only("MultiSwap", () => {
         if (!process.env['WETH_ADDRESS'] || !process.env['MULTI_SWAP_ADDRESS']) {
             throw new Error('wrong env')
         }
-        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/1679871713422', 'utf-8'));
+        //fails: 1679876409757, 1679876425490
+        const filename = '1679873825429';
+        const swapData = JSON.parse(fs.readFileSync('../volumes/storage/swaps/'+filename, 'utf-8'));
+        await helpers.reset(`https://rpc.ankr.com/bsc/${process.env.ANKR_PROVIDER_KEY}`, swapData.block);
+
         console.log('swapData', swapData);
         //await helpers.reset('https://bsc-dataseed.binance.org/', swapData.block);
 

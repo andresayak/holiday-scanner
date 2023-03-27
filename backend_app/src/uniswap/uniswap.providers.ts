@@ -7,7 +7,8 @@ import {RedisClient} from 'redis';
 import {ethers} from "ethers";
 import {RouterEntity} from "./entities/router.entity";
 
-export type EthProviderFactoryType = (type: 'ws' | 'http', network?: string, provider?: string) => ethers.providers.BaseProvider;
+export type EthProviderFactoryType = (type: 'ws' | 'http', network?: string, provider?: string)
+    => (ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider);
 
 export const providers = [
     {

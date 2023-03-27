@@ -74,10 +74,15 @@ export class ScanArbitrageCommand {
     }
 
     @Command({
-        command: 'scan:arbitrage <provider1Name> <provider2Name>',
+        command: 'scan:arbitrage <isTestMode> <provider1Name> <provider2Name>',
         autoExit: false
     })
     async create(
+        @Positional({
+            name: 'isTestMode',
+            type: 'boolean'
+        })
+            isTestMode: boolean = false,
         @Positional({
             name: 'provider1Name',
             type: 'string'
@@ -138,7 +143,7 @@ export class ScanArbitrageCommand {
                                 };
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
-                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient);
+                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode);
                                 }catch (e) {
                                     console.log(e)
                                 }

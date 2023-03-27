@@ -52,7 +52,7 @@ module.exports = {
             allowUnlimitedContractSize: true,
             forking: {
                 url: `https://rpc.ankr.com/bsc/${process.env.ANKR_PROVIDER_KEY}`,
-                blockNumber: 26812128
+                blockNumber: 26813613
             },
             mining: {
               auto: true,

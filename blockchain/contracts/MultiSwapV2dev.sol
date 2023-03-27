@@ -2,6 +2,7 @@
 pragma solidity =0.6.6;
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+import "hardhat/console.sol";
 
 interface IERC20 {
     function balanceOf(address owner) external view returns (uint);
@@ -58,6 +59,8 @@ contract MultiSwapV2 {
     onlyOwner
     {
         uint[] memory amounts = getAmountsOut(pairs, amountIn, path, fee, fee_scale);
+        console.log('amount1', amounts[1]);
+        console.log('amount2', amounts[2]);
         if(amounts[2]>=amountIn){
             uint[] storage amounts0;
             amounts0.push(amountIn);
@@ -81,6 +84,7 @@ contract MultiSwapV2 {
             (address token0,) = sortTokens(path[i], path[i + 1]);
             (uint amount0Out, uint amount1Out) = path[i] == token0 ? (uint(0), amounts[i+1]) : (uint(amounts[i+1]), uint(0));
             address to = i < path.length - 2 ? pairs[i + 1] : address(this);
+            console.log('swap', pairs[i], amount0Out, amount1Out);
             IUniswapV2Pair(pairs[i]).swap(
                 amount0Out, amount1Out, to, new bytes(0)
             );

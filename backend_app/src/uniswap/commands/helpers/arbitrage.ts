@@ -42,7 +42,7 @@ export const calculate = async (swap: {
         method: string;
     }
 }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
-        multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient) => {
+        multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean) => {
     const {target} = swap;
     const token0 = swap.json.result.path[0].toLowerCase();
     const token1 = swap.json.result.path[1].toLowerCase();
@@ -157,7 +157,12 @@ export const calculate = async (swap: {
             const success = items[0];
             const timeDiff1 = (new Date().getTime() - timeStart.getTime())/1000;
             console.log(' TIME DIFF1 = ', timeDiff1);
-            //const hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice, wallet);
+            let hash = '';
+            if(isTestMode){
+                console.log('TEST MODE ENABLED');
+            }else{
+                hash = await calculateswap(success, multiSwapContract, swap.target.gasPrice, wallet);
+            }
             const timeDiff2 = (new Date().getTime() - timeStart.getTime())/1000;
             console.log(' TIME DIFF2 = ', timeDiff2);
             const data = {
@@ -165,7 +170,7 @@ export const calculate = async (swap: {
                     timeDiff0, timeDiff1, timeDiff2
                 },
                 block: currentBlock,
-                //hash,
+                hash,
                 target: {
                     hash: swap.target.hash,
                     from: swap.target.from,
