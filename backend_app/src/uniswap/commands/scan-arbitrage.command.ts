@@ -108,13 +108,13 @@ export class ScanArbitrageCommand {
         const getTransaction = async (hash, addedBlock: number) => {
             const timeStart = new Date();
             let attems = 0;
-            while (true) {
+            while (attems < 10) {
                 try {
                     const target: TransactionResponse | null = await wsProvider.getTransaction(hash);
                     if (target && target.to && target.nonce!==null) {
                         const router = routers.find((router) => router.address.toLowerCase() === target.to.toLowerCase())
-                        if (target.gasPrice.gt('1000000000') && router) {
-                            console.log('t', (new Date().getTime() - timeStart.getTime())/1000);
+                        if (target.gasPrice.gt('5000000000') && router) {
+                            console.log('t', (new Date().getTime() - timeStart.getTime())/1000, 'attems: '+attems);
                             const getMethod = () => {
                                 for (const method of methods) {
                                     let result;
@@ -150,6 +150,7 @@ export class ScanArbitrageCommand {
                     }
                 } catch (e) {
                     console.log('error', e.toString());
+                    return;
                 }
             }
         }
@@ -210,12 +211,13 @@ export class ScanArbitrageCommand {
         }
         wsProvider.on("pending", (hash) => {
             const timeStart = new Date();
+            /*
             this.transactions.push({
                 txIndex: ++txIndex,
                 currentBlock: this.currentBlock,
                 hash,
                 added: new Date().getTime()
-            });
+            });*/
             if (typeof hash == 'string' && this.blockUpdated) {
                 getTransaction(hash, this.currentBlock);
             }
