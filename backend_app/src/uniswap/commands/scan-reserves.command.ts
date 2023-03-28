@@ -1,7 +1,7 @@
 import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {utils} from 'ethers';
-import {IsNull, Not, Repository} from "typeorm";
+import {Repository} from "typeorm";
 import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
@@ -9,6 +9,7 @@ import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
 import {EthProviderFactoryType} from "../uniswap.providers";
 import { Timeout } from '@nestjs/schedule';
+import * as process from "process";
 
 @Injectable()
 export class ScanReservesCommand {
@@ -34,29 +35,23 @@ export class ScanReservesCommand {
 
     @Timeout(5000)
     async cron(){
-        //await this.create('node2', 'node2');
+        if(process.env.NODE_ENV == 'production')
+            await this.create('chainstack');
     }
 
     @Command({
-        command: 'scan:reserves <provider1Name> <provider2Name>',
+        command: 'scan:reserves <providerName>',
         autoExit: false
     })
     async create(
         @Positional({
-            name: 'provider1Name',
+            name: 'providerName',
             type: 'string'
         })
-            provider1Name: string,
-        @Positional({
-            name: 'provider2Name',
-            type: 'string'
-        })
-            provider2Name: string,
+            providerName: string,
     ) {
-        const wsProvider = this.providers('ws', this.envService.get('ETH_HOST'), 'node2');
-        const provider = this.providers('http', this.envService.get('ETH_HOST'), 'chainstack');
-        const provider2 = this.providers('http', this.envService.get('ETH_HOST'), 'node2');
-
+        const provider = this.providers('http', this.envService.get('ETH_HOST'), providerName);
+        const providers = [provider];
         const startWork = new Date();
         let lastBlock:number = await new Promise(done=>this.redisPublisherClient.get('lastBlock', (err, reply)=>{
             const number = parseInt(reply);
@@ -65,6 +60,7 @@ export class ScanReservesCommand {
             }
             done(0);
         }));
+
         console.log('lastBlock', lastBlock);
         let liveCount = 0;
         let lastProcessBlock = 0;
@@ -119,13 +115,10 @@ export class ScanReservesCommand {
         new Promise(async ()=>{
             if(lastBlock > 0)
                 for(let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++){
-                    const logs = await Promise.race([provider.getLogs({
+                    const logs = await Promise.any(providers.map(provider=>provider.getLogs({
                         fromBlock: blockNumber,
                         toBlock: blockNumber
-                    }), provider2.getLogs({
-                        fromBlock: blockNumber,
-                        toBlock: blockNumber
-                    })]);
+                    })));
                     processLogs(blockNumber, logs, new Date());
                 }
             isSyncOld = true;
@@ -142,13 +135,10 @@ export class ScanReservesCommand {
                         while (attempt <= 10) {
                             attempt++;
                             try {
-                                const logs = await Promise.race([provider.getLogs({
+                                const logs = await Promise.any(providers.map(provider=>provider.getLogs({
                                     fromBlock: blockNumber,
                                     toBlock: blockNumber
-                                }), provider2.getLogs({
-                                    fromBlock: blockNumber,
-                                    toBlock: blockNumber
-                                })]);
+                                })));
                                 if (!logs || !logs.length) {
                                     console.log('attems', attempt);
                                     continue;
@@ -182,7 +172,7 @@ export class ScanReservesCommand {
         };
         this.redisPublisherClient.del('reserves');
         try {
-            wsProvider.on("block", (blockNumber) => {
+            provider.on("block", (blockNumber) => {
                 currentBlock = blockNumber;
                 const timeStart = new Date();
                 console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount,
