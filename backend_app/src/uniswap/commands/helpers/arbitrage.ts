@@ -33,6 +33,31 @@ const checkisWhitelist = (tokenAddress: string, redisPublisherClient: RedisClien
         });
     });
 }
+
+const checkVariants = async (tokensAddress: string[], redisPublisherClient: RedisClient): Promise<VariantType[]> => {
+    const items: VariantType[] = [];
+    await Promise.all(tokensAddress.map(tokenAddress=>{
+        return new Promise((done)=> {
+            redisPublisherClient.get('variants_'+tokenAddress, (err, reply)=>{
+                if(reply){
+                    const data = JSON.parse(reply);
+                    if(data){
+                        for(const variant of data.variants){
+                            items.push({
+                                path: [
+                                    variant.token, tokenAddress, variant.token,
+                                ],
+                                pairs: variant.pairs
+                            })
+                        }
+                    }
+                }
+                done(true);
+            });
+        });
+    }));
+    return items;
+}
 export const calculate = async (swap: {
     factory: string;
     target: TransactionResponse,
@@ -46,26 +71,34 @@ export const calculate = async (swap: {
         nonce: number, upNonce: ()=>void
 ) => {
     const timeProcessing = (new Date().getTime() - timeStart.getTime())/1000;
+    console.log('timeProcessing', timeProcessing);
     const {target} = swap;
     const token0 = swap.json.result.path[0].toLowerCase();
     const token1 = swap.json.result.path[1].toLowerCase();
     const token2 = swap.json.result.path[2]?.toLowerCase();
 
     const tokenInner = [];
-    if (!tokens.includes(token0) && await checkisWhitelist(token0, redisPublisherClient)) {
+
+    if (!tokens.includes(token0)) {
         tokenInner.push(token0);
     }
-    if (token1 && !tokens.includes(token1) && await checkisWhitelist(token1, redisPublisherClient)) {
+    if (token1 && !tokens.includes(token1)) {
         tokenInner.push(token1);
     }
-    if (token2 && !tokens.includes(token2) && await checkisWhitelist(token2, redisPublisherClient)) {
+    if (token2 && !tokens.includes(token2)) {
         tokenInner.push(token2);
     }
+
     if(!tokenInner.length){
         return;
     }
-    const timeFetchRedis = (new Date().getTime() - timeStart.getTime())/1000;
-    const pairs = (await pairRepository.find({
+    const variants = await checkVariants(tokenInner, redisPublisherClient);
+
+    if(!variants.length){
+        console.log('not variants');
+        return;
+    }
+    /*const pairs = (await pairRepository.find({
         where: [{
             network,
             blockNumber: MoreThan(startBlock),
@@ -77,35 +110,40 @@ export const calculate = async (swap: {
             token1: In(tokens),
             token0: In(tokenInner),
         }]
-    })).filter(item=>item.fee);
+    })).filter(item=>item.fee);*/
 
-    const timeFetchDb = (new Date().getTime() - timeStart.getTime())/1000;
-    /*
-    const pairs = [];
-    const promises = [];
-    for(const t1 of baselist){
-        for(const t2 of tokenInner){
-            const [token0, token1] = sortTokens(t1, t2);
-            promises.push(new Promise((done)=> {
-                redisPublisherClient.get('pair_'+token0+'_'+token1, (err, reply)=>{
-                    if(reply){
+    const pairs:{[k: string]: PairEntity} = {};
+    let allPairs = []
+    for(const variant of variants){
+        allPairs = [...allPairs, ...variant.pairs];
+    }
+    allPairs = allPairs.filter((value, index, array) => array.indexOf(value) === index);
+    await Promise.all(allPairs.map(pairAddress=>{
+        return new Promise((done)=> {
+            redisPublisherClient.get('pair_'+pairAddress, (err, reply)=>{
+                if(reply){
+                    try {
                         const data = JSON.parse(reply);
                         if(data && data.blockNumber>=startBlock){
-                            pairs.push(data);
+                            pairs[data.address] = data;
                             return done(true);
                         }
-                    }
-                    done(true);
-                });
-            }));
-        }
+                    }catch (e) {}
+                }
+                done(true);
+            });
+        });
+    }));
+
+    const timeFetch = (new Date().getTime() - timeStart.getTime())/1000;
+    console.log('timeFetch', timeFetch)
+    if(!Object.keys(pairs).length){
+        console.log('not pairs');
+        return;
     }
-    await Promise.all(promises);*/
-    console.log('timeFetchRedis', timeFetchRedis)
-    console.log('timeFetchRedis', timeFetchDb)
-    console.log('pairs', pairs.length);
-    if (pairs.length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
-        const pair1 = pairs.find((pair) => pair.factory == swap.factory && (
+    console.log('pairs',  pairs);
+    if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
+        const pair1 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
         ));
         if (!pair1) {
@@ -128,7 +166,7 @@ export const calculate = async (swap: {
         console.log('amountInMax=' + amountInMax, balanceHuman(amountInMax));
         let pair2;
         if (token2) {
-            pair2 = pairs.find((pair) => pair.factory == swap.factory && (
+            pair2 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
                 (pair.token0 == token1 && pair.token1 == token2) || (pair.token1 == token1 && pair.token0 == token2)
             ));
             if (!pair2) {
@@ -154,7 +192,7 @@ export const calculate = async (swap: {
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
-        const variants: VariantType[] = getVariants(pairs);
+        //const variants: VariantType[] = getVariants(pairs);
         const items = processFindSuccess({variants, pairs});
         const timeDiff0 = (new Date().getTime() - timeStart.getTime())/1000;
         console.log(' TIME DIFF0 = ', timeDiff0);
@@ -177,15 +215,13 @@ export const calculate = async (swap: {
             const timeDiff2 = (new Date().getTime() - timeStart.getTime())/1000;
             console.log('times:', {
                 timeProcessing,
-                timeFetchRedis,
-                timeFetchDb,
+                timeFetch,
                 timeDiff0, timeDiff1, timeDiff2, timing
             });
             const data = {
                 times: {
                     timeProcessing,
-                    timeFetchRedis,
-                    timeFetchDb,
+                    timeFetch,
                     timeDiff0, timeDiff1, timeDiff2, timing
                 },
                 block: currentBlock,

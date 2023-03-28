@@ -231,7 +231,8 @@ export class ScanArbitrageCommand {
         });
         wsProvider.on("block", (blockNumber) => {
             const timeStart = new Date();
-            console.log('block', blockNumber);
+            const used = process.memoryUsage().heapUsed / 1024 / 1024;
+            console.log('block', blockNumber, `memory ${Math.round(used * 100) / 100} MB`);
             this.currentBlock = blockNumber;
             this.lastBlockTime = timeStart.getTime();
             this.blockUpdated = false;

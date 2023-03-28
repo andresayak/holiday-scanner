@@ -14,6 +14,7 @@ import {ScanTokensContractsCommand} from "./scan-tokens-contracts.command";
 import {TestTokensCommand} from "./test-tokens.command";
 import {SyncTokensCommand} from "./sync-tokens.command";
 import {TestSwapCommand} from "./test-swap.command";
+import {ScanVariantsCommand} from "./scan-variants.command";
 
 export default [
     ScanTransactionsCommand,
@@ -27,6 +28,7 @@ export default [
     ImportTokensCommand,
     ImportPairsCommand,
     ScanArbitrageCommand,
+    ScanVariantsCommand,
     ScanTestCommand,
     ScanTokensContractsCommand,
     TestTokensCommand,

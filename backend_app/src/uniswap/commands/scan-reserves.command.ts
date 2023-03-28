@@ -81,19 +81,34 @@ export class ScanReservesCommand {
             }
             Promise.all(Object.entries(pairs).map(([pairAddress, result])=>{
                 return new Promise(async (done)=>{
-                    const pair = await this.pairRepository.findOne({
-                        where: {
-                            address: pairAddress
+                    let pairData:any = await new Promise((fetch)=>this.redisPublisherClient.get('pair_'+pairAddress, (err, reply)=>{
+                        if(reply){
+                            const data = JSON.parse(reply);
+                            if(data){
+                                fetch(data)
+                            }
                         }
-                    });
-                    if(pair && pair.fee){
-                        pair.fill({
+                        fetch(null);
+                    }));
+                    if(!pairData || !pairData.address){
+                        const pair = await this.pairRepository.findOne({
+                            where: {
+                                address: pairAddress
+                            }
+                        });
+                        if(pair && pair.fee){
+                            pairData = pair.toJSON();
+                        }
+                    }
+                    if(pairData){
+                        pairData = {...pairData,
                             blockNumber,
-                            reserve0: result[0].toString(),
-                            reserve1: result[1].toString(),
-                        })
-                        await this.pairRepository.save(pair);
-                        await new Promise((save)=>this.redisPublisherClient.set('pair_'+pair.token0+'_'+pair.token1, JSON.stringify(pair), save));
+                                reserve0: result[0].toString(),
+                                reserve1: result[1].toString(),
+                        };
+                        //await this.pairRepository.save(pair);
+                        await new Promise((save)=>this.redisPublisherClient.set('pair_'+pairData.token0+'_'+pairData.token1, JSON.stringify(pairData), save));
+                        await new Promise((save)=>this.redisPublisherClient.set('pair_'+pairData.address, JSON.stringify(pairData), save));
                     }
                     done(true);
                 });
@@ -175,8 +190,9 @@ export class ScanReservesCommand {
             provider.on("block", (blockNumber) => {
                 currentBlock = blockNumber;
                 const timeStart = new Date();
+                const used = process.memoryUsage().heapUsed / 1024 / 1024;
                 console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount,
-                    ' live work: '+((new Date().getTime() - startWork.getTime())/1000)+' sec');
+                    ' live work: '+((new Date().getTime() - startWork.getTime())/1000)+' sec',  `memory ${Math.round(used * 100) / 100} MB`);
                 if(blockNumber > lastProcessBlock && isSyncOld)
                     processBlock(blockNumber, timeStart)
             });

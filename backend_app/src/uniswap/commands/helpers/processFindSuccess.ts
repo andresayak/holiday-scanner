@@ -22,7 +22,7 @@ export type SuccessType = {
 }
 type PropsType = {
     variants: VariantType[];
-    pairs: PairEntity[];
+    pairs: {[k: string]:PairEntity};
     onlyPairs?: string[]
     //gasPrice: BigNumber;
     //gasLimit: BigNumber;
@@ -117,6 +117,7 @@ const updateReserves = (prev, factory, updatePairs, token0: string, token1: stri
     }
     return null;
 }
+/*
 export const processSwap = (props: SwapPropsType): SuccessType[] => {
     const {variants, pairs, swaps} = props;
     let success: SuccessType[] = [];
@@ -170,8 +171,9 @@ export const processSwap = (props: SwapPropsType): SuccessType[] => {
     }
     return success
         .sort((a, b) => (b.profit - a.profit));
-}
+}*/
 export const processFindSuccess = (props: PropsType): SuccessType[] => {
+    console.log('processFindSuccess');
     const {variants, pairs} = props;
     let success: SuccessType[] = [];
     for (const variant of variants) {
@@ -180,28 +182,39 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         let fees = [];
         let feeScales = [];
         let reservers = [];
-        let status = true;
         for (const index in variant.pairs) {
             const pairAddress = variant.pairs[index];
-            const pair = pairs.find(pair => pair.address == pairAddress);
-            if (pair) {
+            if (pairs[pairAddress]) {
+                const pair = pairs[pairAddress];
                 const token0 = variant.path[index];
                 const reserve0 = BigNumber.from(token0 == pair.token0 ? pair.reserve0 : pair.reserve1);
                 const reserve1 = BigNumber.from(token0 == pair.token0 ? pair.reserve1 : pair.reserve0);
+                console.log('amountOutsMin', amountOutsMin, parseInt(index));
                 const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
+                console.log('amountInCurrent', amountInCurrent);
                 amountOutsMin.push(getAmountOut(amountInCurrent, reserve0, reserve1, parseInt(pair.fee), parseInt(pair.fee_scale)));
                 reservers.push([reserve0, reserve1]);
                 fees.push(pair.fee);
                 feeScales.push(pair.fee_scale);
+            }else{
+                console.log('pairAddress not found', pairAddress);
+                break;
             }
         }
+        if(amountOutsMin.length == 0 || reservers.length!=2){
+            continue;
+        }
+        console.log('amountOutsMin', amountOutsMin);
         const amountOut = BigNumber.from(amountOutsMin[amountOutsMin.length - 1]);
+        console.log('amountOut', amountOut);
         //const _gasPrice = gasPrice.add(gasPrice.mul(30).div(100));
         //const gas = _gasPrice.mul(gasLimit);
         const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
         const real = amountIn.mul(profit).div(1000);
         const profitNumber = parseInt(profit.toString()) / 100;
-        if (status && profitNumber >= 0.5) {
+        console.log('profitNumber', profitNumber);
+        if (profitNumber >= 0.5) {
+console.log('variant', variant, reservers);
             success.push({
                 amountIn: amountIn.toString(),
                 amountOut: amountOut.toString(),
