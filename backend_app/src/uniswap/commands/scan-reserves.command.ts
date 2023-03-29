@@ -50,167 +50,168 @@ export class ScanReservesCommand {
         })
             providerName: string,
     ) {
-        const provider = this.providers(this.envService.get('ETH_HOST'), providerName);
-        const providers = [provider];
-        const startWork = new Date();
-        let lastBlock: number = await new Promise(done => this.redisPublisherClient.get('lastBlock', (err, reply) => {
-            const number = parseInt(reply);
-            if (number) {
-                return done(number);
-            }
-            done(0);
-        }));
 
-        console.log('lastBlock', lastBlock);
-        let liveCount = 0;
-        let lastProcessBlock = 0;
-        let currentBlock = await provider.getBlockNumber();
-        console.log('currentBlock', currentBlock);
-        let isSyncOld = false;
-
-        const processLogs = (blockNumber, logs, timeStart) => {
-            const startSave = new Date().getTime();
-            liveCount++;
-
-            let pairs = {};
-            for (const event of logs) {
-                try {
-                    const result = this.iface.decodeEventLog('Sync', event.data, event.topics);
-                    pairs[event.address.toLowerCase()] = result;
-                } catch (e) {
-
-                }
-            }
-            Promise.all(Object.entries(pairs).map(([pairAddress, result]) => {
-                return new Promise(async (done) => {
-                    let pairData: any = await new Promise((fetch) => this.redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
-                        if (reply) {
-                            const data = JSON.parse(reply);
-                            if (data) {
-                                fetch(data)
-                            }
-                        }
-                        fetch(null);
-                    }));
-                    if (!pairData || !pairData.address) {
-                        const pair = await this.pairRepository.findOne({
-                            where: {
-                                address: pairAddress
-                            }
-                        });
-                        if (pair && pair.fee) {
-                            pairData = pair.toJSON();
-                        }
+        while (true) {
+            await new Promise(async (errorWebsocket) => {
+                const provider = this.providers(this.envService.get('ETH_HOST'), providerName);
+                const providers = [provider];
+                const startWork = new Date();
+                let lastBlock: number = await new Promise(done => this.redisPublisherClient.get('lastBlock', (err, reply) => {
+                    const number = parseInt(reply);
+                    if (number) {
+                        return done(number);
                     }
-                    if (pairData) {
-                        pairData = {
-                            ...pairData,
-                            blockNumber,
-                            reserve0: result[0].toString(),
-                            reserve1: result[1].toString(),
-                        };
-                        //await this.pairRepository.save(pair);
-                        await new Promise((save) => this.redisPublisherClient.set('pair_' + pairData.token0 + '_' + pairData.token1, JSON.stringify(pairData), save));
-                        await new Promise((save) => this.redisPublisherClient.set('pair_' + pairData.address, JSON.stringify(pairData), save));
-                    }
-                    done(true);
-                });
+                    done(0);
+                }));
 
-            })).then(() => {
-                const data = JSON.stringify({
-                    pairs,
-                    blockNumber,
-                    liveCount,
-                    timeStart
-                });
-                this.redisPublisherClient.publish('pairs', data, () => {
-                    console.log('save', ((new Date().getTime() - startSave) / 1000) + ' sec');
-                    console.log('sync time, blockNumber: ' + blockNumber + '; pairs: ' + Object.keys(pairs).length + '; ' + (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
-                });
-                this.redisPublisherClient.set('lastBlock', blockNumber);
-            })
-        }
+                console.log('lastBlock', lastBlock);
+                let liveCount = 0;
+                let lastProcessBlock = 0;
+                let currentBlock = await provider.getBlockNumber();
+                console.log('currentBlock', currentBlock);
+                let isSyncOld = false;
 
-        new Promise(async () => {
-            if (lastBlock > 0)
-                for (let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++) {
-                    const logs = await Promise.any(providers.map(provider => provider.getLogs({
-                        fromBlock: blockNumber,
-                        toBlock: blockNumber
-                    })));
-                    processLogs(blockNumber, logs, new Date());
-                }
-            isSyncOld = true;
-            console.log('SYNC OK');
-        });
+                const processLogs = (blockNumber, logs, timeStart) => {
+                    const startSave = new Date().getTime();
+                    liveCount++;
 
-        const forceLogs = false;
-
-        const processBlock = (blockNumber: number, timeStart: Date) => {
-            lastProcessBlock = blockNumber;
-            try {
-                new Promise(async (done) => {
-                    let attempt = 0;
-                    while (attempt <= 10) {
-                        attempt++;
+                    let pairs = {};
+                    for (const event of logs) {
                         try {
+                            const result = this.iface.decodeEventLog('Sync', event.data, event.topics);
+                            pairs[event.address.toLowerCase()] = result;
+                        } catch (e) {
+
+                        }
+                    }
+                    Promise.all(Object.entries(pairs).map(([pairAddress, result]) => {
+                        return new Promise(async (done) => {
+                            let pairData: any = await new Promise((fetch) => this.redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
+                                if (reply) {
+                                    const data = JSON.parse(reply);
+                                    if (data) {
+                                        fetch(data)
+                                    }
+                                }
+                                fetch(null);
+                            }));
+                            if (!pairData || !pairData.address) {
+                                const pair = await this.pairRepository.findOne({
+                                    where: {
+                                        address: pairAddress
+                                    }
+                                });
+                                if (pair && pair.fee) {
+                                    pairData = pair.toJSON();
+                                }
+                            }
+                            if (pairData) {
+                                pairData = {
+                                    ...pairData,
+                                    blockNumber,
+                                    reserve0: result[0].toString(),
+                                    reserve1: result[1].toString(),
+                                };
+                                //await this.pairRepository.save(pair);
+                                await new Promise((save) => this.redisPublisherClient.set('pair_' + pairData.token0 + '_' + pairData.token1, JSON.stringify(pairData), save));
+                                await new Promise((save) => this.redisPublisherClient.set('pair_' + pairData.address, JSON.stringify(pairData), save));
+                            }
+                            done(true);
+                        });
+
+                    })).then(() => {
+                        const data = JSON.stringify({
+                            pairs,
+                            blockNumber,
+                            liveCount,
+                            timeStart
+                        });
+                        this.redisPublisherClient.publish('pairs', data, () => {
+                            console.log('save', ((new Date().getTime() - startSave) / 1000) + ' sec');
+                            console.log('sync time, blockNumber: ' + blockNumber + '; pairs: ' + Object.keys(pairs).length + '; ' + (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
+                        });
+                        this.redisPublisherClient.set('lastBlock', blockNumber);
+                    })
+                }
+
+                new Promise(async () => {
+                    if (lastBlock > 0)
+                        for (let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++) {
                             const logs = await Promise.any(providers.map(provider => provider.getLogs({
                                 fromBlock: blockNumber,
                                 toBlock: blockNumber
                             })));
-                            if (!logs || !logs.length) {
-                                console.log('attems', attempt);
-                                continue;
-                            }
-                            if (blockNumber > lastBlock) {
-                                if (blockNumber === lastBlock + 1) {
-                                    //liveCount++;
-                                } else {
-                                    liveCount = 1;
-                                }
-                            }
-                            attempt = 0;
-                            console.log('fetch logs [' + blockNumber + '] count: ' + logs.length + ', attempt: ' + attempt);
-                            if (forceLogs || blockNumber > lastBlock) {
-                                processLogs(blockNumber, logs, timeStart);
-                            }
-                            lastBlock = blockNumber;
-                        } catch (e) {
-                            console.log(e);
-                            continue;
+                            processLogs(blockNumber, logs, new Date());
                         }
-
-                        break;
-                    }
-                    return done(true);
+                    isSyncOld = true;
+                    console.log('SYNC OK');
                 });
 
-            } catch (e) {
-                console.log('getLogs error2', e.toString());
-            }
-        };
-        this.redisPublisherClient.del('reserves');
-        try {
-            provider.on("block", (blockNumber) => {
-                currentBlock = blockNumber;
-                const timeStart = new Date();
-                const used = process.memoryUsage().heapUsed / 1024 / 1024;
-                console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount,
-                    ' live work: ' + ((new Date().getTime() - startWork.getTime()) / 1000) + ' sec', `memory ${Math.round(used * 100) / 100} MB`);
-                if (blockNumber > lastProcessBlock && isSyncOld)
-                    processBlock(blockNumber, timeStart)
+                const forceLogs = false;
+
+                const processBlock = (blockNumber: number, timeStart: Date) => {
+                    lastProcessBlock = blockNumber;
+                    try {
+                        new Promise(async (done) => {
+                            let attempt = 0;
+                            while (attempt <= 10) {
+                                attempt++;
+                                try {
+                                    const logs = await Promise.any(providers.map(provider => provider.getLogs({
+                                        fromBlock: blockNumber,
+                                        toBlock: blockNumber
+                                    })));
+                                    if (!logs || !logs.length) {
+                                        console.log('attems', attempt);
+                                        continue;
+                                    }
+                                    if (blockNumber > lastBlock) {
+                                        if (blockNumber === lastBlock + 1) {
+                                            //liveCount++;
+                                        } else {
+                                            liveCount = 1;
+                                        }
+                                    }
+                                    attempt = 0;
+                                    console.log('fetch logs [' + blockNumber + '] count: ' + logs.length + ', attempt: ' + attempt);
+                                    if (forceLogs || blockNumber > lastBlock) {
+                                        processLogs(blockNumber, logs, timeStart);
+                                    }
+                                    lastBlock = blockNumber;
+                                } catch (e) {
+                                    console.log(e);
+                                    continue;
+                                }
+
+                                break;
+                            }
+                            return done(true);
+                        });
+
+                    } catch (e) {
+                        console.log('getLogs error2', e.toString());
+                    }
+                };
+                this.redisPublisherClient.del('reserves');
+                try {
+                    provider.on("block", (blockNumber) => {
+                        currentBlock = blockNumber;
+                        const timeStart = new Date();
+                        const used = process.memoryUsage().heapUsed / 1024 / 1024;
+                        console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount,
+                            ' live work: ' + ((new Date().getTime() - startWork.getTime()) / 1000) + ' sec', `memory ${Math.round(used * 100) / 100} MB`);
+                        if (blockNumber > lastProcessBlock && isSyncOld)
+                            processBlock(blockNumber, timeStart)
+                    });
+                    provider._websocket.on('close', async (code) => {
+                        console.log('websocket error', code);
+                        errorWebsocket(true);
+                    });
+                } catch (e) {
+                    console.log('wsProvider error', e.toString());
+                }
+                console.log('listening...');
             });
-            provider._websocket.on('close', async (code) => {
-                console.log('close', code);
-                setTimeout(()=>{
-                    provider._websocket.connect();
-                }, 1000);
-            });
-        } catch (e) {
-            console.log('wsProvider error', e.toString());
         }
-        console.log('listening...');
     }
-
-
 }
