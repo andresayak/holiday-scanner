@@ -8,7 +8,7 @@ import {PairEntity} from "../../entities/pair.entity";
 import {updateReserves} from "./updateReserves";
 import * as fs from 'fs';
 import {RedisClient} from "redis";
-import { JsonRpcProvider } from "@ethersproject/providers";
+import {JsonRpcProvider} from "@ethersproject/providers";
 
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
@@ -27,8 +27,8 @@ const swapInterface = [
 const iface = new utils.Interface(swapInterface);
 
 const checkisWhitelist = (tokenAddress: string, redisPublisherClient: RedisClient) => {
-    return new Promise((done)=> {
-        redisPublisherClient.get('token_'+tokenAddress.toLowerCase(), (err, reply)=>{
+    return new Promise((done) => {
+        redisPublisherClient.get('token_' + tokenAddress.toLowerCase(), (err, reply) => {
             done(reply);
         });
     });
@@ -36,13 +36,13 @@ const checkisWhitelist = (tokenAddress: string, redisPublisherClient: RedisClien
 
 const checkVariants = async (tokensAddress: string[], redisPublisherClient: RedisClient): Promise<VariantType[]> => {
     const items: VariantType[] = [];
-    await Promise.all(tokensAddress.map(tokenAddress=>{
-        return new Promise((done)=> {
-            redisPublisherClient.get('variants_'+tokenAddress, (err, reply)=>{
-                if(reply){
+    await Promise.all(tokensAddress.map(tokenAddress => {
+        return new Promise((done) => {
+            redisPublisherClient.get('variants_' + tokenAddress, (err, reply) => {
+                if (reply) {
                     const data = JSON.parse(reply);
-                    if(data){
-                        for(const variant of data.variants){
+                    if (data) {
+                        for (const variant of data.variants) {
                             items.push({
                                 path: [
                                     variant.token, tokenAddress, variant.token,
@@ -59,18 +59,18 @@ const checkVariants = async (tokensAddress: string[], redisPublisherClient: Redi
     return items;
 }
 export const calculate = async (swap: {
-    factory: string;
-    target: TransactionResponse,
-    json: {
-        result: Swap,
-        method: string;
-    }
-}, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
-        multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean,
-        providers: JsonRpcProvider[],
-        nonce: number, upNonce: ()=>void
+                                    factory: string;
+                                    target: TransactionResponse,
+                                    json: {
+                                        result: Swap,
+                                        method: string;
+                                    }
+                                }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
+                                multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean,
+                                providers: JsonRpcProvider[],
+                                nonce: number, upNonce: () => void, chainId: number
 ) => {
-    const timeProcessing = (new Date().getTime() - timeStart.getTime())/1000;
+    const timeProcessing = (new Date().getTime() - timeStart.getTime()) / 1000;
     console.log('timeProcessing', timeProcessing);
     const {target} = swap;
     const token0 = swap.json.result.path[0].toLowerCase();
@@ -89,12 +89,12 @@ export const calculate = async (swap: {
         tokenInner.push(token2);
     }
 
-    if(!tokenInner.length){
+    if (!tokenInner.length) {
         return;
     }
     const variants = await checkVariants(tokenInner, redisPublisherClient);
 
-    if(!variants.length){
+    if (!variants.length) {
         console.log('not variants');
         return;
     }
@@ -112,36 +112,37 @@ export const calculate = async (swap: {
         }]
     })).filter(item=>item.fee);*/
 
-    const pairs:{[k: string]: PairEntity} = {};
+    const pairs: { [k: string]: PairEntity } = {};
     let allPairs = []
-    for(const variant of variants){
+    for (const variant of variants) {
         allPairs = [...allPairs, ...variant.pairs];
     }
     allPairs = allPairs.filter((value, index, array) => array.indexOf(value) === index);
-    await Promise.all(allPairs.map(pairAddress=>{
-        return new Promise((done)=> {
-            redisPublisherClient.get('pair_'+pairAddress, (err, reply)=>{
-                if(reply){
+    await Promise.all(allPairs.map(pairAddress => {
+        return new Promise((done) => {
+            redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
+                if (reply) {
                     try {
                         const data = JSON.parse(reply);
-                        if(data && data.blockNumber>=startBlock){
+                        if (data && data.blockNumber >= startBlock) {
                             pairs[data.address] = data;
                             return done(true);
                         }
-                    }catch (e) {}
+                    } catch (e) {
+                    }
                 }
                 done(true);
             });
         });
     }));
 
-    const timeFetch = (new Date().getTime() - timeStart.getTime())/1000;
+    const timeFetch = (new Date().getTime() - timeStart.getTime()) / 1000;
     console.log('timeFetch', timeFetch)
-    if(!Object.keys(pairs).length){
+    if (!Object.keys(pairs).length) {
         console.log('not pairs');
         return;
     }
-    console.log('pairs',  Object.keys(pairs).length);
+    console.log('pairs', Object.keys(pairs).length);
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
         const pair1 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
@@ -194,25 +195,25 @@ export const calculate = async (swap: {
         }
         //const variants: VariantType[] = getVariants(pairs);
         const items = processFindSuccess({variants, pairs});
-        const timeDiff0 = (new Date().getTime() - timeStart.getTime())/1000;
+        const timeDiff0 = (new Date().getTime() - timeStart.getTime()) / 1000;
         console.log(' TIME DIFF0 = ', timeDiff0);
         if (items.length) {
             const success = items[0];
-            const timeDiff1 = (new Date().getTime() - timeStart.getTime())/1000;
+            const timeDiff1 = (new Date().getTime() - timeStart.getTime()) / 1000;
             console.log(' TIME DIFF1 = ', timeDiff1);
             let hash = '';
             let timing;
-            if(isTestMode){
+            if (isTestMode) {
                 console.log('TEST MODE ENABLED');
-            }else{
-                const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers);
-                if(sendResult){
+            } else {
+                const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
+                if (sendResult) {
                     upNonce();
                     hash = sendResult.hash;
                     timing = sendResult.timing;
                 }
             }
-            const timeDiff2 = (new Date().getTime() - timeStart.getTime())/1000;
+            const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
             console.log('times:', {
                 timeProcessing,
                 timeFetch,
@@ -244,7 +245,7 @@ export const calculate = async (swap: {
                 }, before, after, success
             };
             console.log('data', JSON.stringify(data));
-            fs.writeFileSync("/var/www/backend_app/storage/swaps/"+currentBlock+ "-" + (new Date().getTime()), JSON.stringify(data, null, "\t"));
+            fs.writeFileSync("/var/www/backend_app/storage/swaps/" + currentBlock + "-" + (new Date().getTime()), JSON.stringify(data, null, "\t"));
             console.log('success', success);
 
             console.log('gasPrice=' + swap.target.gasPrice);
@@ -302,13 +303,13 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
         };
         let fee1 = success.fees[0];
         let fee2 = success.fees[1];
-/*
-        if(fee1 >= 10){
-            fee1++;
-        }
-        if(fee2 >= 10){
-            fee2++;
-        }*/
+        /*
+                if(fee1 >= 10){
+                    fee1++;
+                }
+                if(fee2 >= 10){
+                    fee2++;
+                }*/
         const tx = await multiSwapContract.swap(
             success.amountIn,
             success.pairs,
@@ -329,11 +330,12 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
     }
 }
 
-const calculateswapRaw = async (success, multiSwapContract: Contract, gasPrice: BigNumber, nonce: number, providers: JsonRpcProvider[]) =>{
+const calculateswapRaw = async (success, multiSwapContract: Contract,
+                                gasPrice: BigNumber, nonce: number,
+                                providers: JsonRpcProvider[], chainId: number) => {
 
     const timeStart = new Date().getTime();
-    const timing:any = {
-    };
+    const timing: any = {};
     let params = {
         nonce,
         gasLimit: BigNumber.from('2500000'),
@@ -351,16 +353,14 @@ const calculateswapRaw = async (success, multiSwapContract: Contract, gasPrice: 
         success.feeScales,
         params
     );
+    txNotSigned.chainId = chainId;
     const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
-    timing.sign = (new Date().getTime() - timeStart)/1000;
-    const tx = await Promise.any(providers.map(provider=>{
-        return provider.sendTransaction(signedTx);
-    })).catch(error=>{
-        console.log('error', error);
-    });
-    if(tx){
+    timing.sign = (new Date().getTime() - timeStart) / 1000;
+
+    const tx = await multiSwapContract.provider.sendTransaction(signedTx);
+    if (tx) {
         console.log('tx send', tx.hash);
-        timing.send = (new Date().getTime() - timeStart)/1000;
+        timing.send = (new Date().getTime() - timeStart) / 1000;
         return {hash: tx.hash, timing};
     }
 }

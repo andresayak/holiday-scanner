@@ -101,6 +101,9 @@ export class ScanArbitrageCommand {
         const startWork = new Date();
         const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), provider1Name);
         const provider = this.providers('http', this.envService.get('ETH_NETWORK'), provider2Name);
+        const providerForSend = new ethers.providers.JsonRpcProvider( this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
+
+        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID'))
         let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
 
         let nonce = await wallet.provider.getTransactionCount(wallet.address);
@@ -153,7 +156,9 @@ export class ScanArbitrageCommand {
                                 };
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
-                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce);
+                                        multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce,
+                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID'))
+                                    );
                                 }catch (e) {
                                     console.log(e)
                                 }
