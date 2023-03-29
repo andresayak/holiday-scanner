@@ -69,6 +69,7 @@ export class ScanReservesCommand {
         let isSyncOld = false;
 
         const processLogs = (blockNumber, logs, timeStart) => {
+            const startSave = new Date().getTime();
             liveCount++;
 
             let pairs = {};
@@ -123,6 +124,7 @@ export class ScanReservesCommand {
                     timeStart
                 });
                 this.redisPublisherClient.publish('pairs', data, () => {
+                    console.log('save', ((new Date().getTime() - startSave) / 1000) + ' sec');
                     console.log('sync time, blockNumber: ' + blockNumber + '; pairs: ' + Object.keys(pairs).length + '; ' + (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
                 });
                 this.redisPublisherClient.set('lastBlock', blockNumber);
