@@ -194,7 +194,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                 fees.push(pair.fee);
                 feeScales.push(pair.fee_scale);
             }else{
-                console.log('pairAddress not found', pairAddress);
+                //console.log('pairAddress not found', pairAddress);
                 break;
             }
         }

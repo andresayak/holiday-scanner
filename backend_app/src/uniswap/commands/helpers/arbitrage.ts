@@ -141,7 +141,7 @@ export const calculate = async (swap: {
         console.log('not pairs');
         return;
     }
-    console.log('pairs',  pairs);
+    console.log('pairs',  Object.keys(pairs).length);
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
         const pair1 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
