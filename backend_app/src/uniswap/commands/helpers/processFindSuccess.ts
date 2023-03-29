@@ -173,7 +173,6 @@ export const processSwap = (props: SwapPropsType): SuccessType[] => {
         .sort((a, b) => (b.profit - a.profit));
 }*/
 export const processFindSuccess = (props: PropsType): SuccessType[] => {
-    console.log('processFindSuccess');
     const {variants, pairs} = props;
     let success: SuccessType[] = [];
     for (const variant of variants) {
@@ -189,9 +188,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                 const token0 = variant.path[index];
                 const reserve0 = BigNumber.from(token0 == pair.token0 ? pair.reserve0 : pair.reserve1);
                 const reserve1 = BigNumber.from(token0 == pair.token0 ? pair.reserve1 : pair.reserve0);
-                console.log('amountOutsMin', amountOutsMin, parseInt(index));
                 const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
-                console.log('amountInCurrent', amountInCurrent);
                 amountOutsMin.push(getAmountOut(amountInCurrent, reserve0, reserve1, parseInt(pair.fee), parseInt(pair.fee_scale)));
                 reservers.push([reserve0, reserve1]);
                 fees.push(pair.fee);
@@ -204,17 +201,13 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         if(amountOutsMin.length == 0 || reservers.length!=2){
             continue;
         }
-        console.log('amountOutsMin', amountOutsMin);
         const amountOut = BigNumber.from(amountOutsMin[amountOutsMin.length - 1]);
-        console.log('amountOut', amountOut);
         //const _gasPrice = gasPrice.add(gasPrice.mul(30).div(100));
         //const gas = _gasPrice.mul(gasLimit);
         const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
         const real = amountIn.mul(profit).div(1000);
         const profitNumber = parseInt(profit.toString()) / 100;
-        console.log('profitNumber', profitNumber);
         if (profitNumber >= 0.5) {
-console.log('variant', variant, reservers);
             success.push({
                 amountIn: amountIn.toString(),
                 amountOut: amountOut.toString(),
