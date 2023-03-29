@@ -8,8 +8,9 @@ import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
 import {EthProviderFactoryType} from "../uniswap.providers";
-import { Timeout } from '@nestjs/schedule';
+import {Timeout} from '@nestjs/schedule';
 import * as process from "process";
+import {WebSocketProvider} from "@ethersproject/providers";
 
 @Injectable()
 export class ScanReservesCommand {
@@ -34,9 +35,9 @@ export class ScanReservesCommand {
     }
 
     @Timeout(5000)
-    async cron(){
-        if(process.env.NODE_ENV == 'production')
-            await this.create('chainstack');
+    async cron() {
+        //if (process.env.NODE_ENV == 'production')
+        //    await this.create('chainstack');
     }
 
     @Command({
@@ -50,12 +51,12 @@ export class ScanReservesCommand {
         })
             providerName: string,
     ) {
-        const provider = this.providers('http', this.envService.get('ETH_HOST'), providerName);
+        const provider = this.providers('ws', this.envService.get('ETH_HOST'), providerName);
         const providers = [provider];
         const startWork = new Date();
-        let lastBlock:number = await new Promise(done=>this.redisPublisherClient.get('lastBlock', (err, reply)=>{
+        let lastBlock: number = await new Promise(done => this.redisPublisherClient.get('lastBlock', (err, reply) => {
             const number = parseInt(reply);
-            if(number){
+            if (number) {
                 return done(number);
             }
             done(0);
@@ -79,41 +80,42 @@ export class ScanReservesCommand {
 
                 }
             }
-            Promise.all(Object.entries(pairs).map(([pairAddress, result])=>{
-                return new Promise(async (done)=>{
-                    let pairData:any = await new Promise((fetch)=>this.redisPublisherClient.get('pair_'+pairAddress, (err, reply)=>{
-                        if(reply){
+            Promise.all(Object.entries(pairs).map(([pairAddress, result]) => {
+                return new Promise(async (done) => {
+                    let pairData: any = await new Promise((fetch) => this.redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
+                        if (reply) {
                             const data = JSON.parse(reply);
-                            if(data){
+                            if (data) {
                                 fetch(data)
                             }
                         }
                         fetch(null);
                     }));
-                    if(!pairData || !pairData.address){
+                    if (!pairData || !pairData.address) {
                         const pair = await this.pairRepository.findOne({
                             where: {
                                 address: pairAddress
                             }
                         });
-                        if(pair && pair.fee){
+                        if (pair && pair.fee) {
                             pairData = pair.toJSON();
                         }
                     }
-                    if(pairData){
-                        pairData = {...pairData,
+                    if (pairData) {
+                        pairData = {
+                            ...pairData,
                             blockNumber,
-                                reserve0: result[0].toString(),
-                                reserve1: result[1].toString(),
+                            reserve0: result[0].toString(),
+                            reserve1: result[1].toString(),
                         };
                         //await this.pairRepository.save(pair);
-                        await new Promise((save)=>this.redisPublisherClient.set('pair_'+pairData.token0+'_'+pairData.token1, JSON.stringify(pairData), save));
-                        await new Promise((save)=>this.redisPublisherClient.set('pair_'+pairData.address, JSON.stringify(pairData), save));
+                        await new Promise((save) => this.redisPublisherClient.set('pair_' + pairData.token0 + '_' + pairData.token1, JSON.stringify(pairData), save));
+                        await new Promise((save) => this.redisPublisherClient.set('pair_' + pairData.address, JSON.stringify(pairData), save));
                     }
                     done(true);
                 });
 
-            })).then(()=>{
+            })).then(() => {
                 const data = JSON.stringify({
                     pairs,
                     blockNumber,
@@ -121,16 +123,16 @@ export class ScanReservesCommand {
                     timeStart
                 });
                 this.redisPublisherClient.publish('pairs', data, () => {
-                    console.log('sync time, blockNumber: '+blockNumber+'; pairs: '+Object.keys(pairs).length+'; '+ (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
+                    console.log('sync time, blockNumber: ' + blockNumber + '; pairs: ' + Object.keys(pairs).length + '; ' + (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
                 });
                 this.redisPublisherClient.set('lastBlock', blockNumber);
             })
         }
 
-        new Promise(async ()=>{
-            if(lastBlock > 0)
-                for(let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++){
-                    const logs = await Promise.any(providers.map(provider=>provider.getLogs({
+        new Promise(async () => {
+            if (lastBlock > 0)
+                for (let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++) {
+                    const logs = await Promise.any(providers.map(provider => provider.getLogs({
                         fromBlock: blockNumber,
                         toBlock: blockNumber
                     })));
@@ -144,46 +146,46 @@ export class ScanReservesCommand {
 
         const processBlock = (blockNumber: number, timeStart: Date) => {
             lastProcessBlock = blockNumber;
-                try {
-                    new Promise(async (done) => {
-                        let attempt = 0;
-                        while (attempt <= 10) {
-                            attempt++;
-                            try {
-                                const logs = await Promise.any(providers.map(provider=>provider.getLogs({
-                                    fromBlock: blockNumber,
-                                    toBlock: blockNumber
-                                })));
-                                if (!logs || !logs.length) {
-                                    console.log('attems', attempt);
-                                    continue;
-                                }
-                                if (blockNumber > lastBlock) {
-                                    if (blockNumber === lastBlock + 1) {
-                                        //liveCount++;
-                                    } else {
-                                        liveCount = 1;
-                                    }
-                                }
-                                attempt=0;
-                                console.log('fetch logs [' + blockNumber + '] count: ' + logs.length + ', attempt: ' + attempt);
-                                if (forceLogs || blockNumber > lastBlock) {
-                                    processLogs(blockNumber, logs, timeStart);
-                                }
-                                lastBlock = blockNumber;
-                            }catch (e) {
-                                console.log(e);
+            try {
+                new Promise(async (done) => {
+                    let attempt = 0;
+                    while (attempt <= 10) {
+                        attempt++;
+                        try {
+                            const logs = await Promise.any(providers.map(provider => provider.getLogs({
+                                fromBlock: blockNumber,
+                                toBlock: blockNumber
+                            })));
+                            if (!logs || !logs.length) {
+                                console.log('attems', attempt);
                                 continue;
                             }
-
-                            break;
+                            if (blockNumber > lastBlock) {
+                                if (blockNumber === lastBlock + 1) {
+                                    //liveCount++;
+                                } else {
+                                    liveCount = 1;
+                                }
+                            }
+                            attempt = 0;
+                            console.log('fetch logs [' + blockNumber + '] count: ' + logs.length + ', attempt: ' + attempt);
+                            if (forceLogs || blockNumber > lastBlock) {
+                                processLogs(blockNumber, logs, timeStart);
+                            }
+                            lastBlock = blockNumber;
+                        } catch (e) {
+                            console.log(e);
+                            continue;
                         }
-                        return done(true);
-                    });
 
-                } catch (e) {
-                    console.log('getLogs error2', e.toString());
-                }
+                        break;
+                    }
+                    return done(true);
+                });
+
+            } catch (e) {
+                console.log('getLogs error2', e.toString());
+            }
         };
         this.redisPublisherClient.del('reserves');
         try {
@@ -192,8 +194,8 @@ export class ScanReservesCommand {
                 const timeStart = new Date();
                 const used = process.memoryUsage().heapUsed / 1024 / 1024;
                 console.log(timeStart, ' --------- new block [' + blockNumber + '] live blocks: ' + liveCount,
-                    ' live work: '+((new Date().getTime() - startWork.getTime())/1000)+' sec',  `memory ${Math.round(used * 100) / 100} MB`);
-                if(blockNumber > lastProcessBlock && isSyncOld)
+                    ' live work: ' + ((new Date().getTime() - startWork.getTime()) / 1000) + ' sec', `memory ${Math.round(used * 100) / 100} MB`);
+                if (blockNumber > lastProcessBlock && isSyncOld)
                     processBlock(blockNumber, timeStart)
             });
         } catch (e) {
