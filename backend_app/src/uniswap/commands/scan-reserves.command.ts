@@ -200,9 +200,6 @@ export class ScanReservesCommand {
                 if (blockNumber > lastProcessBlock && isSyncOld)
                     processBlock(blockNumber, timeStart)
             });
-            provider.on('close', (error)=>{
-                console.log('error', error)
-            });
             provider._websocket.on('close', async (code) => {
                 console.log('close', code);
                 setTimeout(()=>{
