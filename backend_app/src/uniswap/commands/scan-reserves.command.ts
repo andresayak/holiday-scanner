@@ -7,7 +7,7 @@ import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
-import {EthProviderFactoryType} from "../uniswap.providers";
+import {EthProviderFactoryType, EthWebsocketProviderFactoryType} from "../uniswap.providers";
 import {Timeout} from '@nestjs/schedule';
 import * as process from "process";
 import {WebSocketProvider} from "@ethersproject/providers";
@@ -23,8 +23,8 @@ export class ScanReservesCommand {
                 private readonly redisPublisherClient: RedisClient,
                 @Inject('PAIR_REPOSITORY')
                 private readonly pairRepository: Repository<PairEntity>,
-                @Inject('ETH_PROVIDERS')
-                private readonly providers: EthProviderFactoryType
+                @Inject('ETH_WS_PROVIDER_FACTORY')
+                private readonly providers: EthWebsocketProviderFactoryType
     ) {
 
         const swapInterface = [
@@ -51,7 +51,7 @@ export class ScanReservesCommand {
         })
             providerName: string,
     ) {
-        const provider = this.providers('ws', this.envService.get('ETH_HOST'), providerName);
+        const provider = this.providers(this.envService.get('ETH_HOST'), providerName);
         const providers = [provider];
         const startWork = new Date();
         let lastBlock: number = await new Promise(done => this.redisPublisherClient.get('lastBlock', (err, reply) => {
@@ -199,6 +199,15 @@ export class ScanReservesCommand {
                     ' live work: ' + ((new Date().getTime() - startWork.getTime()) / 1000) + ' sec', `memory ${Math.round(used * 100) / 100} MB`);
                 if (blockNumber > lastProcessBlock && isSyncOld)
                     processBlock(blockNumber, timeStart)
+            });
+            provider.on('close', (error)=>{
+                console.log('error', error)
+            });
+            provider._websocket.on('close', async (code) => {
+                console.log('close', code);
+                provider.on('error', (error) => {
+                    console.log('error', error)
+                });
             });
         } catch (e) {
             console.log('wsProvider error', e.toString());

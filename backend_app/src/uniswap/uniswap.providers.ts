@@ -10,6 +10,9 @@ import {RouterEntity} from "./entities/router.entity";
 export type EthProviderFactoryType = (type: 'ws' | 'http', network?: string, provider?: string)
     => (ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider);
 
+export type EthWebsocketProviderFactoryType = (network?: string, provider?: string)
+    => (ethers.providers.WebSocketProvider);
+
 export const providers = [
     {
         provide: 'TRANSACTION_REPOSITORY',
@@ -33,7 +36,7 @@ export const providers = [
     },
     {
         provide: 'ETH_WS_PROVIDER_FACTORY',
-        useFactory: (envService: EnvService) => {
+        useFactory: (envService: EnvService): EthWebsocketProviderFactoryType => {
             return (network?: string, provider?: string) => {
                 network = network?network:envService.get('ETH_NETWORK');
                 if (network === 'bsc_mainnet') {
