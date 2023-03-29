@@ -203,11 +203,14 @@ export class ScanReservesCommand {
             provider.on('close', (error)=>{
                 console.log('error', error)
             });
+            provider._websocket.on('connect', async (code) => {
+                console.log('connect');
+            });
             provider._websocket.on('close', async (code) => {
                 console.log('close', code);
-                provider.on('error', (error) => {
-                    console.log('error', error)
-                });
+                setTimeout(()=>{
+                    provider._websocket.connect();
+                }, 1000);
             });
         } catch (e) {
             console.log('wsProvider error', e.toString());
