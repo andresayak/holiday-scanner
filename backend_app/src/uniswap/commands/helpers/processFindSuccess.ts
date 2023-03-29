@@ -23,7 +23,9 @@ export type SuccessType = {
 type PropsType = {
     variants: VariantType[];
     pairs: {[k: string]:PairEntity};
-    onlyPairs?: string[]
+    onlyPairs?: string[];
+    amount0: string;
+    amount1: string;
     //gasPrice: BigNumber;
     //gasLimit: BigNumber;
 }
@@ -173,10 +175,10 @@ export const processSwap = (props: SwapPropsType): SuccessType[] => {
         .sort((a, b) => (b.profit - a.profit));
 }*/
 export const processFindSuccess = (props: PropsType): SuccessType[] => {
-    const {variants, pairs} = props;
+    const {variants, pairs, amount0, amount1} = props;
     let success: SuccessType[] = [];
     for (const variant of variants) {
-        const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther("0.3") : utils.parseEther("30");
+        const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
         let amountOutsMin = [];
         let fees = [];
         let feeScales = [];

@@ -75,7 +75,7 @@ export class ScanArbitrageCommand {
     }
 
     @Command({
-        command: 'scan:arbitrage <isTestMode> <provider1Name> <provider2Name>',
+        command: 'scan:arbitrage <isTestMode> <provider1Name> <provider2Name> <amount0> <amount1>',
         autoExit: false
     })
     async create(
@@ -94,6 +94,16 @@ export class ScanArbitrageCommand {
             type: 'string'
         })
             provider2Name: string,
+        @Positional({
+            name: 'amount0',
+            type: 'string'
+        })
+            amount0: string,
+        @Positional({
+            name: 'amount1',
+            type: 'string'
+        })
+            amount1: string,
     ) {
 
         let txIndex = 0;
@@ -157,7 +167,7 @@ export class ScanArbitrageCommand {
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
                                         multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce,
-                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID'))
+                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1
                                     );
                                 }catch (e) {
                                     console.log(e)

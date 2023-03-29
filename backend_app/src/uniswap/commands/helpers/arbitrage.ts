@@ -68,7 +68,7 @@ export const calculate = async (swap: {
                                 }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
                                 multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean,
                                 providers: JsonRpcProvider[],
-                                nonce: number, upNonce: () => void, chainId: number
+                                nonce: number, upNonce: () => void, chainId: number, amount0: string, amount1: string
 ) => {
     const timeProcessing = (new Date().getTime() - timeStart.getTime()) / 1000;
     console.log('timeProcessing', timeProcessing);
@@ -194,7 +194,7 @@ export const calculate = async (swap: {
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
         //const variants: VariantType[] = getVariants(pairs);
-        const items = processFindSuccess({variants, pairs});
+        const items = processFindSuccess({variants, pairs, amount0, amount1});
         const timeDiff0 = (new Date().getTime() - timeStart.getTime()) / 1000;
         console.log(' TIME DIFF0 = ', timeDiff0);
         if (items.length) {
