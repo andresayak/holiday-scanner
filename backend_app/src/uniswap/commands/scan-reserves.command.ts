@@ -10,7 +10,6 @@ import {RedisClient} from 'redis';
 import {EthProviderFactoryType, EthWebsocketProviderFactoryType} from "../uniswap.providers";
 import {Timeout} from '@nestjs/schedule';
 import * as process from "process";
-import {WebSocketProvider} from "@ethersproject/providers";
 
 @Injectable()
 export class ScanReservesCommand {
@@ -66,6 +65,7 @@ export class ScanReservesCommand {
         let liveCount = 0;
         let lastProcessBlock = 0;
         let currentBlock = await provider.getBlockNumber();
+        console.log('currentBlock', currentBlock);
         let isSyncOld = false;
 
         const processLogs = (blockNumber, logs, timeStart) => {
