@@ -1,4 +1,5 @@
 const {ethers, waffle} = require("hardhat");
+const bn =  require('bignumber.js');
 const {utils, BigNumber} = require("ethers");
 const {bytecode} = require('../artifacts/@uniswap/v2-core/contracts/UniswapV2Pair.sol/UniswapV2Pair.json');
 const {keccak256} = require('@ethersproject/solidity');
@@ -48,7 +49,7 @@ describe("MultiSwap", () => {
 
     const fee = 3;
     const feeScale = 1000;
-    it('', async () => {
+    it.only('', async () => {
         const variant = {
             amountIn: '100000000000000000',
             amountOut: '100597272790697089',
@@ -75,15 +76,99 @@ describe("MultiSwap", () => {
             ],
             profit: 0.59
         };
+        //const amountIn = ethers.BigNumber.from(variant.reservers[0][1].sub(variant.reservers[1][1]).div(620000).toString());
 
-        const price0 = (variant.reservers[0][1]).mul(1000).div(variant.reservers[0][0]).toString();
-        const price1 = (variant.reservers[1][0]).mul(1000).div(variant.reservers[1][1]).toString();
 
-        console.log('price0=' + price0);
-        console.log('price1=' + price1);
-        const amountIn = ethers.BigNumber.from(variant.reservers[0][1].sub(variant.reservers[1][1]).div(620000).toString());
 
-        console.log('amountIn=' + amountIn, balanceHuman(amountIn));
+        const reserveA = BigNumber.from('4213446430434254961698');
+        const reserveB = BigNumber.from('363320704345357402579744');
+        const reserveC = BigNumber.from('321511918439820845711816');
+        const reserveD = BigNumber.from('3773654629131813877295');
+        const commission = BigNumber.from(3);
+
+        console.log('reserveA='+reserveA);
+        console.log('reserveB='+reserveB);
+        console.log('reserveC='+reserveC);
+        console.log('reserveD='+reserveD);
+
+        /*
+        reserveA=4213446430434254961698
+        reserveB=363320704345357402579744
+        reserveC=321511918439820845711816
+        reserveD=3773654629131813877295
+
+        const  sqrt = (value)=>BigNumber.from(bn(value.toString()).sqrt().toString().split('.')[0]);
+
+        const numerator = reserveA.mul(reserveD).mul(reserveC.mul(BigNumber.from('1000').sub("3")));
+        const denominator = reserveB.mul(BigNumber.from('1000')).mul(reserveC.sub(reserveD));
+        const amountIn = sqrt(numerator.div(denominator)).mul("1000000000");
+        console.log('Optimal amountIn: ', amountIn.toString());
+
+        const optimalAmountIn = (amountIn);
+
+        console.log('Optimal amountIn: ', optimalAmountIn.toString());
+ */
+
+        const amountInMy = ethers.BigNumber.from(variant.reservers[0][1].sub(variant.reservers[1][1]).div(620000).toString());
+
+        const maxAmountIn = BigNumber.from('10').pow('18').mul(reserveB).mul(reserveC.sub(reserveD)).div(reserveA.mul(reserveD).mul(BigNumber.from('1000').sub(commission)));
+
+        console.log('maxAmountIn='+maxAmountIn, balanceHuman(maxAmountIn));
+        console.log('amountInMy='+amountInMy, balanceHuman(amountInMy));
+
+        let maxProfit = ethers.BigNumber.from('0');
+        let maxRealProfit = ethers.BigNumber.from('0');
+        let optimalAmountIn = ethers.BigNumber.from('0');
+
+        const step = maxAmountIn.div(100); // крок для ітерації
+
+        for (let amountIn = step; amountIn.lt(maxAmountIn); amountIn = amountIn.add(step)) {
+            console.log('amount', amountIn, balanceHuman(amountIn));
+            let amountOutsMin = [];
+            for (const index in variant.pairs) {
+                const reserve0 = variant.reservers[index][0];
+                const reserve1 = variant.reservers[index][1];
+                const amountInCurrent = index == 0 ? amountIn : amountOutsMin[index - 1];
+                amountOutsMin.push(getAmountOut(amountInCurrent, reserve0, reserve1, fee, feeScale));
+            }
+            const amountOut = ethers.BigNumber.from(amountOutsMin[amountOutsMin.length - 1]);
+            const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
+            const real = amountIn.mul(profit).div(1000);
+            console.log('real='+ real, balanceHuman(real));
+            if (real.gt(maxRealProfit)) {
+                maxProfit = profit;
+                maxRealProfit = real;
+                optimalAmountIn = amountIn;
+            }
+        }
+
+        const real = optimalAmountIn.mul(maxProfit).div(1000);//.div(100);
+        console.log('optimalAmountIn='+optimalAmountIn, balanceHuman(optimalAmountIn));
+        console.log('profit', parseInt(maxProfit.toString()) / 100);
+        console.log('real', real, balanceHuman(real));
+
+
+        return;/*
+        const fee = 3;
+        const feeScale = 1000;
+        const amountIn = ?;
+
+        const getAmountOut = (amountIn, reserveIn, reserveOut, fee = 3, feeScale = 1000)=>{
+            const amountInWithFee = amountIn.mul(feeScale - fee);
+            const numerator = amountInWithFee.mul(reserveOut);
+            const denominator = reserveIn.mul(feeScale).add(amountInWithFee);
+            return numerator.div(denominator);
+        }
+
+        const variant = {
+            pairs:[
+                'pairX', 'pairY'
+            ],
+            reservers:[
+                ['4213446430434254961698', '363320704345357402579744'],
+                ['321511918439820845711816', '3773654629131813877295']
+            ]
+        }
         let amountOutsMin = [];
         for (const index in variant.pairs) {
             const reserve0 = variant.reservers[index][0];
@@ -101,9 +186,9 @@ describe("MultiSwap", () => {
         console.log('amountOut=' + amountOut);
         console.log('amountOutsMin', amountOutsMin);
 
-        console.log('real=' + real, balanceHuman(real));
+        console.log('real=' + real, balanceHuman(real));*/
     })
-    it('MultiSwap', async () => {
+    it.skip('MultiSwap', async () => {
         const pairs = [];
         const [owner, user1] = await ethers.getSigners();
 
@@ -337,7 +422,7 @@ describe("MultiSwap", () => {
         expect(diffs[1][1]).to.equal('-' + mostSuccess.amountOutsMin[1]);
     });
 
-    it('MultiSwap Fork Test', async () => {
+    it.skip('MultiSwap Fork Test', async () => {
         /*
                 const result = getAmountOut(BigNumber.from('275663894295740050695'), BigNumber.from('0x0000000000000000000000000000000000000000000008a31ea5a7848d9bd104'), BigNumber.from('11985568732274'),
                     1, 100);

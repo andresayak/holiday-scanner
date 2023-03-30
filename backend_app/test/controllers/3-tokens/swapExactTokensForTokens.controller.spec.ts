@@ -14,7 +14,7 @@ describe('swapTokensForExactTokens', () => {
     });
 
 
-    it.only('success login', async () => {
+    it('success login', async () => {
         const data: any = {
             "target": {
                 "from": "0x5c1D8d6B29ca99DE9c583371b87341d59b1A4C7A",

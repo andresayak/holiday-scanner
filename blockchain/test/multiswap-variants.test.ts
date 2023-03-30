@@ -21,7 +21,7 @@ const iface = new ethers.utils.Interface(swapInterface);
 
 describe.only("MultiSwap", () => {
 
-    it.only('test success', async () => {
+    it('test success', async () => {
 
         if (!process.env['WETH_ADDRESS'] || !process.env['MULTI_SWAP_ADDRESS']) {
             throw new Error('wrong env')
