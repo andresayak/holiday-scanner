@@ -55,9 +55,15 @@ export class ScanPairsCommand {
         command: 'scan:pairs',
         describe: '',
     })
-    async create() {
+    async create(
+        @Positional({
+            name: 'providerName <providerName>',
+            type: 'string'
+        })
+            providerName: string,
+    ) {
         const network = this.envService.get('ETH_NETWORK');
-        const provider = this.providers('http', network, 'node2');
+        const provider = this.providers('http', network, providerName);
         let currentBlock = await provider.getBlockNumber();
         provider.on("block", (blockNumber) => {
             currentBlock = blockNumber;
