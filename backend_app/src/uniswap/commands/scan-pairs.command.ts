@@ -52,12 +52,12 @@ export class ScanPairsCommand {
     }
 
     @Command({
-        command: 'scan:pairs',
+        command: 'scan:pairs <providerName>',
         describe: '',
     })
     async create(
         @Positional({
-            name: 'providerName <providerName>',
+            name: 'providerName',
             type: 'string'
         })
             providerName: string,
