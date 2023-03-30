@@ -65,7 +65,7 @@ export class ScanPairsCommand {
             const used = process.memoryUsage().heapUsed / 1024 / 1024;
             console.log(timeStart, ' --------- new block [' + blockNumber + ']', `memory ${Math.round(used * 100) / 100} MB`);
         });
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
+        let wallet = new Wallet(this.envService.get('ETH_PRIVATE_KEY'), provider);
 
         for (const factoryAddress of factories) {
             const factoryContract = ContractFactory.getContract(factoryAddress, SwapFactoryAbi.abi, wallet);
