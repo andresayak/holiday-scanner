@@ -7,9 +7,10 @@ import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
-import {EthProviderFactoryType, EthWebsocketProviderFactoryType} from "../uniswap.providers";
+import {EthWebsocketProviderFactoryType} from "../uniswap.providers";
 import {Timeout} from '@nestjs/schedule';
 import * as process from "process";
+import {TgBot} from "../TgBot";
 
 @Injectable()
 export class ScanReservesCommand {
@@ -23,7 +24,8 @@ export class ScanReservesCommand {
                 @Inject('PAIR_REPOSITORY')
                 private readonly pairRepository: Repository<PairEntity>,
                 @Inject('ETH_WS_PROVIDER_FACTORY')
-                private readonly providers: EthWebsocketProviderFactoryType
+                private readonly providers: EthWebsocketProviderFactoryType,
+                private readonly tgBot: TgBot,
     ) {
 
         const swapInterface = [
@@ -205,6 +207,7 @@ export class ScanReservesCommand {
                     });
                     provider._websocket.on('close', async (code) => {
                         console.log('websocket error', code);
+                        this.tgBot.sendMessage('websocket error, code='+code );
                         errorWebsocket(true);
                     });
                 } catch (e) {

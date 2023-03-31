@@ -87,17 +87,27 @@ export class ScanPairsCommand {
             console.log('factoryAddress', factoryAddress);
             console.log('lastIndex', lastIndex);
             for (let i = lastIndex; i < count; i++) {
-                const pairAddress = (await factoryContract.allPairs(i)).toLowerCase();
-                console.log(i + ' / ' + pairAddress);
-                const pairContract = ContractFactory.getContract(pairAddress, UniswapV2PairAbi.abi, wallet);
-                const token0 = (await pairContract.token0()).toLowerCase();
-                const token1 = (await pairContract.token1()).toLowerCase();
-                console.log(' - token0 = ' + token0);
-                console.log(' - token1 = ' + token1);
+                let pairAddress, token0, token1, reserves;
                 const requestBlock = currentBlock;
-                const reserves = await pairContract.getReserves({blockTag: requestBlock});
-                console.log(' - reserves0 = ' + reserves[0]);
-                console.log(' - reserves1 = ' + reserves[1]);
+                while (true){
+                    try{
+                        pairAddress = (await factoryContract.allPairs(i)).toLowerCase();
+                        console.log(i + ' / ' + pairAddress);
+                        const pairContract = ContractFactory.getContract(pairAddress, UniswapV2PairAbi.abi, wallet);
+                        token0 = (await pairContract.token0()).toLowerCase();
+                        token1 = (await pairContract.token1()).toLowerCase();
+                        console.log(' - token0 = ' + token0);
+                        console.log(' - token1 = ' + token1);
+                        reserves = await await pairContract.getReserves({blockTag: requestBlock});
+                        console.log(' - reserves0 = ' + reserves[0]);
+                        console.log(' - reserves1 = ' + reserves[1]);
+                        break;
+                    }catch (e) {
+                        console.log('error', e);
+                        console.log('wait 1 sec.');
+                        await new Promise((done)=>setTimeout(done, 1000));
+                    }
+                }
 
                 let pair = await this.pairRepository.findOne({
                     where: {
