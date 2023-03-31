@@ -177,6 +177,68 @@ export const processSwap = (props: SwapPropsType): SuccessType[] => {
 export const processFindSuccess = (props: PropsType): SuccessType[] => {
     const {variants, pairs, amount0, amount1} = props;
     let success: SuccessType[] = [];
+    let cases = [];
+    for (const variant of variants) {
+        const reserves = [];
+        const fees = [];
+        const feeScales = [];
+        for (const index in variant.pairs) {
+            const pairAddress = variant.pairs[index];
+            if (pairs[pairAddress]) {
+                const pair = pairs[pairAddress];
+                const token0 = variant.path[index];
+                const reserve0 = BigNumber.from(token0 == pair.token0 ? pair.reserve0 : pair.reserve1);
+                const reserve1 = BigNumber.from(token0 == pair.token0 ? pair.reserve1 : pair.reserve0);
+                reserves.push([reserve0, reserve1]);
+                fees.push(pair.fee);
+                feeScales.push(pair.fee_scale);
+            } else {
+                break;
+            }
+        }
+        if (reserves.length == variant.pairs.length) {
+            cases.push({
+                variant,
+                reserves,
+                fees,
+                feeScales
+            });
+        }
+    }
+
+    console.log('cases', cases.length);
+    for(const item of cases){
+        const {variant, reserves, fees, feeScales} = item;
+        const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
+        let amountOutsMin = [];
+        for (const index in variant.pairs) {
+            const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
+            amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
+        }
+        const amountOut = BigNumber.from(amountOutsMin[amountOutsMin.length - 1]);
+        const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
+        const real = amountIn.mul(profit).div(1000);
+        const profitNumber = parseInt(profit.toString()) / 100;
+        if (profitNumber >= 0.5) {
+            success.push({
+                amountIn: amountIn.toString(),
+                amountOut: amountOut.toString(),
+                amountOutsMin: amountOutsMin.map(amountOutMin => amountOutMin.toString()),
+                reservers0: [reserves[0][0].toString(), reserves[0][1].toString()],
+                reservers1: [reserves[1][0].toString(), reserves[1][1].toString()],
+                pairs: variant.pairs,
+                //blockNumbers: variant.blockNumbers,
+                path: variant.path,
+                fees,
+                feeScales,
+                //gasPrice: _gasPrice,
+                //gasLimit: gasLimit,
+                profit: profitNumber,
+                profit_real: balanceHuman(real, variant.path[0])
+            });
+        }
+    }
+    /*
     for (const variant of variants) {
         const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
         let amountOutsMin = [];
@@ -196,7 +258,6 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                 fees.push(pair.fee);
                 feeScales.push(pair.fee_scale);
             }else{
-                //console.log('pairAddress not found', pairAddress);
                 break;
             }
         }
@@ -227,7 +288,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                 profit_real: balanceHuman(real, variant.path[0])
             });
         }
-    }
+    }*/
     return success
         .sort((a, b) => (b.profit - a.profit));
 }
