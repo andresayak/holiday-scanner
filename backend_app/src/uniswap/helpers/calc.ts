@@ -10,25 +10,25 @@ export const tokens = [
     //'0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d'
 ];
 export const sortTokens = (tokenA: string, tokenB: string): [string, string] => {
-    return BigNumber.from(tokenA).lt(tokenB)  ? [tokenA, tokenB] : [tokenB, tokenA];
+    return BigNumber.from(tokenA).lt(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA];
 }
 const balanceHuman = (value: BigNumber | number | string, tokenAddress?: string) => {
-    const price = !tokenAddress || tokenAddress.toLowerCase() == BNB_CONTRACT.toLowerCase()?BNB_PRICE_USD:1;
-    const symbol = !tokenAddress || tokenAddress.toLowerCase() == BNB_CONTRACT.toLowerCase()?'BNB':'USD';
-    if(symbol == 'BNB'){
-        const totalSum = 100 * price * parseFloat(utils.formatEther(value));
+    const price = !tokenAddress || tokenAddress.toLowerCase() == BNB_CONTRACT.toLowerCase() ? BNB_PRICE_USD : 1;
+    const symbol = !tokenAddress || tokenAddress.toLowerCase() == BNB_CONTRACT.toLowerCase() ? 'BNB' : 'USD';
+    if (symbol == 'BNB') {
+        const totalSum = Math.ceil(100 * price * parseFloat(utils.formatEther(value))) / 100;
         return utils.formatEther(value) + ' BNB, ' + totalSum + ' USD';
     }
-    return utils.formatEther(value) + ' '+symbol;
+    return utils.formatEther(value) + ' ' + symbol;
 }
 
-export const calcInterestDiff= (value0: BigNumber, diff: BigNumber) => {
-    return value0.eq(0)?0:(parseInt(diff.mul(10000).div(value0).toString()) / 100);
+export const calcInterestDiff = (value0: BigNumber, diff: BigNumber) => {
+    return value0.eq(0) ? 0 : (parseInt(diff.mul(10000).div(value0).toString()) / 100);
 }
 
 const calcProfit = (buy: BigNumber, sell: BigNumber) => {
     const diff = sell.sub(buy);
-    const profit = buy.eq(0)?0:(parseInt(diff.mul(10000).div(buy).toString()) / 100);
+    const profit = buy.eq(0) ? 0 : (parseInt(diff.mul(10000).div(buy).toString()) / 100);
     console.log('profit=' + profit + '%, ' + balanceHuman(diff));
     return profit;
 }
