@@ -216,10 +216,10 @@ export const calculate = async (swap: {
             }
             const message = items.map((item, index) => {
                 return (index + 1) + ') ' + (hash ? 'hash: ' + hash + "\n" : '')
-                    + 'amount: ' + item.amountIn + "\n"
+                    + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
                     + 'token: ' + item.path[0] + "\n"
                     + 'profit: ' + item.profit_real + "\n"
-                    + 'time: ' + timeDiff0 + ' sec.' + "\n"
+                    + 'timing: '+timeProcessing+' / '+timeFetch+' / ' + timeDiff0 + ' sec.' + "\n"
             }).join("\n");
             await tgBot.sendMessage(message);
 

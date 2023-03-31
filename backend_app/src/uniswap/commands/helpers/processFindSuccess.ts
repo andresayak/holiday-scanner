@@ -209,33 +209,51 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
     console.log('cases', cases.length);
     for(const item of cases){
         const {variant, reserves, fees, feeScales} = item;
-        const amountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
-        let amountOutsMin = [];
-        for (const index in variant.pairs) {
-            const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
-            amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
+        const maxAmountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
+        let maxProfit = BigNumber.from('0');
+        let maxRealProfit = BigNumber.from('0');
+        let optimalAmountIn = BigNumber.from('0');
+        let optimalAmountOut = BigNumber.from('0');
+        let optimalAmountOutsMin = [];
+        const step = maxAmountIn.div(20); // крок для ітерації
+        for (let amountIn = step; amountIn.lt(maxAmountIn); amountIn = amountIn.add(step)) {
+            let amountOutsMin = [];
+            for (const index in variant.pairs) {
+                const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
+                amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
+            }
+            const amountOut = BigNumber.from(amountOutsMin[amountOutsMin.length - 1]);
+            const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
+            const real = amountIn.mul(profit).div(1000);
+
+            if (real.gt(maxRealProfit)) {
+                maxProfit = profit;
+                maxRealProfit = real;
+                optimalAmountIn = amountIn;
+                optimalAmountOut = amountOut;
+                optimalAmountOutsMin = amountOutsMin;
+            }
         }
-        const amountOut = BigNumber.from(amountOutsMin[amountOutsMin.length - 1]);
-        const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
-        const real = amountIn.mul(profit).div(1000);
-        const profitNumber = parseInt(profit.toString()) / 100;
-        if (profitNumber >= 0.5) {
-            success.push({
-                amountIn: amountIn.toString(),
-                amountOut: amountOut.toString(),
-                amountOutsMin: amountOutsMin.map(amountOutMin => amountOutMin.toString()),
-                reservers0: [reserves[0][0].toString(), reserves[0][1].toString()],
-                reservers1: [reserves[1][0].toString(), reserves[1][1].toString()],
-                pairs: variant.pairs,
-                //blockNumbers: variant.blockNumbers,
-                path: variant.path,
-                fees,
-                feeScales,
-                //gasPrice: _gasPrice,
-                //gasLimit: gasLimit,
-                profit: profitNumber,
-                profit_real: balanceHuman(real, variant.path[0])
-            });
+        const profitNumber = parseInt(maxProfit.toString()) / 100;
+        if(profitNumber > 0){
+            console.log('profitNumber='+ profitNumber);
+            console.log('maxRealProfit='+ maxRealProfit);
+            if (profitNumber >= 0.5) {
+                success.push({
+                    amountIn: optimalAmountIn.toString(),
+                    amountOut: optimalAmountOut.toString(),
+                    amountOutsMin: optimalAmountOutsMin.map(amountOutMin => amountOutMin.toString()),
+                    reservers0: [reserves[0][0].toString(), reserves[0][1].toString()],
+                    reservers1: [reserves[1][0].toString(), reserves[1][1].toString()],
+                    pairs: variant.pairs,
+                    //blockNumbers: variant.blockNumbers,
+                    path: variant.path,
+                    fees,
+                    feeScales,
+                    profit: profitNumber,
+                    profit_real: balanceHuman(maxRealProfit, variant.path[0])
+                });
+            }
         }
     }
     /*

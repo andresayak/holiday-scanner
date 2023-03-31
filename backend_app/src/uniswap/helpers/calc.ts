@@ -14,8 +14,12 @@ export const sortTokens = (tokenA: string, tokenB: string): [string, string] => 
 }
 const balanceHuman = (value: BigNumber | number | string, tokenAddress?: string) => {
     const price = !tokenAddress || tokenAddress.toLowerCase() == BNB_CONTRACT.toLowerCase()?BNB_PRICE_USD:1;
-    const totalSum = price * parseFloat(utils.formatEther(value));
-    return utils.formatEther(value) + ' BNB, ' + totalSum + ' USD';
+    const symbol = !tokenAddress || tokenAddress.toLowerCase() == BNB_CONTRACT.toLowerCase()?'BNB':'USD';
+    if(symbol == 'BNB'){
+        const totalSum = 100 * price * parseFloat(utils.formatEther(value));
+        return utils.formatEther(value) + ' BNB, ' + totalSum + ' USD';
+    }
+    return utils.formatEther(value) + ' '+symbol;
 }
 
 export const calcInterestDiff= (value0: BigNumber, diff: BigNumber) => {

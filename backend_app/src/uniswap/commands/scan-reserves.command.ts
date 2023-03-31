@@ -1,4 +1,4 @@
-import {Command, Positional} from 'nestjs-command';
+import {Command, Positional, Option} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {utils} from 'ethers';
 import {Repository} from "typeorm";
@@ -51,9 +51,17 @@ export class ScanReservesCommand {
             type: 'string'
         })
             providerName: string,
+        @Option({
+            name: 'force',
+            type: 'boolean',
+            default: false,
+        })
+            force: boolean,
     ) {
-
+        let loop = 0;
         while (true) {
+            loop++;
+            const forceInLoop = (loop === 1) ? force : false;
             await new Promise(async (errorWebsocket) => {
                 const provider = this.providers(this.envService.get('ETH_HOST'), providerName);
                 const providers = [provider];
@@ -72,7 +80,10 @@ export class ScanReservesCommand {
                 let currentBlock = await provider.getBlockNumber();
                 console.log('currentBlock', currentBlock);
                 let isSyncOld = false;
-
+                if (forceInLoop) {
+                    isSyncOld = true;
+                    lastBlock = currentBlock;
+                }
                 const processLogs = (blockNumber, logs, timeStart) => {
                     const startSave = new Date().getTime();
                     liveCount++;
@@ -137,7 +148,7 @@ export class ScanReservesCommand {
                 }
 
                 new Promise(async () => {
-                    if (lastBlock > 0)
+                    if (lastBlock > 0 && forceInLoop === false)
                         for (let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++) {
                             const logs = await Promise.any(providers.map(provider => provider.getLogs({
                                 fromBlock: blockNumber,

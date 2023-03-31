@@ -44,6 +44,7 @@ export class ScanArbitrageCommand {
     startBlock: number;
     currentBlock: number = 0;
     lastBlockTime: number = 0;
+    lastSyncBlock: number = 0;
     openTrading = false;
     pairs: PairEntity[] = [];
     transactions = [];
@@ -289,11 +290,14 @@ export class ScanArbitrageCommand {
         this.redisSubscriberClient.subscribe('pairs');
         this.redisSubscriberClient.on('message', async (channel, data) => {
             const json = JSON.parse(data);
-            console.log('block', json.blockNumber, 'update', ((new Date().getTime() - this.lastBlockTime)/1000)+' sec');
-            //this.transactions = [];
-            this.blockUpdated = true;
-            //console.log('json.pairs', json.pairs);
-            //this.startBlock = json.blockNumber - json.liveCount;
+            this.lastSyncBlock = json.blockNumber;
+            const diff = this.lastSyncBlock - this.currentBlock;
+            if(diff<0){
+                console.log('wait sync, syncBlock=', json.blockNumber, 'currentBlock=', this.currentBlock, 'diff: '+diff);
+            }else{
+                console.log('block', json.blockNumber, 'update', ((new Date().getTime() - this.lastBlockTime)/1000)+' sec');
+                this.blockUpdated = true;
+            }
         });
     }
 
