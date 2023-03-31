@@ -9,6 +9,7 @@ import {updateReserves} from "./updateReserves";
 import * as fs from 'fs';
 import {RedisClient} from "redis";
 import {JsonRpcProvider} from "@ethersproject/providers";
+import {TgBot} from "../../TgBot";
 
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
@@ -68,7 +69,7 @@ export const calculate = async (swap: {
                                 }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
                                 multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean,
                                 providers: JsonRpcProvider[],
-                                nonce: number, upNonce: () => void, chainId: number, amount0: string, amount1: string
+                                nonce: number, upNonce: () => void, chainId: number, amount0: string, amount1: string, tgBot: TgBot
 ) => {
     const timeProcessing = (new Date().getTime() - timeStart.getTime()) / 1000;
     console.log('timeProcessing', timeProcessing);
@@ -196,11 +197,11 @@ export const calculate = async (swap: {
         //const variants: VariantType[] = getVariants(pairs);
         const items = processFindSuccess({variants, pairs, amount0, amount1});
         const timeDiff0 = (new Date().getTime() - timeStart.getTime()) / 1000;
-        console.log(' TIME DIFF0 = ', timeDiff0);
+        console.log('TIME DIFF0 = ', timeDiff0);
         if (items.length) {
             const success = items[0];
             const timeDiff1 = (new Date().getTime() - timeStart.getTime()) / 1000;
-            console.log(' TIME DIFF1 = ', timeDiff1);
+            console.log('TIME DIFF1 = ', timeDiff1);
             let hash = '';
             let timing;
             if (isTestMode) {
@@ -213,6 +214,15 @@ export const calculate = async (swap: {
                     timing = sendResult.timing;
                 }
             }
+            const message = items.map((item, index) => {
+                return (index + 1) + ') ' + (hash ? 'hash: ' + hash + "\n" : '')
+                    + 'amount: ' + item.amountIn + "\n"
+                    + 'token: ' + item.path[0] + "\n"
+                    + 'profit: ' + item.profit_real + "\n"
+                    + 'time: ' + timeDiff0 + ' sec.' + "\n"
+            }).join("\n");
+            await tgBot.sendMessage(message);
+
             const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
             console.log('times:', {
                 timeProcessing,

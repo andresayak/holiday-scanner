@@ -14,6 +14,7 @@ import {PairsType, VariantType} from "./helpers/getVariants";
 import * as MultiSwapAbi from "../../contracts/MultiSwapV2.json";
 import {calculate} from './helpers/arbitrage';
 import {urls} from "../helpers/provider";
+import {TgBot} from "../TgBot";
 
 
 const swapInterface = [
@@ -70,6 +71,7 @@ export class ScanArbitrageCommand {
                 private readonly pairRepository: Repository<PairEntity>,
                 @Inject('ROUTER_REPOSITORY')
                 private readonly routerRepository: Repository<RouterEntity>,
+                private readonly tgBot: TgBot,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType) {
     }
@@ -133,8 +135,7 @@ export class ScanArbitrageCommand {
         const multiSwapAddress = this.envService.get('MULTI_SWAP_ADDRESS');
         const multiSwapContract = ContractFactory.getContract(multiSwapAddress, MultiSwapAbi.abi, wallet);
         console.log('multiSwapAddress=', multiSwapAddress);
-        const getTransaction = async (hash, addedBlock: number) => {
-            const timeStart = new Date();
+        const getTransaction = async (hash, addedBlock: number, timeStart: Date) => {
             let attems = 0;
             while (attems < 10) {
                 try {
@@ -167,7 +168,7 @@ export class ScanArbitrageCommand {
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
                                         multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce,
-                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1
+                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1, this.tgBot
                                     );
                                 }catch (e) {
                                     console.log(e)
@@ -240,8 +241,9 @@ export class ScanArbitrageCommand {
 
         }
         wsProvider.on("pending", (hash) => {
+            const timeStart = new Date();
             if (typeof hash == 'string' && this.blockUpdated) {
-                getTransaction(hash, this.currentBlock);
+                getTransaction(hash, this.currentBlock, timeStart);
             }
         });
         wsProvider.on("block", (blockNumber) => {
