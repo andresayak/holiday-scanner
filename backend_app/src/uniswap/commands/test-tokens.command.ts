@@ -9,7 +9,6 @@ import {balanceHuman, BNB_CONTRACT} from "../helpers/calc";
 import * as ERC20Abi from '../../contracts/ERC20.json';
 import * as WETH9Abi from '../../contracts/WETH9.json';
 import * as SwapRouter02Abi from '../../contracts/SwapRouter02.json';
-import * as process from "process";
 
 
 const swapInterface = [
@@ -35,7 +34,7 @@ export class TestTokensCommand {
         autoExit: false
     })
     async create() {
-        const provider = this.providers('ws', 'local');
+        const provider = this.providers('ws', 'hardhat');
 
         const private_keys: string[] = [
             '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
@@ -64,7 +63,6 @@ export class TestTokensCommand {
             const tokens = await this.tokenRepository.find({
                 where:{
                     isTested: IsNull()
-                    //address: '0xa57ac35ce91ee92caefaa8dc04140c8e232c2e50',
                 },
                 take: 100
             });
@@ -72,7 +70,7 @@ export class TestTokensCommand {
                 console.log('DONE');
                 return;
             }
-            const chunkSize = 20;
+            const chunkSize = 1;
             for (let i = 0; i < tokens.length; i += chunkSize) {
                 const chunk = tokens.slice(i, i + chunkSize);
                 console.log('chunk', chunk, i, i + chunkSize);
