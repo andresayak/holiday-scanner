@@ -51,12 +51,11 @@ module.exports = {
         hardhat: {
             allowUnlimitedContractSize: true,
             forking: {
-                url: `https://rpc.ankr.com/bsc/${process.env.ANKR_PROVIDER_KEY}`,
+                url: process.env.CHAINSTACK_PROVIDER_URL,
                 blockNumber: 26813613
             },
             mining: {
-              auto: true,
-            //  interval: 5000
+                auto: true,
             },
             gas: 'auto'
         },
