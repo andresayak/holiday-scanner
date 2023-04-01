@@ -1,6 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {EnvService} from "../../env/env.service";
-import {IsNull, Repository} from "typeorm";
+import {IsNull, MoreThan, Repository} from "typeorm";
 import {TokenEntity} from "../entities/token.entity";
 import {EthProviderFactoryType} from "../uniswap.providers";
 import {Command, Positional} from "nestjs-command";
@@ -14,6 +14,10 @@ import * as SwapRouter02Abi from '../../contracts/SwapRouter02.json';
 
 import {expect} from "chai";
 import {BaseProvider, JsonRpcProvider} from "@ethersproject/providers";
+import {TransactionEntity} from "../entities/transaction.entity";
+import {TgBot} from "../TgBot";
+import {balanceHuman} from "../helpers/calc";
+import {Cron} from "@nestjs/schedule";
 
 const BNB_CONTRACT = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
 const holders = {
@@ -37,10 +41,37 @@ export class TestSwapCommand {
     constructor(private readonly envService: EnvService,
                 @Inject('TOKEN_REPOSITORY')
                 private readonly tokenRepository: Repository<TokenEntity>,
+                @Inject('TRANSACTION_REPOSITORY')
+                private readonly transactionRepository: Repository<TransactionEntity>,
+                private readonly tgBot: TgBot,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType) {
     }
 
+    @Cron('0 * * * * *')
+    async cronTest(){
+        if (process.env.NODE_ENV !== 'production'){
+            return
+        }
+        const provider = this.providers('http', 'chainstack');
+        const currentBlock= await provider.getBlockNumber();
+        const transactions = await this.transactionRepository.find({
+            where: {
+                blockNumber: MoreThan(currentBlock - 30),
+                isTested: false
+            }
+        });
+        for (const transaction of transactions) {
+            const realProfit = this.create(transaction.logs);
+            const message = 'testing:' + (transaction.hash ? ' hash: ' + transaction.hash + "\n" : '')+' ['+currentBlock+']'
+                + 'est. profit: ' + transaction.profit + '%, ' + transaction.profitReal + "\n"
+                + 'real. profit: ' + realProfit;
+            await this.tgBot.sendMessage(message);
+            await this.transactionRepository.save(transaction.fill({
+                isTested: true
+            }))
+        }
+    }
     @Command({
         command: 'test:swaps <filename>',
         autoExit: false
@@ -147,7 +178,7 @@ export class TestSwapCommand {
         console.log('diff='+diff);
         const profit = parseInt(diff.mul(10000).div(success.amountIn).toString())/100;
         console.log('profit='+profit+'%');
-
+        return profit;
     }
 }
 
