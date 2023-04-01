@@ -51,7 +51,7 @@ export class ScanTokensContractsCommand {
         });
         console.log('tokens=' + tokens.length);
         let count = 0;
-        const chunkSize = 2;
+        const chunkSize = 1;
         const apikeys = [
             this.envService.get('ETHERSCAN_API'),
             //'9HICMHD834BZSA8R4CIMXYFKKSP8G3PVJB',
