@@ -51,11 +51,11 @@ export class ScanTokensContractsCommand {
         });
         console.log('tokens=' + tokens.length);
         let count = 0;
-        const chunkSize = 3;
+        const chunkSize = 2;
         const apikeys = [
             this.envService.get('ETHERSCAN_API'),
-            '9HICMHD834BZSA8R4CIMXYFKKSP8G3PVJB',
-            'E5VUD2I1AFEE6VCN844CKGIIS4SX5RRZVC'
+            //'9HICMHD834BZSA8R4CIMXYFKKSP8G3PVJB',
+            //'E5VUD2I1AFEE6VCN844CKGIIS4SX5RRZVC'
         ];
         for (let i = 0; i < tokens.length; i += chunkSize) {
             const chunk = tokens.slice(i, i + chunkSize);
@@ -64,7 +64,7 @@ export class ScanTokensContractsCommand {
                     const contractSource = await getContractSource(token.address, apikeys[index]);
                     if (contractSource[0] && contractSource[0].ABI !== 'Contract source code not verified') {
                         const source = contractSource[0].SourceCode;
-                        await fs.writeFileSync("/var/www/backend_app/storage/contracts/" + token.address, source);
+                        //await fs.writeFileSync("/var/www/backend_app/storage/contracts/" + token.address, source);
                         token.isVerified = true;
                     } else {
                         token.isVerified = false;
