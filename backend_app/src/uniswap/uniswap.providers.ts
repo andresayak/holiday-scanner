@@ -62,6 +62,11 @@ export const providers = [
                     console.log('PROVIDER: '+url);
                     return new ethers.providers.WebSocketProvider(url);
                 }
+                if (network === 'hardhat') {
+                    const url = 'ws://hardhat:8545';
+                    console.log('PROVIDER: '+url);
+                    return new ethers.providers.WebSocketProvider(url);
+                }
                 throw Error('wrong network ['+network+']');
             }
         },
@@ -93,6 +98,11 @@ export const providers = [
                 }
                 if (network === 'local') {
                     const url = 'http://host:8545';
+                    console.log('PROVIDER: '+url);
+                    return new ethers.providers.JsonRpcProvider(url);
+                }
+                if (network === 'hardhat') {
+                    const url = 'http://hardhat:8545';
                     console.log('PROVIDER: '+url);
                     return new ethers.providers.JsonRpcProvider(url);
                 }

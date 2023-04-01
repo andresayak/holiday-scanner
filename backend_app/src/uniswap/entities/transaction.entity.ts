@@ -10,12 +10,11 @@ export class TransactionEntity extends BaseEntity<TransactionEntity> {
     @Column({type: 'varchar', length: 66})
     hash: string;
 
-
     @Column({type: 'varchar', length: 32})
     network: string;
 
     @Column({type: 'integer', nullable: true})
-    blockNumber: string;
+    blockNumber: number;
 
     @Column({type: 'integer', nullable: true})
     transactionIndex: string;
@@ -99,7 +98,10 @@ export class TransactionEntity extends BaseEntity<TransactionEntity> {
     amount1Usd: number;
 
     @Column({type: 'text', nullable: true})
-    logs: number;
+    logs: string;
+
+    @Column({type: 'boolean', default: false})
+    isTested: boolean;
 
     @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
     createdAt: Date;

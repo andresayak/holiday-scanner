@@ -1,4 +1,4 @@
-import {balanceHuman, BNB_CONTRACT, getAmountOut} from "../../helpers/calc";
+import {balanceHuman, BNB_CONTRACT, BNB_PRICE_USD, getAmountOut} from "../../helpers/calc";
 import {BigNumber, utils} from "ethers";
 import {PairEntity} from "../../entities/pair.entity";
 import {VariantType} from "./getVariants";
@@ -18,7 +18,8 @@ export type SuccessType = {
     fees: any[];
     feeScales: any[];
     profit_real: string;
-    swaps?: any[]
+    swaps?: any[];
+    amountInUsd: number;
 }
 type PropsType = {
     variants: VariantType[];
@@ -235,10 +236,12 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
             }
         }
         const profitNumber = parseInt(maxProfit.toString()) / 100;
-        if(profitNumber > 0){
+        if(profitNumber > 0 && maxRealProfit){
             console.log('profitNumber='+ profitNumber);
             console.log('maxRealProfit='+ maxRealProfit);
-            if (profitNumber >= 0.5) {
+            const price = variant.path[0] == BNB_CONTRACT.toLowerCase() ? BNB_PRICE_USD : 1;
+            const amountInUsd = price * parseFloat(utils.formatEther(maxRealProfit));
+            if (profitNumber >= 0.5 && amountInUsd > 1) {
                 success.push({
                     amountIn: optimalAmountIn.toString(),
                     amountOut: optimalAmountOut.toString(),
@@ -251,7 +254,8 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                     fees,
                     feeScales,
                     profit: profitNumber,
-                    profit_real: balanceHuman(maxRealProfit, variant.path[0])
+                    profit_real: balanceHuman(maxRealProfit, variant.path[0]),
+                    amountInUsd
                 });
             }
         }

@@ -15,6 +15,7 @@ import * as MultiSwapAbi from "../../contracts/MultiSwapV2.json";
 import {calculate} from './helpers/arbitrage';
 import {urls} from "../helpers/provider";
 import {TgBot} from "../TgBot";
+import { TransactionEntity } from '../entities/transaction.entity';
 
 
 const swapInterface = [
@@ -72,6 +73,8 @@ export class ScanArbitrageCommand {
                 private readonly pairRepository: Repository<PairEntity>,
                 @Inject('ROUTER_REPOSITORY')
                 private readonly routerRepository: Repository<RouterEntity>,
+                @Inject('TRANSACTION_REPOSITORY')
+                private readonly transactionRepository: Repository<TransactionEntity>,
                 private readonly tgBot: TgBot,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType) {
@@ -169,7 +172,7 @@ export class ScanArbitrageCommand {
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
                                         multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce,
-                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1, this.tgBot
+                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1, this.tgBot, this.transactionRepository
                                     );
                                 }catch (e) {
                                     console.log(e)

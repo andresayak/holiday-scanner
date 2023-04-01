@@ -52,7 +52,7 @@ export class TestSwapCommand {
         })
             filename: string,
     ) {
-        const provider = this.providers('ws', 'local');
+        const provider = this.providers('http', 'hardhat');
 
         const swapData = JSON.parse(fs.readFileSync('/var/www/backend_app/storage/swaps/'+filename, 'utf-8'));
 

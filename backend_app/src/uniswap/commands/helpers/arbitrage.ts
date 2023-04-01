@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import {RedisClient} from "redis";
 import {JsonRpcProvider} from "@ethersproject/providers";
 import {TgBot} from "../../TgBot";
+import {TransactionEntity} from "../../entities/transaction.entity";
 
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
@@ -69,7 +70,8 @@ export const calculate = async (swap: {
                                 }, pairRepository: Repository<PairEntity>, network: string, startBlock: number, currentBlock: number,
                                 multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean,
                                 providers: JsonRpcProvider[],
-                                nonce: number, upNonce: () => void, chainId: number, amount0: string, amount1: string, tgBot: TgBot
+                                nonce: number, upNonce: () => void, chainId: number, amount0: string, amount1: string, tgBot: TgBot,
+                                transactionRepository: Repository<TransactionEntity>
 ) => {
     const timeProcessing = (new Date().getTime() - timeStart.getTime()) / 1000;
     console.log('timeProcessing', timeProcessing);
@@ -255,8 +257,33 @@ export const calculate = async (swap: {
                 }, before, after, success
             };
             console.log('data', JSON.stringify(data));
-            fs.writeFileSync("/var/www/backend_app/storage/swaps/" + currentBlock + "-" + (new Date().getTime()), JSON.stringify(data, null, "\t"));
+            const filename = currentBlock + "-" + (new Date().getTime());
+            fs.writeFileSync("/var/www/backend_app/storage/swaps/" + filename, JSON.stringify(data, null, "\t"));
             console.log('success', success);
+
+            try{
+                await transactionRepository.create(new TransactionEntity({
+                    hash: target.hash,
+                    network,
+                    blockNumber: currentBlock,
+                    from: target.from,
+                    to: target.to,
+                    gasPrice: target.gasPrice.toString(),
+                    gasLimit: target.gasLimit.toString(),
+                    value: target.value.toString(),
+                    data: target.data.toString(),
+                    nonce: target.nonce,
+                    chainId: target.chainId,
+                    profit: success.profit,
+                    profitReal: success.amountInUsd,
+                    method: swap.json.method,
+                    logs: filename,
+                }));
+            }catch (e) {
+                console.log(e);
+            }
+
+
 
             console.log('gasPrice=' + swap.target.gasPrice);
             console.log('gasLimit=' + swap.target.gasLimit);
