@@ -153,8 +153,8 @@ export class ScanPairsCommand {
                     reserve1: reserves[1].toString()
                 };
 
-                await new Promise((save) => this.redisPublisherClient.set('pair_' + token0 + '_' + token1, JSON.stringify(pairData), save));
-                await new Promise((save) => this.redisPublisherClient.set('pair_' + pairAddress, JSON.stringify(pairData), save));
+                this.redisPublisherClient.set('pair_' + token0 + '_' + token1, JSON.stringify(pairData));
+                this.redisPublisherClient.set('pair_' + pairAddress, JSON.stringify(pairData));
                 this.redisPublisherClient.set('lastFactoryIndex_' + factoryAddress, i.toString());
             }
         }
