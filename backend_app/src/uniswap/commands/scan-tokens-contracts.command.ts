@@ -8,6 +8,7 @@ import {EnvService} from "../../env/env.service";
 import {RedisClient} from 'redis';
 import axios from "axios";
 import {EthProviderFactoryType} from "../uniswap.providers";
+import * as fs from 'fs';
 
 const getContractSource = async (address, apiKey: string) => {
     const url = 'https://api.bscscan.com/api' +
@@ -62,7 +63,7 @@ export class ScanTokensContractsCommand {
                     const contractSource = await getContractSource(token.address, apikeys[index]);
                     if (contractSource[0] && contractSource[0].ABI !== 'Contract source code not verified') {
                         const source = contractSource[0].SourceCode;
-                        //await fs.writeFileSync("/var/www/backend_app/storage/contracts/" + token.address, source);
+                        await fs.writeFileSync("/var/www/backend_app/storage/contracts/" + token.address, source);
                         token.isVerified = true;
                     } else {
                         token.isVerified = false;

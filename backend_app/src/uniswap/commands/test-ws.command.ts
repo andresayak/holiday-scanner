@@ -2,7 +2,6 @@ import {Injectable} from "@nestjs/common";
 import {Command, Positional} from "nestjs-command";
 import {WebSocketProvider} from "@ethersproject/providers";
 
-
 @Injectable()
 export class TestWsCommand {
     @Command({
