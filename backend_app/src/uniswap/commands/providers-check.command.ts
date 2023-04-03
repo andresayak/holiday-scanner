@@ -1,4 +1,4 @@
-import {Command} from 'nestjs-command';
+import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {providers} from 'ethers';
 import {Repository} from "typeorm";
@@ -23,14 +23,20 @@ export class ProvidersCheckCommand {
         command: 'provider:compare',
         autoExit: false
     })
-    async create() {
-
-        const url1 = 'http://65.21.195.47:8545';//wss://rpc.ankr.com/bsc/ws/' + this.envService.get('ANKR_PROVIDER_KEY');
-        console.log('url1', url1);
-        //const url2 = 'wss://frequent-purple-fire.bsc.discover.quiknode.pro/' + this.envService.get('QUIKNODE_PROVIDER_KEY') + '/';
-        const url2 = 'http://65.21.192.28:58545';
-        const jsonProvider1 = new providers.WebSocketProvider(url1);
-        const jsonProvider2 = new providers.JsonRpcProvider(url2);
+    async create(
+        @Positional({
+            name: 'url1',
+            type: 'string'
+        })
+            provider1Url: string,
+        @Positional({
+            name: 'url2',
+            type: 'string'
+        })
+            provider2Url: string,
+    ) {
+        const jsonProvider1 = new providers.WebSocketProvider(provider1Url);
+        const jsonProvider2 = new providers.WebSocketProvider(provider2Url);
 
         let lastBlock = {
             block: 0,
@@ -55,10 +61,10 @@ export class ProvidersCheckCommand {
             }
         }
         jsonProvider1.on("block", (blockNumber) => {
-            check('ANKR', blockNumber);
+            check('NODE1', blockNumber);
         });
         jsonProvider2.on("block", (blockNumber) => {
-            check('NODE', blockNumber);
+            check('NODE2', blockNumber);
         });
     }
 }

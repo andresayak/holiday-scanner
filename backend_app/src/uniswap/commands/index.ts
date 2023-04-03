@@ -16,6 +16,7 @@ import {SyncTokensCommand} from "./sync-tokens.command";
 import {TestSwapCommand} from "./test-swap.command";
 import {ScanVariantsCommand} from "./scan-variants.command";
 import {ScanVariants3Command} from "./scan-variants3.command";
+import {TestWsCommand} from "./test-ws.command";
 
 export default [
     ScanTransactionsCommand,
@@ -35,5 +36,6 @@ export default [
     ScanTokensContractsCommand,
     TestTokensCommand,
     SyncTokensCommand,
-    TestSwapCommand
+    TestSwapCommand,
+    TestWsCommand
 ];
