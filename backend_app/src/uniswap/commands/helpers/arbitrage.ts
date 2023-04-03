@@ -217,11 +217,11 @@ export const calculate = async (swap: {
                 }
             }
             const message = items.map((item, index) => {
-                return (index + 1) + ') ' + (hash ? 'hash: ' + hash + "\n" : '')+' ['+currentBlock+']'
+                return (index + 1) + ') ' + (hash ? 'hash: ' + hash + "\n" : '') + ' [' + currentBlock + '] '
                     + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
                     + 'token: ' + item.path[0] + "\n"
-                    + 'profit: '+item.profit+'%, '+ item.profit_real + "\n"
-                    + 'timing: '+timeProcessing+' / '+timeFetch+' / ' + timeDiff0 + ' sec.' + "\n"
+                    + 'profit: ' + item.profit + '%, ' + item.profit_real + "\n"
+                    + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' sec.' + "\n"
             }).join("\n");
             await tgBot.sendMessage(message);
 
@@ -261,7 +261,7 @@ export const calculate = async (swap: {
             fs.writeFileSync("/var/www/backend_app/storage/swaps/" + filename, JSON.stringify(data, null, "\t"));
             console.log('success', success);
 
-            try{
+            try {
                 await transactionRepository.create(new TransactionEntity({
                     hash: target.hash,
                     network,
@@ -279,10 +279,9 @@ export const calculate = async (swap: {
                     method: swap.json.method,
                     logs: filename,
                 }));
-            }catch (e) {
+            } catch (e) {
                 console.log(e);
             }
-
 
 
             console.log('gasPrice=' + swap.target.gasPrice);

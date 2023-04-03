@@ -23,7 +23,7 @@ export type SuccessType = {
 }
 type PropsType = {
     variants: VariantType[];
-    pairs: {[k: string]:PairEntity};
+    pairs: { [k: string]: PairEntity };
     onlyPairs?: string[];
     amount0: string;
     amount1: string;
@@ -208,7 +208,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
     }
 
     console.log('cases', cases.length);
-    for(const item of cases){
+    for (const item of cases) {
         const {variant, reserves, fees, feeScales} = item;
         const maxAmountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
         let maxProfit = BigNumber.from('0');
@@ -236,9 +236,9 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
             }
         }
         const profitNumber = parseInt(maxProfit.toString()) / 100;
-        if(profitNumber > 0 && maxRealProfit){
-            console.log('profitNumber='+ profitNumber);
-            console.log('maxRealProfit='+ maxRealProfit);
+        if (profitNumber > 0 && maxRealProfit) {
+            console.log('profitNumber=' + profitNumber);
+            console.log('maxRealProfit=' + maxRealProfit);
             const price = variant.path[0] == BNB_CONTRACT.toLowerCase() ? BNB_PRICE_USD : 1;
             const amountInUsd = price * parseFloat(utils.formatEther(maxRealProfit));
             if (profitNumber >= 0.5 && amountInUsd > 1) {
@@ -312,5 +312,5 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         }
     }*/
     return success
-        .sort((a, b) => (b.profit - a.profit));
+        .sort((a, b) => (b.amountInUsd - a.amountInUsd));
 }

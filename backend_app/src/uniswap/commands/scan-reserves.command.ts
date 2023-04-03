@@ -218,7 +218,7 @@ export class ScanReservesCommand {
                     });
                     provider._websocket.on('close', async (code) => {
                         console.log('websocket error', code);
-                        this.tgBot.sendMessage('websocket error, code='+code );
+                        this.tgBot.sendMessage('reserves websocket error, code=' + code);
                         errorWebsocket(true);
                     });
                 } catch (e) {

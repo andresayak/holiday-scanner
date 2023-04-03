@@ -1,21 +1,22 @@
 import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
-import {ContractFactory, ethers, utils, Wallet} from 'ethers';
-import {Repository} from "typeorm";
+import {BigNumber, Contract, ContractFactory, ethers, utils, Wallet} from 'ethers';
+import {In, Repository, MoreThan, Not, IsNull} from "typeorm";
 import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
 import {RedisClient} from 'redis';
-import {balanceHuman} from "../helpers/calc";
+import {balanceHuman, BNB_CONTRACT, getAmountIn, getAmountOut, tokens} from "../helpers/calc";
 import {EthProviderFactoryType, EthWebsocketProviderFactoryType} from "../uniswap.providers";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {RouterEntity} from "../entities/router.entity";
-import {PairsType} from "./helpers/getVariants";
+import {PairsType, VariantType} from "./helpers/getVariants";
 import * as MultiSwapAbi from "../../contracts/MultiSwapV2.json";
 import {calculate} from './helpers/arbitrage';
 import {urls} from "../helpers/provider";
 import {TgBot} from "../TgBot";
-import {TransactionEntity} from '../entities/transaction.entity';
+import { TransactionEntity } from '../entities/transaction.entity';
+
 
 const swapInterface = [
     'function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)',
@@ -37,7 +38,6 @@ const methods = ['swapExactETHForTokens', 'swapETHForExactTokens', 'swapExactETH
     'swapExactTokensForETHSupportingFeeOnTransferTokens', 'swapExactTokensForTokensSupportingFeeOnTransferTokens', 'swapExactTokensForTokens',
     'swapTokensForExactTokens', 'swapTokensForExactTokens', 'swapTokensForExactETH', 'swapExactTokensForETH',
 ];
-
 const iface = new utils.Interface(swapInterface);
 
 @Injectable()
@@ -115,11 +115,13 @@ export class ScanArbitrageCommand {
     ) {
 
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
+        const startWork = new Date();
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
-        const providerForSend = new ethers.providers.JsonRpcProvider(this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
+        const provider = this.providers('http', this.envService.get('ETH_NETWORK'), provider2Name);
+        const providerForSend = new ethers.providers.JsonRpcProvider( this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
 
         parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID'))
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(providerForSend);
+        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
 
         let nonce = await wallet.provider.getTransactionCount(wallet.address);
 
@@ -131,7 +133,7 @@ export class ScanArbitrageCommand {
         console.log(' - account balance: ' + balanceHuman(balance));
 
         const providers = [];
-        for (const url of urls) {
+        for(const url of urls){
             providers.push(new ethers.providers.JsonRpcProvider(url));
         }
 
@@ -143,10 +145,10 @@ export class ScanArbitrageCommand {
             while (attems < 10) {
                 try {
                     const target: TransactionResponse | null = await wsProvider.getTransaction(hash);
-                    if (target && target.to && target.nonce !== null) {
+                    if (target && target.to && target.nonce!==null) {
                         const router = routers.find((router) => router.address.toLowerCase() === target.to.toLowerCase())
                         if (target.gasPrice.gt('5000000000') && router) {
-                            console.log('t', (new Date().getTime() - timeStart.getTime()) / 1000, 'attems: ' + attems);
+                            console.log('t', (new Date().getTime() - timeStart.getTime())/1000, 'attems: '+attems);
                             const getMethod = () => {
                                 for (const method of methods) {
                                     let result;
@@ -173,7 +175,7 @@ export class ScanArbitrageCommand {
                                         multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce,
                                         parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1, this.tgBot, this.transactionRepository
                                     );
-                                } catch (e) {
+                                }catch (e) {
                                     console.log(e)
                                 }
                             }
@@ -188,29 +190,109 @@ export class ScanArbitrageCommand {
                 }
             }
         }
+        const renderTable = () => {
+            /*const prices = this.transactions.reduce((accumulator, item) => {
+                if (item.gasPrice) {
+                    return {
+                        count: accumulator.count + 1,
+                        totalGasPrice: item.gasPrice.add(accumulator.totalGasPrice)
+                    };
+                }
+                return accumulator;
+            }, {
+                count: 0,
+                totalGasPrice: 0
+            });
+            const avgPrice = prices.totalGasPrice.div(prices.count)*/
+            //console.log(currentBlock + ') avgPrice=' + avgPrice);
+            const items = this.transactions.sort((a, b) => {
+                if (a.gasPrice && b.gasPrice) {
+                    if (a.gasPrice.eq(b.gasPrice)) {
+                        return a.txIndex > b.txIndex ? -1 : 1;
+                    } else {
+                        return a.gasPrice.gt(b.gasPrice) ? -1 : 1;
+                    }
+                }
+                return 1;
+            });
+            const table = items.filter(item => item.from && item.json).map((item) => {
+                return {
+                    hash: item.hash,
+                    txIndex: item.txIndex,
+                    from: item.from ? item.from.toString() : null,
+                    to: item.to ? item.to.toString() : null,
+                    //nonce: item.nonce?item.nonce:null,
+                    price: item.gasPrice ? item.gasPrice.toString() : null,
+                    limit: item.gasLimit ? item.gasLimit.toString() : null,
+                    added: (new Date().getTime() - item.added) / 1000 + ' sec',
+                    method: item.json ? item.json.method : '',
+                    //token0: item.json.result.path[0],
+                    //token1: item.json.result.path[1],
+                    //token2: item.json.result.path[2],
+                    factory: item.factory,
+                    path: item.json.result.path,
+                    value: item.value.toString(),
+                    amountOutMin: item.json.result?.amountOutMin,
+                    amountOut: item.json.result?.amountOut,
+                    amountInMax: item.json.result?.amountInMax,
+                    amountIn: item.value.gt(0) ? item.value : item.json.result?.amountIn,
+                    gasPrice: item.gasPrice,
+                    deadline: item.deadline + ' sec'
+                }
+            });
+            //this.calculate(table, multiSwapContract);
+            //console.table(table);
+            console.log('time ', (new Date().getTime() - startWork.getTime()) / 1000 + ' sec')
 
+        }
         wsProvider.on("pending", (hash) => {
             const timeStart = new Date();
             if (typeof hash == 'string' && this.blockUpdated) {
                 getTransaction(hash, this.currentBlock, timeStart);
             }
         });
-
-        wsProvider.on('block', (blockNumber) => {
+        wsProvider.on("block", (blockNumber) => {
+            const timeStart = new Date();
             const used = process.memoryUsage().heapUsed / 1024 / 1024;
             console.log('block', blockNumber, `memory ${Math.round(used * 100) / 100} MB`);
             this.currentBlock = blockNumber;
-            this.lastBlockTime = new Date().getTime();
+            this.lastBlockTime = timeStart.getTime();
             this.blockUpdated = false;
+            /*provider.getBlockWithTransactions(blockNumber).then((info) => {
+                let transactions = info.transactions.map(item => item.hash);
+                const items = info.transactions.filter(item => item.gasPrice.gt(0));
+                const minGasPrice = items.reduce((a: BigNumber, item) => (a === null)
+                    ? item.gasPrice : (item.gasPrice.lt(a) && a.toString() !== '0' ? item.gasPrice : a), null);
+                console.log('minGasPrice=' + minGasPrice);
+                const maxGasPrice = items.reduce((a: BigNumber, item) => (a === null)
+                    ? item.gasPrice : (item.gasPrice.gt(a) && a.toString() !== '0' ? item.gasPrice : a), null);
+                console.log('maxGasPrice=' + maxGasPrice);
+
+                const pendings = this.transactions.map(item => item.hash);
+                this.transactions = this.transactions.filter(item => //!transactions.includes(item.hash)
+                    //||
+                    ((new Date().getTime() - item.added) / 1000 < 5)//)//&& item.gasPrice && item.gasPrice.lt(minGasPrice))
+                );
+                const notFromList = transactions.filter(hash => !pendings.includes(hash));
+                const fromRemoveList = notFromList.filter(hash => removed.includes(hash));
+                console.log('notFromPending', notFromList.length + ' / ' + transactions.length);
+                console.log('fromRemoveList', fromRemoveList.length + ' / ' + removed.length);
+                console.log('transactions', this.transactions.length);
+                console.log('openRequest', openRequest, 'closeRequest', closeRequest, 'successTxs', successTxs, 'timeoudRequest', timeoudRequest);
+                this.transactions = this.transactions.sort((a, b) => {
+                    return a.gasPrice && b.gasPrice && a.gasPrice.gt(b.gasPrice) ? -1 : 1;
+                });
+                //renderTable();
+                console.log('end block', blockNumber, (new Date().getTime() - timeStart.getTime()) / 1000 + ' sec');
+            });*/
         });
 
         wsProvider._websocket.on('close', async (code) => {
             console.log('websocket error', code);
-            this.tgBot.sendMessage('arbitrage websocket error, code=' + code);
         });
 
         this.startBlock = parseInt(this.envService.get('START_BLOCK'));
-        if (!this.startBlock || isNaN(this.startBlock)) {
+        if(!this.startBlock || isNaN(this.startBlock)){
             throw Error('START_BLOCK not set');
         }
         this.redisSubscriberClient.subscribe('pairs');
@@ -218,10 +300,10 @@ export class ScanArbitrageCommand {
             const json = JSON.parse(data);
             this.lastSyncBlock = json.blockNumber;
             const diff = this.lastSyncBlock - this.currentBlock;
-            if (diff < 0) {
-                console.log('wait sync, syncBlock=', json.blockNumber, 'currentBlock=', this.currentBlock, 'diff: ' + diff);
-            } else {
-                console.log('block', json.blockNumber, 'update', ((new Date().getTime() - this.lastBlockTime) / 1000) + ' sec');
+            if(diff<0){
+                console.log('wait sync, syncBlock=', json.blockNumber, 'currentBlock=', this.currentBlock, 'diff: '+diff);
+            }else{
+                console.log('block', json.blockNumber, 'update', ((new Date().getTime() - this.lastBlockTime)/1000)+' sec');
                 this.blockUpdated = true;
             }
         });
