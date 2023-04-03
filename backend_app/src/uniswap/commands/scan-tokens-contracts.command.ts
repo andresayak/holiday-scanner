@@ -8,7 +8,6 @@ import {EnvService} from "../../env/env.service";
 import {RedisClient} from 'redis';
 import axios from "axios";
 import {EthProviderFactoryType} from "../uniswap.providers";
-import * as fs from 'fs';
 
 const getContractSource = async (address, apiKey: string) => {
     const url = 'https://api.bscscan.com/api' +
@@ -34,7 +33,6 @@ export class ScanTokensContractsCommand {
                 private readonly pairRepository: Repository<PairEntity>,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType) {
-
     }
 
     @Command({

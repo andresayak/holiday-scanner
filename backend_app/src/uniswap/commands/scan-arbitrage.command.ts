@@ -83,7 +83,7 @@ export class ScanArbitrageCommand {
     }
 
     @Command({
-        command: 'scan:arbitrage <isTestMode> <provider1Name> <provider2Name> <amount0> <amount1>',
+        command: 'scan:arbitrage <isTestMode> <provider1Name> <amount0> <amount1>',
         autoExit: false
     })
     async create(
@@ -97,11 +97,6 @@ export class ScanArbitrageCommand {
             type: 'string'
         })
             provider1Name: string,
-        @Positional({
-            name: 'provider2Name',
-            type: 'string'
-        })
-            provider2Name: string,
         @Positional({
             name: 'amount0',
             type: 'string'

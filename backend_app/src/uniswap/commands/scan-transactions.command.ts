@@ -6,7 +6,6 @@ import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
 import * as pairAbi from '../../contracts/UniswapV2Pair.json';
 import axios from 'axios';
-import {getBSCProviderUrl} from '../helpers/provider';
 import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {EthProviderFactoryType} from "../uniswap.providers";
@@ -96,7 +95,6 @@ export class ScanTransactionsCommand {
         if (receipt) {
             incCount();
             for (const event of receipt.logs) {
-
                 try {
                     this.iface.decodeEventLog('Swap', event.data, event.topics);
                     const pairAddress = event.address.toLowerCase();

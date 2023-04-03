@@ -10,7 +10,6 @@ import * as ERC20Abi from '../../contracts/ERC20.json';
 import * as WETH9Abi from '../../contracts/WETH9.json';
 import * as SwapRouter02Abi from '../../contracts/SwapRouter02.json';
 
-
 const swapInterface = [
     'event Transfer(address indexed from, address indexed to, uint256 value)',
     'event Swap(address indexed sender, uint256 amount0In, uint256 amount1In, uint256 amount0Out, uint256 amount1Out, address indexed to)',
@@ -30,10 +29,16 @@ export class TestTokensCommand {
     }
 
     @Command({
-        command: 'test:tokens',
+        command: 'test:tokens <chunkSize>',
         autoExit: false
     })
-    async create() {
+    async create(
+        @Positional({
+            name: 'chunkSize',
+            type: 'number'
+        })
+            chunkSize: number = 1,
+    ) {
         const provider = this.providers('ws', 'hardhat');
 
         const private_keys: string[] = [
@@ -59,18 +64,17 @@ export class TestTokensCommand {
             '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e'
         ];
         let count = 0;
-        while(true){
+        while (true) {
             const tokens = await this.tokenRepository.find({
-                where:{
+                where: {
                     isTested: IsNull()
                 },
                 take: 100
             });
-            if(!tokens.length){
+            if (!tokens.length) {
                 console.log('DONE');
                 return;
             }
-            const chunkSize = 1;
             for (let i = 0; i < tokens.length; i += chunkSize) {
                 const chunk = tokens.slice(i, i + chunkSize);
                 console.log('chunk', chunk, i, i + chunkSize);
@@ -78,20 +82,20 @@ export class TestTokensCommand {
                     const account = new Wallet(private_keys[index], provider)
                         .connect(provider);
                     return new Promise(async (done) => {
-                        if(token.address == BNB_CONTRACT.toLowerCase()){
+                        if (token.address == BNB_CONTRACT.toLowerCase()) {
                             token.isTested = true;
                             await this.tokenRepository.save(token);
                             return done(true);
                         }
-                        console.log((++count)+') -- test '+token.address);
-                        try{
+                        console.log((++count) + ') -- test ' + token.address);
+                        try {
                             await testToken(account, token.address);
                             token.isTested = true;
-                        }catch (e){
+                        } catch (e) {
                             console.log(e.toString());
-                            if(!e.toString().match(/VM Exception while processing transaction/i)){
+                            if (!e.toString().match(/VM Exception while processing transaction/i)) {
                                 //process.exit(1);
-                                await new Promise((done)=>setTimeout(()=>done(1),10000));
+                                await new Promise((done) => setTimeout(() => done(1), 10000));
                                 return done(true);
                             }
                             token.isTested = false;
@@ -109,13 +113,13 @@ export class TestTokensCommand {
 const testToken = async (account: Wallet, token1Address: string) => {
 
     const balance = await account.getBalance();
-    console.log(' - account balance: '+balance, balanceHuman(balance));
+    console.log(' - account balance: ' + balance, balanceHuman(balance));
 
     const routerAddress = '0x10ed43c718714eb63d5aa57b78b54704e256024e';
     const token0Address = BNB_CONTRACT.toLowerCase();
 
     const amountIn = utils.parseEther("0.1");
-    console.log('amountIn='+amountIn, balanceHuman(amountIn));
+    console.log('amountIn=' + amountIn, balanceHuman(amountIn));
     let token0 = await ContractFactory.getContract(token0Address, WETH9Abi.abi, account);
     let token1 = await ContractFactory.getContract(token1Address, ERC20Abi.abi, account);
 
@@ -126,17 +130,17 @@ const testToken = async (account: Wallet, token1Address: string) => {
     });
 
     const buyTokens = async (amountIn) => {
-        console.log(' - amountIn='+amountIn);
+        console.log(' - amountIn=' + amountIn);
         const balance = await account.getBalance();
-        console.log('balance='+balance);
+        console.log('balance=' + balance);
         const balance00 = await token0.balanceOf(account.address);
-        console.log('balance0='+balance00);
+        console.log('balance0=' + balance00);
         const balance01 = await token1.balanceOf(account.address);
-        console.log('balance01='+balance01);
+        console.log('balance01=' + balance01);
 
         const tx = await router.connect(account)
             .swapExactETHForTokens(0, [token0.address, token1.address],
-                account.address, Math.ceil(new Date().getTime()/1000) + 1000000000000, {
+                account.address, Math.ceil(new Date().getTime() / 1000) + 1000000000000, {
                     value: amountIn,
                     gasLimit: BigNumber.from('2000000'),
                 });
@@ -156,11 +160,11 @@ const testToken = async (account: Wallet, token1Address: string) => {
             }
         }
         const balance2 = await account.getBalance();
-        console.log('balance='+balance2);
+        console.log('balance=' + balance2);
         const balance10 = await token0.balanceOf(account.address);
-        console.log('balance10='+balance10);
+        console.log('balance10=' + balance10);
         const balance11 = await token1.balanceOf(account.address);
-        console.log('balance11='+balance11);
+        console.log('balance11=' + balance11);
         const diff = balance2.sub(balance);
         const diff0 = balance10.sub(balance00);
         const diff1 = balance11.sub(balance01);
@@ -170,19 +174,19 @@ const testToken = async (account: Wallet, token1Address: string) => {
     }
 
     const sellTokens = async (amountIn) => {
-        console.log(' - amountIn='+amountIn);
+        console.log(' - amountIn=' + amountIn);
         const balance = await account.getBalance();
-        console.log('balance='+balance);
+        console.log('balance=' + balance);
         const balance00 = await token0.balanceOf(account.address);
-        console.log('balance0='+balance00);
+        console.log('balance0=' + balance00);
         const balance01 = await token1.balanceOf(account.address);
-        console.log('balance01='+balance01);
+        console.log('balance01=' + balance01);
         await token1.approve(router.address, amountIn, {
             gasLimit: BigNumber.from('2000000'),
         });
         const tx = await router.connect(account)
             .swapExactTokensForETH(amountIn, 0, [token1.address, token0.address],
-                account.address, Math.ceil(new Date().getTime()/1000) + 1000000000000,
+                account.address, Math.ceil(new Date().getTime() / 1000) + 1000000000000,
                 {
                     gasLimit: BigNumber.from('2000000'),
                 }
@@ -190,11 +194,11 @@ const testToken = async (account: Wallet, token1Address: string) => {
 
         await tx.wait();
         const balance2 = await account.getBalance();
-        console.log('balance='+balance2);
+        console.log('balance=' + balance2);
         const balance10 = await token0.balanceOf(account.address);
-        console.log('balance10='+balance10);
+        console.log('balance10=' + balance10);
         const balance11 = await token1.balanceOf(account.address);
-        console.log('balance11='+balance11);
+        console.log('balance11=' + balance11);
         const diff = balance2.sub(balance);
         const diff0 = balance10.sub(balance00);
         const diff1 = balance11.sub(balance01);
@@ -205,15 +209,15 @@ const testToken = async (account: Wallet, token1Address: string) => {
     }
 
     const {diff, diff0: diff00, diff1: diff10} = await buyTokens(amountIn);
-    console.log('diff='+diff);
-    console.log('diff00='+diff00);
-    console.log('diff10='+diff10);
+    console.log('diff=' + diff);
+    console.log('diff00=' + diff00);
+    console.log('diff10=' + diff10);
     console.log('');
     const {diff: diff2, diff0: diff01, diff1: diff11} = await sellTokens(diff10);
-    console.log('diff='+diff2);
-    console.log('diff01='+diff01);
-    console.log('diff11='+diff11);
+    console.log('diff=' + diff2);
+    console.log('diff01=' + diff01);
+    console.log('diff11=' + diff11);
     const balanceLast = await account.getBalance();
     const diffTotal = balance.sub(balanceLast);
-    console.log('diffTotal='+diffTotal, balanceHuman(diffTotal));
+    console.log('diffTotal=' + diffTotal, balanceHuman(diffTotal));
 }

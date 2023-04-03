@@ -6,7 +6,7 @@ import {WebSocketProvider} from "@ethersproject/providers";
 @Injectable()
 export class TestWsCommand {
     @Command({
-        command: 'test:swaps <url>',
+        command: 'test:ws <url>',
         autoExit: false
     })
     async create(

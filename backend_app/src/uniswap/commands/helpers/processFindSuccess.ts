@@ -71,24 +71,6 @@ const updateReserves = (prev, factory, updatePairs, token0: string, token1: stri
                 throw Error('amountOut less zero');
             }
         }
-        /*if (amountOut && amountOut.gte(0)) {
-            amountInReal = getAmountOut(amountOut, reserves[0], reserves[1], pair.fee, pair.fee_scale);
-            if (amountInReal.lt(0)) {
-                console.log('amountOut=' + amountOut);
-                console.log('reserves0=' + reserves[0]);
-                console.log('reserves1=' + reserves[1]);
-                throw Error('amountIn less zero');
-            }
-        }*/
-        /*if (amountOutMin && amountOutMin.lt(amountOut)) {
-            continue;
-        }
-
-        if (mountInMax && amountInMax.gt(amountIn)) {
-            continue;
-        }*/
-        console.log('amountIn=' + amountInReal);
-        console.log('amountOut=' + amountRealOut);
 
         const reserves_after = [
             reserves[0].sub(amountRealOut),

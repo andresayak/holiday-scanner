@@ -9,7 +9,6 @@ import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
 import {balanceHuman} from "../helpers/calc";
 import * as MultiSwapAbi from "../../contracts/MultiSwap.json";
-import {MakeTrade} from "./helpers/makeTrade";
 import {processVariants} from './helpers/processVariants';
 import {EthProviderFactoryType} from "../uniswap.providers";
 
