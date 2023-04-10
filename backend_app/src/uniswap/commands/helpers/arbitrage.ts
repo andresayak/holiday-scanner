@@ -154,6 +154,10 @@ export const calculate = async (swap: {
             console.log('target pair1 not found', swap.factory, token0, token1);
             return;
         }
+        if(!pair1.fee){
+            console.log('target pair1 not have fee', pair1);
+            return;
+        }
 
         const before: any = {
             pair0: JSON.parse(JSON.stringify(pair1))
@@ -176,6 +180,10 @@ export const calculate = async (swap: {
             if (!pair2) {
                 console.log('target pair2 not found', swap.factory, token1, token2);
                 console.log('pairs',Object.values(pairs));
+                return;
+            }
+            if(!pair2.fee){
+                console.log('target pair2 not have fee', pair2);
                 return;
             }
             before.pair1 = JSON.parse(JSON.stringify(pair2));

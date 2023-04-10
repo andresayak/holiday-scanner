@@ -70,6 +70,7 @@ export class ScanVariantsCommand {
         console.log('tokens='+tokensAll.length);
         const pairsAll = await this.pairRepository.find({
             where: {
+                status: 'Success'
                 //fee: Not(IsNull())
             }
         });

@@ -50,7 +50,7 @@ export class ScanPairsContractsCommand {
         const pairs = await this.pairRepository.find({
             where: {
                 network: this.envService.get('ETH_NETWORK'),
-                fee: null
+                fee: null,
             }
         });
 
