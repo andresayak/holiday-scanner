@@ -169,12 +169,14 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
             const pairAddress = variant.pairs[index];
             if (pairs[pairAddress]) {
                 const pair = pairs[pairAddress];
-                const token0 = variant.path[index];
-                const reserve0 = BigNumber.from(token0 == pair.token0 ? pair.reserve0 : pair.reserve1);
-                const reserve1 = BigNumber.from(token0 == pair.token0 ? pair.reserve1 : pair.reserve0);
-                reserves.push([reserve0, reserve1]);
-                fees.push(pair.fee);
-                feeScales.push(pair.fee_scale);
+                if(pair.fee){
+                    const token0 = variant.path[index];
+                    const reserve0 = BigNumber.from(token0 == pair.token0 ? pair.reserve0 : pair.reserve1);
+                    const reserve1 = BigNumber.from(token0 == pair.token0 ? pair.reserve1 : pair.reserve0);
+                    reserves.push([reserve0, reserve1]);
+                    fees.push(pair.fee);
+                    feeScales.push(pair.fee_scale);
+                }
             } else {
                 break;
             }
