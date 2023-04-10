@@ -171,10 +171,11 @@ export const calculate = async (swap: {
         let pair2;
         if (token2) {
             pair2 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
-                (pair.token0 == token1 && pair.token1 == token2) || (pair.token1 == token1 && pair.token0 == token2)
+                (pair.token0 == token1 && pair.token1 == token2) || (pair.token0 == token2 && pair.token1 == token1)
             ));
             if (!pair2) {
                 console.log('target pair2 not found', swap.factory, token1, token2);
+                console.log('pairs',Object.values(pairs));
                 return;
             }
             before.pair1 = JSON.parse(JSON.stringify(pair2));
