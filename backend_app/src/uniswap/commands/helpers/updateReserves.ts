@@ -48,5 +48,5 @@ export const updateReserves = (pair, token0: string, amountIn: BigNumber, amount
         pair.reserve0 = reserves_after[1].toString();
         pair.reserve1 = reserves_after[0].toString();
     }
-    return {amountRealIn, amountRealOut};
+    return {amountRealIn, amountRealOut, pair};
 }
