@@ -98,7 +98,7 @@ export const calculate = async (swap: {
     const variants = await checkVariants(tokenInner, redisPublisherClient);
 
     if (!variants.length) {
-        console.log('not variants');
+        console.log('not variants', tokenInner);
         return;
     }
     /*const pairs = (await pairRepository.find({
@@ -127,7 +127,7 @@ export const calculate = async (swap: {
                 if (reply) {
                     try {
                         const data = JSON.parse(reply);
-                        if (data && data.blockNumber >= startBlock) {
+                        if (data) {
                             pairs[data.address] = data;
                             return done(true);
                         }
@@ -151,7 +151,7 @@ export const calculate = async (swap: {
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
         ));
         if (!pair1) {
-            console.log('target pair1 not found');
+            console.log('target pair1 not found', swap.factory, token0, token1);
             return;
         }
 
@@ -174,7 +174,7 @@ export const calculate = async (swap: {
                 (pair.token0 == token1 && pair.token1 == token2) || (pair.token1 == token1 && pair.token0 == token2)
             ));
             if (!pair2) {
-                console.log('target pair2 not found');
+                console.log('target pair2 not found', swap.factory, token1, token2);
                 return;
             }
             before.pair1 = JSON.parse(JSON.stringify(pair2));
