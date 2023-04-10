@@ -58,6 +58,7 @@ const updateReserves = (prev, factory, updatePairs, token0: string, token1: stri
         )
     );
     if (pair) {
+        console.log('pair', pair);
         const reserves = pair.token1 === token0
             ? [BigNumber.from(pair.reserve0), BigNumber.from(pair.reserve1)] : [BigNumber.from(pair.reserve1), BigNumber.from(pair.reserve0)];
 
@@ -93,7 +94,6 @@ const updateReserves = (prev, factory, updatePairs, token0: string, token1: stri
                         reserve1: reserves_after[0].toString()
                     }
                 }
-
             }
             return item;
         });
