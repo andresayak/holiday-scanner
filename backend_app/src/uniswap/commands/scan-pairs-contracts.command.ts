@@ -61,8 +61,7 @@ export class ScanPairsContractsCommand {
 
         const network = this.envService.get('ETH_NETWORK');
         const provider = this.providers('http', network, providerName);
-
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
+        const wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
 
         const pairs = await this.pairRepository.find({
             where: {

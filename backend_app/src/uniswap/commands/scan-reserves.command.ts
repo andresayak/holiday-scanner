@@ -108,7 +108,7 @@ export class ScanReservesCommand {
                                 }
                                 fetch(null);
                             }));
-                            if (!pairData || !pairData.address) {
+                            if (!pairData || !pairData.address || !pairData.fee) {
                                 const pair = await this.pairRepository.findOne({
                                     where: {
                                         address: pairAddress
