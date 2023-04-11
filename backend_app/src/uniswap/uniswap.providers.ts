@@ -55,7 +55,7 @@ export const providers = [
                         url = provider;
                     }
                     console.log('PROVIDER: '+url);
-                    return new ethers.providers.WebSocketProvider(url);
+                    return new ethers.providers.WebSocketProvider(url, 56);
                 }
                 if (network === 'local') {
                     const url = 'ws://host:8545';
@@ -94,7 +94,7 @@ export const providers = [
                     }
 
                     console.log('PROVIDER: '+url);
-                    return new ethers.providers.JsonRpcProvider(url);
+                    return new ethers.providers.JsonRpcProvider(url, 56);
                 }
                 if (network === 'local') {
                     const url = 'http://host:8545';

@@ -48,12 +48,12 @@ export class TestSwapCommand {
                 private readonly providers: EthProviderFactoryType) {
     }
 
-    @Cron('0 * * * * *')
+    //@Cron('0 * * * * *')
     async cronTest(){
         if (process.env.NODE_ENV !== 'production'){
             return
         }
-        const provider = this.providers('http', 'chainstack');
+        const provider = this.providers('http', 'hardhat');
         const currentBlock= await provider.getBlockNumber();
         const transactions = await this.transactionRepository.find({
             where: {
