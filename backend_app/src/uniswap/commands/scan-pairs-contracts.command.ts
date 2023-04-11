@@ -38,10 +38,16 @@ export class ScanPairsContractsCommand {
     }
 
     @Command({
-        command: 'scan:pair-contracts',
+        command: 'scan:pair-contracts <limit>',
         autoExit: true
     })
-    async create() {
+    async create(
+        @Positional({
+            name: 'limit',
+            type: 'number'
+        })
+            skip: number = 0,
+    ) {
 
         const mainProvider = this.providers('http');
 
@@ -51,7 +57,8 @@ export class ScanPairsContractsCommand {
             where: {
                 network: this.envService.get('ETH_NETWORK'),
                 fee: null,
-            }
+            },
+            skip
         });
 
         let index = 0;
