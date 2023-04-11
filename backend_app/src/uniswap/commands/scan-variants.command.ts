@@ -93,7 +93,7 @@ export class ScanVariantsCommand {
                 }
                 const [token0, token1] = sortTokens(tokenIn, tokenOut);
                 count++;
-                console.log(count+'/'+total, tokenIn, token0);
+                console.log(count+'/'+total, token0, token1);
                 const items = pairsAll.filter(pair=>(pair.token0 == token0 && pair.token1 == token1)
                     || (pair.token0 == token1 && pair.token1 == token0));
                 if(items.length > 1){
