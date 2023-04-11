@@ -19,6 +19,8 @@ services:
       - ./backend_app:/var/www/app:z
       - ./volumes/logs:/var/www/logs:z
       - ./volumes/storage:/var/www/backend_app/storage:z
+    extra_hosts:
+      - "host:host-gateway"
     links:
       - db
       - redis
