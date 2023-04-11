@@ -38,10 +38,15 @@ export class ScanPairsContractsCommand {
     }
 
     @Command({
-        command: 'scan:pair-contracts <skip> <take>',
+        command: 'scan:pair-contracts <providerName> <skip> <take>',
         autoExit: true
     })
     async create(
+        @Positional({
+            name: 'providerName',
+            type: 'string'
+        })
+            providerName: string,
         @Positional({
             name: 'skip',
             type: 'number'
@@ -54,9 +59,10 @@ export class ScanPairsContractsCommand {
             take: number = 0,
     ) {
 
-        const mainProvider = this.providers('http');
+        const network = this.envService.get('ETH_NETWORK');
+        const provider = this.providers('http', network, providerName);
 
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(mainProvider);
+        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
 
         const pairs = await this.pairRepository.find({
             where: {
