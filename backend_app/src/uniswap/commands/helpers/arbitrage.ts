@@ -121,6 +121,7 @@ export const calculate = async (swap: {
         allPairs = [...allPairs, ...variant.pairs];
     }
     allPairs = allPairs.filter((value, index, array) => array.indexOf(value) === index);
+    console.log('allPairs', allPairs);
     await Promise.all(allPairs.map(pairAddress => {
         return new Promise((done) => {
             redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
@@ -145,7 +146,7 @@ export const calculate = async (swap: {
         console.log('not pairs');
         return;
     }
-    console.log('pairs', Object.keys(pairs).length);
+    console.log('pairs', Object.keys(pairs).length, pairs);
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
         const pair1 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
