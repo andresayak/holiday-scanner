@@ -94,15 +94,28 @@ export class ScanVariantsCommand {
                 const [token0, token1] = sortTokens(tokenIn, tokenOut);
                 count++;
                 console.log(count+'/'+total, token0, token1);
-                const items = pairsAll.filter(pair=>(pair.token0 == token0 && pair.token1 == token1)
-                    || (pair.token0 == token1 && pair.token1 == token0));
+                const items = await this.pairRepository.find({
+                    where: [{
+                        token0,
+                        token1,
+                        //status: 'Success'
+                        fee: Not(IsNull())
+                    }, {
+                        token0: token1,
+                        token1: token0,
+                        //status: 'Success'
+                        fee: Not(IsNull())
+                    }]
+                });
+                //const items = pairsAll.filter(pair=>(pair.token0 == token0 && pair.token1 == token1)
+                //    || (pair.token0 == token1 && pair.token1 == token0));
                 if(items.length > 1){
                     console.log('items', items.length);
                     const date = [];
                     for (const x in items) {
                         const pairX = items[x];
                         for (const y in items) {
-                            if(x == y){
+                            if(x >= y){
                                 continue;
                             }
                             const pairY = items[y];
