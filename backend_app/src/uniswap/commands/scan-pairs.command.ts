@@ -161,8 +161,9 @@ export class ScanPairsCommand {
                         console.log('save token1 error', e.toString());
                     }
                 }
-
-                pair = await this.scanContract(pair, wallet);
+                if(!pair.fee) {
+                    pair = await this.scanContract(pair, wallet);
+                }
                 if(pair.fee){
                     const pairData = {
                         ...pair.toJSON(), blockNumber: requestBlock,
