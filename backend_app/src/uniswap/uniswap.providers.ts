@@ -48,7 +48,7 @@ export const providers = [
                     }else if(provider == 'node') {
                         url = 'ws://65.21.195.47:8545';
                     }else if(provider == 'node2'){
-                        url = 'ws://65.21.192.28:58545';
+                        url = 'ws://host:58545';
                     }else if(provider == 'chainstack'){
                         url = envService.get("CHAINSTACK_WS_URL");
                     }else{
@@ -86,7 +86,7 @@ export const providers = [
                     }else if(provider == 'node'){
                         url = 'http://65.21.195.47:8545';
                     }else if(provider == 'node2'){
-                        url = 'http://65.21.192.28:58545';
+                        url = 'http://host:58545';
                     }else if(provider == 'chainstack'){
                         url = envService.get("CHAINSTACK_HTTP_URL");
                     }else{
