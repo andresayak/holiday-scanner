@@ -109,26 +109,36 @@ export class ScanVariantsCommand {
                 });*/
                 const items = pairsAll.filter(pair=>(pair.token0 == token0 && pair.token1 == token1)
                     || (pair.token0 == token1 && pair.token1 == token0));
-                if(items.length > 1){
-                    console.log('items', items.length);
-                    const date = [];
-                    for (const x in items) {
-                        const pairX = items[x];
-                        for (const y in items) {
-                            if(x >= y){
-                                continue;
+                if(items.length > 0) {
+                    if (items.length > 1) {
+                        console.log('items', items.length);
+                        const date = [];
+                        for (const x in items) {
+                            const pairX = items[x];
+                            for (const y in items) {
+                                if (x >= y) {
+                                    continue;
+                                }
+                                const pairY = items[y];
+                                variants.push({
+                                    token: tokenIn,
+                                    pairs: [
+                                        pairX.address,
+                                        pairY.address
+                                    ]
+                                });
+                                unitPairs.push(pairX.address);
+                                unitPairs.push(pairY.address);
                             }
-                            const pairY = items[y];
-                            variants.push({
-                                token: tokenIn,
-                                pairs: [
-                                    pairX.address,
-                                    pairY.address
-                                ]
-                            });
-                            unitPairs.push(pairX.address);
-                            unitPairs.push(pairY.address);
                         }
+                    } else {
+                        variants.push({
+                            token: tokenIn,
+                            pairs: [
+                                items[0].address
+                            ]
+                        });
+                        unitPairs.push(items[0].address);
                     }
                 }
             }
