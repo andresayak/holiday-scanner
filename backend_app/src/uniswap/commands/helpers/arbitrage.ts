@@ -190,6 +190,8 @@ export const calculate = async (swap: {
         console.log('amountOut=' + amountOut, balanceHuman(amountOut));
         console.log('amountOutMin=' + amountOutMin, balanceHuman(amountOutMin));
         console.log('amountInMax=' + amountInMax, balanceHuman(amountInMax));
+        const timeDiff01 = (new Date().getTime() - timeStart.getTime()) / 1000;
+        console.log('TIME DIFF01 = ', timeDiff01);
         let pair2;
         if (token2) {
             const pair2 = await pairRepository.findOne({
@@ -237,6 +239,8 @@ export const calculate = async (swap: {
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
+        const timeDiff02 = (new Date().getTime() - timeStart.getTime()) / 1000;
+        console.log('TIME DIFF02 = ', timeDiff02);
         //const variants: VariantType[] = getVariants(pairs);
         const items = processFindSuccess({variants, pairs, amount0, amount1});
         const timeDiff0 = (new Date().getTime() - timeStart.getTime()) / 1000;
