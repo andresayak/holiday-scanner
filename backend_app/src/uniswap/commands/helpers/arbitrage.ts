@@ -149,6 +149,16 @@ export const calculate = async (swap: {
     }
     //console.log('pairs', Object.keys(pairs).length, pairs);
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
+        console.log('where', {
+                network,
+                factory: swap.factory,
+                token0, token1
+            },
+            {
+                network,
+                factory: swap.factory,
+                token0: token1, token1: token0
+            });
         const pair1 = await pairRepository.findOne({
             where: [
                 {
