@@ -201,7 +201,8 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         let optimalAmountOut = BigNumber.from('0');
         let optimalAmountOutsMin = [];
         const step = maxAmountIn.div(10);
-        for (let amountIn = step; amountIn.lte(maxAmountIn); amountIn = amountIn.add(step)) {
+        //for (let amountIn = step; amountIn.lte(maxAmountIn); amountIn = amountIn.add(step)) {
+        for (let amountIn = maxAmountIn; amountIn.gt(step); amountIn = amountIn.sub(step)) {
             let amountOutsMin = [];
             for (const index in variant.pairs) {
                 const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
@@ -218,7 +219,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                 optimalAmountOut = amountOut;
                 optimalAmountOutsMin = amountOutsMin;
             }
-            if(real.gt(0) && !real.gt(maxRealProfit)){
+            if(maxRealProfit.gt(0) && !real.gt(maxRealProfit)){
                 break;
             }
         }
