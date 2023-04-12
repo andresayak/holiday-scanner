@@ -111,9 +111,9 @@ export class ScanArbitrageCommand {
 
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
-        //const providerForSend = new ethers.providers.JsonRpcProvider(this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
+        const providerForSend = new ethers.providers.JsonRpcProvider(this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
 
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(wsProvider);
+        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(providerForSend);
 
         let nonce = await wallet.provider.getTransactionCount(wallet.address);
 
