@@ -75,6 +75,7 @@ export class ScanVariantsCommand {
             }
         });
         console.log('pairs='+pairsAll.length);
+
         let variants = [];
         let total = 0;
         for (const tokenIn of tokens) {
@@ -84,7 +85,7 @@ export class ScanVariantsCommand {
         }
         let count = 0;
         for (const tokenOut of tokensAll) {
-            console.log('Removed ', ++count);
+            console.log('Removed', (++count)+'/'+total, tokenOut);
             await new Promise((done)=>this.redisPublisherClient.del('variants_' + tokenOut, done));
         }
 
@@ -93,59 +94,19 @@ export class ScanVariantsCommand {
         for (const tokenOut of tokensAll) {
             let variants = [];
             let unitPairs = [];
-            for (const tokenIn of tokens) {
-                if(tokenOut === tokenIn){
-                    continue;
-                }
-                const [token0, token1] = sortTokens(tokenIn, tokenOut);
-                count++;
-                console.log(count+'/'+total, token0, token1);
-                /*const items = await this.pairRepository.find({
-                    where: [{
-                        token0,
-                        token1,
-                        //status: 'Success'
-                        fee: Not(IsNull())
-                    }, {
-                        token0: token1,
-                        token1: token0,
-                        //status: 'Success'
-                        fee: Not(IsNull())
-                    }]
-                });*/
-                const items = pairsAll.filter(pair=>(pair.token0 == token0 && pair.token1 == token1)
-                    || (pair.token0 == token1 && pair.token1 == token0));
-                if(items.length > 0) {
-                    if (items.length > 1) {
-                        console.log('items', items.length);
-                        const date = [];
-                        for (const x in items) {
-                            const pairX = items[x];
-                            for (const y in items) {
-                                if (x >= y) {
-                                    continue;
-                                }
-                                const pairY = items[y];
-                                variants.push({
-                                    token: tokenIn,
-                                    pairs: [
-                                        pairX.address,
-                                        pairY.address
-                                    ]
-                                });
-                                unitPairs.push(pairX.address);
-                                unitPairs.push(pairY.address);
-                            }
-                        }
-                    } else {
-                        unitPairs.push(items[0].address);
-                    }
+            console.log('Added', (++count)+'/'+total, tokenOut);
+            const items = pairsAll.filter(pair=>(pair.token0 == tokenOut || pair.token1 == tokenOut));
+            if(items.length > 0) {
+                for(const variant of getVariants(items)){
+                    variants.push(variant);
+                    unitPairs.push(variant.pairs[0]);
+                    unitPairs.push(variant.pairs[1]);
                 }
             }
             if(variants.length){
                 unitPairs = unitPairs.filter((value, index, array) => array.indexOf(value) === index);
-
                 console.log('variants', variants);
+                console.log('unitPairs', unitPairs);
                 this.redisPublisherClient.set('variants_'+tokenOut, JSON.stringify({
                     variants,
                     pairs: unitPairs

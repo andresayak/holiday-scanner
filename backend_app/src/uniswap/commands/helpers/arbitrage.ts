@@ -45,12 +45,7 @@ const checkVariants = async (tokensAddress: string[], redisPublisherClient: Redi
                     const data = JSON.parse(reply);
                     if (data) {
                         for (const variant of data.variants) {
-                            items.push({
-                                path: [
-                                    variant.token, tokenAddress, variant.token,
-                                ],
-                                pairs: variant.pairs
-                            })
+                            items.push(variant);
                         }
                     }
                 }
@@ -154,7 +149,7 @@ export const calculate = async (swap: {
             console.log('target pair1 not found', swap.factory, token0, token1);
             return;
         }
-        if(!pair1.fee){
+        if (!pair1.fee) {
             console.log('target pair1 not have fee', pair1);
             return;
         }
@@ -177,10 +172,10 @@ export const calculate = async (swap: {
             ));
             if (!pair2) {
                 console.log('target pair2 not found', swap.factory, token1, token2);
-                console.log('pairs',Object.values(pairs));
+                console.log('pairs', Object.values(pairs));
                 return;
             }
-            if(!pair2.fee){
+            if (!pair2.fee) {
                 console.log('target pair2 not have fee', pair2);
                 return;
             }
