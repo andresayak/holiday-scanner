@@ -95,6 +95,7 @@ export const calculate = async (swap: {
     if (!tokenInner.length) {
         return;
     }
+    console.log('tokenInner', tokenInner);
     const variants = await checkVariants(tokenInner, redisPublisherClient);
 
     if (!variants.length) {
