@@ -82,6 +82,10 @@ export class ScanVariantsCommand {
                 total++;
             }
         }
+        for (const tokenOut of tokensAll) {
+            await new Promise((done)=>this.redisPublisherClient.del('variants_' + tokenOut, done));
+        }
+        console.log('Removed');
         let count = 0;
         let count_cases = 0;
         for (const tokenOut of tokensAll) {
