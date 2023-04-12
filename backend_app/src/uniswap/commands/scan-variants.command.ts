@@ -132,12 +132,6 @@ export class ScanVariantsCommand {
                             }
                         }
                     } else {
-                        variants.push({
-                            token: tokenIn,
-                            pairs: [
-                                items[0].address
-                            ]
-                        });
                         unitPairs.push(items[0].address);
                     }
                 }

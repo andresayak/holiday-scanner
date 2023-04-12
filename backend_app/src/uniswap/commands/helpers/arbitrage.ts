@@ -159,25 +159,10 @@ export const calculate = async (swap: {
                 factory: swap.factory,
                 token0: token1, token1: token0
             });
-        const pair1 = await pairRepository.findOne({
-            where: [
-                {
-                    network,
-                    factory: swap.factory,
-                    token0, token1
-                },
-                {
-                    network,
-                    factory: swap.factory,
-                    token0: token1, token1: token0
-                }
-            ]
-        });
-        /*
+
         const pair1 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
         ));
-        */
         if (!pair1) {
             console.log('target pair1 not found', swap.factory, token0, token1);
             return;
@@ -204,23 +189,9 @@ export const calculate = async (swap: {
         console.log('TIME DIFF01 = ', timeDiff01);
         let pair2;
         if (token2) {
-            const pair2 = await pairRepository.findOne({
-                where: [
-                    {
-                        network,
-                        factory: swap.factory,
-                        token0: token1, token1: token2,
-                    },
-                    {
-                        network,
-                        factory: swap.factory,
-                        token0: token2, token1: token1
-                    }
-                ]
-            });
-            /*pair2 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+            const pair2 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
                 (pair.token0 == token1 && pair.token1 == token2) || (pair.token0 == token2 && pair.token1 == token1)
-            ));*/
+            ));
             if (!pair2) {
                 console.log('target pair2 not found', swap.factory, token1, token2);
                 console.log('pairs',Object.values(pairs));
