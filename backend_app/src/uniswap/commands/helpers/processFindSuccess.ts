@@ -229,7 +229,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
             console.log('variant', variant);
             const price = variant.path[0] == BNB_CONTRACT.toLowerCase() ? BNB_PRICE_USD : 1;
             const amountInUsd = price * parseFloat(utils.formatEther(maxRealProfit));
-            if (profitNumber >= 0.5 && amountInUsd > 1) {
+            if (profitNumber){//} >= 0.5 && amountInUsd > 1) {
                 success.push({
                     amountIn: optimalAmountIn.toString(),
                     amountOut: optimalAmountOut.toString(),
