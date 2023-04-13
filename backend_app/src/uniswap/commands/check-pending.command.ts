@@ -79,6 +79,9 @@ export class CheckPendingCommand {
                 console.log('\n',timeStart.getTime(), ' --------- new block [' + blockNumber + '] ' + providerName, `memory ${Math.round(used * 100) / 100} MB`);
                 this.lastBlock = blockNumber;
                 this.lastBlockTime = timeStart.getTime();
+                invalidCount = 0;
+                successCount = 0;
+                total = 0;
             }
         }
         const amountMinProfit = ethers.utils.parseEther('1').mul(1).div(300);// 1 $
