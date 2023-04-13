@@ -397,7 +397,8 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
     const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
     timing.sign = (new Date().getTime() - timeStart) / 1000;
 
-    const tx = await multiSwapContract.provider.sendTransaction(signedTx);
+    const tx= await Promise.any(providers.map(provider=>provider.sendTransaction(signedTx)))
+    //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
     if (tx) {
         console.log('tx send', tx.hash);
         timing.send = (new Date().getTime() - timeStart) / 1000;
