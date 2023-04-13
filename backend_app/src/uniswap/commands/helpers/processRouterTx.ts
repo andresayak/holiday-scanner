@@ -94,7 +94,6 @@ export const processRouterTx = (props: PropsType) => {
                     }
                 }
 
-
                 const {result, method} = json;
                 console.log('method', method);
                 console.log('txHash', target.hash, 'Swap');
@@ -110,7 +109,6 @@ export const processRouterTx = (props: PropsType) => {
                 console.log(' - amountIn: ' + target.value + ', ', balanceHuman(target.value));
                 console.log(' - path:', result.path);
                 console.log(' - to:', target.to);
-                console.log(' - deadline:', result.deadline.toString());
 
                 if (result.path.length !== 2) {
                     console.log(colors.red('not 2 tokens'));

@@ -222,10 +222,11 @@ export const calculate = async (swap: {
             }
             const message = items.map((item, index) => {
                 return (index + 1) + ') ' + (hash && index===0 ? 'hash: ' + hash + "\n" : '') + ' [' + currentBlock + '] '
+                    + 'target: ' + swap.target.hash,
                     + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
-                    + 'token: ' + item.path[0] + "\n"
+                    + 'tokens: ' + item.path[0]  + ' / '+item.path[1]+ "\n"
                     + 'profit: ' + item.profit + '%, ' + item.profit_real + "\n"
-                    + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' sec.' + "\n"
+                    + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' / '+timeDiff1+' sec.' + "\n"
             }).join("\n");
             await tgBot.sendMessage(message);
 
