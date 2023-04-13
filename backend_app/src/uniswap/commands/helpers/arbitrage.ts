@@ -221,7 +221,7 @@ export const calculate = async (swap: {
                 }
             }
             const message = items.map((item, index) => {
-                return (index + 1) + ') ' + (hash ? 'hash: ' + hash + "\n" : '') + ' [' + currentBlock + '] '
+                return (index + 1) + ') ' + (hash && index===0 ? 'hash: ' + hash + "\n" : '') + ' [' + currentBlock + '] '
                     + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
                     + 'token: ' + item.path[0] + "\n"
                     + 'profit: ' + item.profit + '%, ' + item.profit_real + "\n"
