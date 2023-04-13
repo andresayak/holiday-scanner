@@ -63,7 +63,11 @@ export class CheckPendingCommand {
                 Promise.any([jsonProvider1].map((provider, index) => {
                     return provider.getTransaction(txHash).then((target: TransactionResponse) => {
                         clearTimeout(this.processingTransactions[txHash]);
-                        processTxHash(txHash, target);
+                        if(target){
+                            processTxHash(txHash, target);
+                        }else{
+                            invalidCount++;
+                        }
                     }).catch(error => {
                         console.log('error', error);
                     })
