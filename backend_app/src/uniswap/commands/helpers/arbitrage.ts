@@ -90,27 +90,12 @@ export const calculate = async (swap: {
     if (!tokenInner.length) {
         return;
     }
-    console.log('tokenInner', tokenInner);
     const variants = await checkVariants(tokenInner, redisPublisherClient);
 
     if (!variants.length) {
         console.log('not variants', tokenInner);
         return;
     }
-    /*const pairs = (await pairRepository.find({
-        where: [{
-            network,
-            blockNumber: MoreThan(startBlock),
-            token0: In(tokens),
-            token1: In(tokenInner),
-        }, {
-            network,
-            blockNumber: MoreThan(startBlock),
-            token1: In(tokens),
-            token0: In(tokenInner),
-        }]
-    })).filter(item=>item.fee);*/
-
     const pairs: { [k: string]: PairEntity } = {};
     let allPairs = []
     for (const variant of variants) {
@@ -138,7 +123,7 @@ export const calculate = async (swap: {
     }));
 
     const timeFetch = (new Date().getTime() - timeStart.getTime()) / 1000;
-    console.log('timeFetch', timeFetch)
+    console.log('TIME FETCH', timeFetch)
     if (!Object.keys(pairs).length) {
         console.log('not pairs');
         return;
@@ -164,7 +149,6 @@ export const calculate = async (swap: {
         const amountOutMin = swap.json.result.amountOutMin ?? BigNumber.from(0);
         const amountInMax = swap.json.result.amountInMax ?? BigNumber.from(0);
         const timeDiff01 = (new Date().getTime() - timeStart.getTime()) / 1000;
-        console.log('TIME DIFF01 = ', timeDiff01);
         let pair2;
         if (token2) {
             const pair2 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
@@ -172,7 +156,6 @@ export const calculate = async (swap: {
             ));
             if (!pair2) {
                 console.log('target pair2 not found', swap.factory, token1, token2);
-                console.log('pairs', Object.values(pairs));
                 return;
             }
             if (!pair2.fee) {
@@ -199,14 +182,12 @@ export const calculate = async (swap: {
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
         const timeDiff02 = (new Date().getTime() - timeStart.getTime()) / 1000;
-        console.log('TIME DIFF02 = ', timeDiff02);
+        console.log('TIME UPDATE RESERVERS = ', timeDiff02);
         const items = processFindSuccess({variants, pairs, amount0, amount1});
         const timeDiff0 = (new Date().getTime() - timeStart.getTime()) / 1000;
-        console.log('TIME DIFF0 = ', timeDiff0);
+        console.log('TIME AFTER SUCCESS = ', timeDiff0);
         if (items.length) {
             const success = items[0];
-            const timeDiff1 = (new Date().getTime() - timeStart.getTime()) / 1000;
-            console.log('TIME DIFF1 = ', timeDiff1);
             let hash = '';
             let timing;
             if (isTestMode) {
@@ -239,13 +220,13 @@ export const calculate = async (swap: {
             console.log('times:', {
                 timeProcessing,
                 timeFetch,
-                timeDiff0, timeDiff1, timeDiff2, timing
+                timeDiff0, timeDiff2, timing
             });
             const data = {
                 times: {
                     timeProcessing,
                     timeFetch,
-                    timeDiff0, timeDiff1, timeDiff2, timing
+                    timeDiff0, timeDiff2, timing
                 },
                 block: currentBlock,
                 hash,
