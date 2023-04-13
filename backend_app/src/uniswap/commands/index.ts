@@ -17,6 +17,7 @@ import {TestSwapCommand} from "./test-swap.command";
 import {ScanVariantsCommand} from "./scan-variants.command";
 import {ScanVariants3Command} from "./scan-variants3.command";
 import {TestWsCommand} from "./test-ws.command";
+import {CheckPendingCommand} from "./check-pending.command";
 
 export default [
     ScanTransactionsCommand,
@@ -37,5 +38,6 @@ export default [
     TestTokensCommand,
     SyncTokensCommand,
     TestSwapCommand,
-    TestWsCommand
+    TestWsCommand,
+    CheckPendingCommand
 ];
