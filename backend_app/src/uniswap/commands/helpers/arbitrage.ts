@@ -125,6 +125,8 @@ export const calculate = async (swap: {
                         const data = JSON.parse(reply);
                         if (data) {
                             pairs[data.address] = data;
+                            pairs[data.address].reserve0 = BigNumber.from(data.reserve0);
+                            pairs[data.address].reserve1 = BigNumber.from(data.reserve1);
                             return done(true);
                         }
                     } catch (e) {
@@ -154,9 +156,7 @@ export const calculate = async (swap: {
             return;
         }
 
-        const before: any = {
-            pair0: JSON.parse(JSON.stringify(pair1))
-        };
+        const before: any = {};
         const after: any = {}
 
         const amountIn = target.value.gt(0) ? target.value : (swap.json.result.amountIn ?? BigNumber.from(0));
@@ -179,7 +179,7 @@ export const calculate = async (swap: {
                 console.log('target pair2 not have fee', pair2);
                 return;
             }
-            before.pair1 = JSON.parse(JSON.stringify(pair2));
+
             const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0}
                 = updateReserves(pair1, token0, amountIn, BigNumber.from(0), amountInMax, BigNumber.from(0));
             after.amountRealIn0 = amountRealIn0.toString();
@@ -200,7 +200,6 @@ export const calculate = async (swap: {
         }
         const timeDiff02 = (new Date().getTime() - timeStart.getTime()) / 1000;
         console.log('TIME DIFF02 = ', timeDiff02);
-        //const variants: VariantType[] = getVariants(pairs);
         const items = processFindSuccess({variants, pairs, amount0, amount1});
         const timeDiff0 = (new Date().getTime() - timeStart.getTime()) / 1000;
         console.log('TIME DIFF0 = ', timeDiff0);
@@ -220,17 +219,23 @@ export const calculate = async (swap: {
                     timing = sendResult.timing;
                 }
             }
+            const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
+
             const message = items.map((item, index) => {
                 return (index + 1) + ') ' + (hash && index === 0 ? 'hash: ' + hash + "\n" : '') + ' [' + currentBlock + '] ' + "\n"
                     + 'target: ' + swap.target.hash + "\n"
                     + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
                     + 'tokens: ' + item.path[0]  + ' / '+item.path[1]+ "\n"
-                    + 'profit: ' + item.profit + '%, ' + item.profit_real + "\n"
-                    + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' / '+timeDiff1+' sec.' + "\n"
+                    + 'profit: ' + item.profit + '%, ' + item.amountInUsd + " USD\n"
+                    + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' / '+timeDiff2+' sec.' + "\n"
             }).join("\n");
             await tgBot.sendMessage(message);
 
-            const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
+            if(pair1)
+                before.pair0 = JSON.parse(JSON.stringify(pair1));
+            if(pair2)
+                before.pair1 = JSON.parse(JSON.stringify(pair2));
+
             console.log('times:', {
                 timeProcessing,
                 timeFetch,

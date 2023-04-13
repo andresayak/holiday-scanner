@@ -111,6 +111,7 @@ export class ScanArbitrageCommand {
 
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
+        const provider = this.providers(this.envService.get('ETH_NETWORK'), provider1Name);
         const providerForSend = new ethers.providers.JsonRpcProvider(this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
 
         let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(providerForSend);
@@ -124,7 +125,9 @@ export class ScanArbitrageCommand {
         console.log(' - account address: ' + wallet.address);
         console.log(' - account balance: ' + balanceHuman(balance));
 
-        const providers = [];
+        const providers = [
+            provider
+        ];
         for (const url of urls) {
             providers.push(new ethers.providers.JsonRpcProvider(url));
         }
@@ -139,7 +142,7 @@ export class ScanArbitrageCommand {
                     const target: TransactionResponse | null = await wsProvider.getTransaction(hash);
                     if (target && target.to && target.nonce !== null) {
                         const router = routers.find((router) => router.address.toLowerCase() === target.to.toLowerCase())
-                        if (target.gasPrice.gt('5000000000') && router) {
+                        if (target.gasPrice.gte('4000000000') && router) {
                             console.log('t', (new Date().getTime() - timeStart.getTime()) / 1000, 'attems: ' + attems);
                             const getMethod = () => {
                                 for (const method of methods) {

@@ -17,7 +17,6 @@ export type SuccessType = {
     profit: number;
     fees: any[];
     feeScales: any[];
-    profit_real: string;
     swaps?: any[];
     amountInUsd: number;
 }
@@ -171,8 +170,8 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                 const pair = pairs[pairAddress];
                 if(pair.fee){
                     const token0 = variant.path[index];
-                    const reserve0 = BigNumber.from(token0 == pair.token0 ? pair.reserve0 : pair.reserve1);
-                    const reserve1 = BigNumber.from(token0 == pair.token0 ? pair.reserve1 : pair.reserve0);
+                    const reserve0 = token0 == pair.token0 ? pair.reserve0 : pair.reserve1;
+                    const reserve1 = token0 == pair.token0 ? pair.reserve1 : pair.reserve0;
                     reserves.push([reserve0, reserve1]);
                     fees.push(pair.fee);
                     feeScales.push(pair.fee_scale);
@@ -201,14 +200,13 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         let optimalAmountOut = BigNumber.from('0');
         let optimalAmountOutsMin = [];
         const step = maxAmountIn.div(10);
-        //for (let amountIn = step; amountIn.lte(maxAmountIn); amountIn = amountIn.add(step)) {
         for (let amountIn = maxAmountIn; amountIn.gt(step); amountIn = amountIn.sub(step)) {
             let amountOutsMin = [];
             for (const index in variant.pairs) {
                 const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
                 amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
             }
-            const amountOut = BigNumber.from(amountOutsMin[amountOutsMin.length - 1]);
+            const amountOut = amountOutsMin[amountOutsMin.length - 1];
             const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
             const real = amountIn.mul(profit).div(10000);
 
@@ -238,14 +236,13 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                     reservers0: [reserves[0][0].toString(), reserves[0][1].toString()],
                     reservers1: [reserves[1][0].toString(), reserves[1][1].toString()],
                     pairs: variant.pairs,
-                    //blockNumbers: variant.blockNumbers,
                     path: variant.path,
                     fees,
                     feeScales,
                     profit: profitNumber,
-                    profit_real: balanceHuman(maxRealProfit, variant.path[0]),
                     amountInUsd
                 });
+                return success;
             }
         }
     }

@@ -39,7 +39,7 @@ const getAmountIn = (amountOut: BigNumber, reserveIn: BigNumber, reserveOut: Big
     return numerator.div(denominator).add(1);
 }
 
-const getAmountOut = (amountIn: BigNumber, reserveIn: BigNumber, reserveOut: BigNumber, fee: number, fee_scale: number = 10000) => {
+const getAmountOut = (amountIn: BigNumber, reserveIn: BigNumber, reserveOut: BigNumber, fee: number, fee_scale: number = 10000): BigNumber => {
     const amountInWithFee = amountIn.mul(fee_scale - fee);//fee: 0.25 %
     const numerator = amountInWithFee.mul(reserveOut);
     const denominator = reserveIn.mul(fee_scale).add(amountInWithFee);
