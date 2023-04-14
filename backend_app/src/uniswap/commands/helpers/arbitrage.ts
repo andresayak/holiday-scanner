@@ -229,12 +229,12 @@ export const calculate = async (swap: {
                     if (txTarget) {
                         const receiptTarget = await txTarget.wait();
                         if (receiptTarget) {
-                            blockInfoMy = " [" + receiptTarget.blockNumber + ': ' + receiptTarget.transactionIndex + "]";
+                            blockInfoTarget = " [" + receiptTarget.blockNumber + ': ' + receiptTarget.transactionIndex + "]";
                         } else {
-                            blockInfoMy = " [receipt empty]";
+                            blockInfoTarget = " [receipt empty]";
                         }
                     } else {
-                        blockInfoMy = ' [tx empty]';
+                        blockInfoTarget = ' [tx empty]';
                     }
                 } catch (e) {
                     console.log('error ', e);
