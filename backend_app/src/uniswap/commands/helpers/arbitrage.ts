@@ -208,16 +208,34 @@ export const calculate = async (swap: {
             let blockInfoMy, blockInfoTarget = '';
             if (hash) {
                 try {
-                    const receiptMy = await multiSwapContract.provider.getTransactionReceipt(hash);
-                    blockInfoMy = " [" + receiptMy.blockNumber + ': ' + receiptMy.transactionIndex + "]";
+                    const txMy = await multiSwapContract.provider.getTransaction(hash);
+                    if (txMy) {
+                        const receiptMy = await txMy.wait();
+                        if (receiptMy) {
+                            blockInfoMy = " [" + receiptMy.blockNumber + ': ' + receiptMy.transactionIndex + "]";
+                        } else {
+                            blockInfoMy = " [receipt empty]";
+                        }
+                    } else {
+                        blockInfoMy = ' [tx empty]';
+                    }
                 } catch (e) {
                     console.log('error ', e);
-                    blockInfoMy = ' [error]';
+                    blockInfoMy = ' [error: ]';
                 }
 
                 try {
-                    const receiptTarget = await multiSwapContract.provider.getTransactionReceipt(swap.target.hash);
-                    blockInfoTarget = " [" + receiptTarget.blockNumber + ': ' + receiptTarget.transactionIndex + "]";
+                    const txTarget = await multiSwapContract.provider.getTransaction(swap.target.hash);
+                    if (txTarget) {
+                        const receiptTarget = await txTarget.wait();
+                        if (receiptTarget) {
+                            blockInfoMy = " [" + receiptTarget.blockNumber + ': ' + receiptTarget.transactionIndex + "]";
+                        } else {
+                            blockInfoMy = " [receipt empty]";
+                        }
+                    } else {
+                        blockInfoMy = ' [tx empty]';
+                    }
                 } catch (e) {
                     console.log('error ', e);
                     blockInfoTarget = ' [error]';
