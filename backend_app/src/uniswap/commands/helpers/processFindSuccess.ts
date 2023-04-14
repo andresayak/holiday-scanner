@@ -160,6 +160,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
     const {variants, pairs, amount0, amount1} = props;
     let success: SuccessType[] = [];
     let cases = [];
+    const timeCaseStart = new Date().getTime();
     for (const variant of variants) {
         const reserves = [];
         const fees = [];
@@ -190,7 +191,10 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         }
     }
 
+    const timeCases = (new Date().getTime() - timeCaseStart) / 1000;
+    console.log('timeCases', timeCases);
     console.log('cases', cases.length);
+    const timeSearchStart = new Date().getTime();
     for (const item of cases) {
         const {variant, reserves, fees, feeScales} = item;
         const maxAmountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
@@ -223,9 +227,8 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         }
         const profitNumber = parseInt(maxProfit.toString()) / 100;
         if (profitNumber > 0 && maxRealProfit) {
-            console.log('profitNumber=' + profitNumber);
-            console.log('maxRealProfit=' + maxRealProfit);
-            console.log('variant', variant);
+            console.log('profitNumber=' + profitNumber +', maxRealProfit=' + maxRealProfit);
+
             const price = variant.path[0] == BNB_CONTRACT.toLowerCase() ? BNB_PRICE_USD : 1;
             const amountInUsd = price * parseFloat(utils.formatEther(maxRealProfit));
             if (amountInUsd > 0.5) {
@@ -242,6 +245,8 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                     profit: profitNumber,
                     amountInUsd
                 });
+                const timeSearch = (new Date().getTime() - timeSearchStart) / 1000;
+                console.log('timeSearch', timeSearch);
                 return success;
             }
         }
