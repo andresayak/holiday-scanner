@@ -67,6 +67,7 @@ services:
     container_name: redis
     restart: unless-stopped
     tty: true
+    user: "1000:1000"
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     command: ['redis-server', '--appendonly yes', '--requirepass $REDIS_PASSWORD']
