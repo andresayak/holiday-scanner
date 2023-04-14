@@ -112,9 +112,10 @@ export class ScanArbitrageCommand {
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
         const provider = this.providers('http', this.envService.get('ETH_NETWORK'), provider1Name);
-        const providerForSend = new ethers.providers.JsonRpcProvider(this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
 
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(providerForSend);
+        //const providerForSend = new ethers.providers.JsonRpcProvider(this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
+
+        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
 
         let nonce = await wallet.provider.getTransactionCount(wallet.address);
 
@@ -134,6 +135,7 @@ export class ScanArbitrageCommand {
 
         const multiSwapAddress = this.envService.get('MULTI_SWAP_ADDRESS');
         const multiSwapContract = ContractFactory.getContract(multiSwapAddress, MultiSwapAbi.abi, wallet);
+
         console.log('multiSwapAddress=', multiSwapAddress);
         const getTransaction = async (hash, addedBlock: number, timeStart: Date) => {
             let attems = 0;

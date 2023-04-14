@@ -4,8 +4,7 @@ import {getAmountIn, getAmountOut} from "../../helpers/calc";
 export const updateReserves = (pair, token0: string, amountIn: BigNumber, amountOut: BigNumber, amountOutMin: BigNumber, amountInMax: BigNumber) => {
 
     const reserves = pair.token0 === token0
-        ?
-        [pair.reserve0, pair.reserve1] : [pair.reserve1, pair.reserve0];
+        ? [pair.reserve0, pair.reserve1] : [pair.reserve1, pair.reserve0];
 
 
     if(pair.token0 !== token0 && pair.token1 !== token0){
