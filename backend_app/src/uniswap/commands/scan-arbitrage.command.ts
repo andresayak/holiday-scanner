@@ -159,11 +159,11 @@ export class ScanArbitrageCommand {
                             }
                             const json = getMethod();
                             if (json && !json.method.match(/Supporting/)) {
-                                const deadline = (parseInt(json.result.deadline) - Math.floor(new Date().getTime() / 1000));
+                                //const deadline = (parseInt(json.result.deadline) - Math.floor(new Date().getTime() / 1000));
                                 const swap = {
                                     target, json,
                                     factory: router.factory,
-                                    deadline
+                                    //deadline
                                 };
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,

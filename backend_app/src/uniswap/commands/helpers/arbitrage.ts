@@ -90,8 +90,10 @@ export const calculate = async (swap: {
     if (!tokenInner.length) {
         return;
     }
+    const timeCheckVariantsStart = new Date().getTime();
     const variants = await checkVariants(tokenInner, redisPublisherClient);
-
+    const timeCheckVariants = (new Date().getTime() - timeCheckVariantsStart) / 1000;
+    console.log('timeCheckVariants', timeCheckVariants);
     if (!variants.length) {
         console.log('not variants', tokenInner);
         return;
@@ -102,6 +104,7 @@ export const calculate = async (swap: {
         allPairs = [...allPairs, ...variant.pairs];
     }
     allPairs = allPairs.filter((value, index, array) => array.indexOf(value) === index);
+    const timeFetchPairsStart = new Date().getTime();
     await Promise.all(allPairs.map(pairAddress => {
         return new Promise((done) => {
             redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
@@ -121,7 +124,8 @@ export const calculate = async (swap: {
             });
         });
     }));
-
+    const timeFetchPairs = (new Date().getTime() - timeFetchPairsStart) / 1000;
+    console.log('timeFetchPairs', timeFetchPairs);
     const timeFetch = (new Date().getTime() - timeStart.getTime()) / 1000;
     console.log('TIME FETCH', timeFetch)
     if (!Object.keys(pairs).length) {
@@ -148,7 +152,6 @@ export const calculate = async (swap: {
         const amountOut = swap.json.result.amountOut ?? BigNumber.from(0);
         const amountOutMin = swap.json.result.amountOutMin ?? BigNumber.from(0);
         const amountInMax = swap.json.result.amountInMax ?? BigNumber.from(0);
-        const timeDiff01 = (new Date().getTime() - timeStart.getTime()) / 1000;
         let pair2;
         if (token2) {
             const pair2 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
@@ -202,19 +205,37 @@ export const calculate = async (swap: {
             }
             const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
 
+            let blockInfoMy, blockInfoTarget = '';
+            if (hash) {
+                try {
+                    const receiptMy = await multiSwapContract.provider.getTransactionReceipt(hash);
+                    blockInfoMy = " [" + receiptMy.blockNumber + ': ' + receiptMy.transactionIndex + "]";
+                } catch (e) {
+                    console.log('error ', e);
+                    blockInfoMy = ' [error]';
+                }
+
+                try {
+                    const receiptTarget = await multiSwapContract.provider.getTransactionReceipt(swap.target.hash);
+                    blockInfoTarget = " [" + receiptTarget.blockNumber + ': ' + receiptTarget.transactionIndex + "]";
+                } catch (e) {
+                    console.log('error ', e);
+                    blockInfoTarget = ' [error]';
+                }
+            }
             const message = items.map((item, index) => {
-                return (index + 1) + ') ' + (hash && index === 0 ? 'hash: ' + hash + "\n" : '') + ' [' + currentBlock + '] ' + "\n"
-                    + 'target: ' + swap.target.hash + "\n"
+                return (index + 1) + ') ' + (hash && index === 0 ? 'hash: ' + hash + blockInfoMy + "\n" : '') + "\n"
+                    + 'target: ' + swap.target.hash + blockInfoTarget + "\n"
                     + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
-                    + 'tokens: ' + item.path[0]  + ' / '+item.path[1]+ "\n"
+                    + 'tokens: ' + item.path[0] + ' / ' + item.path[1] + "\n"
                     + 'profit: ' + item.profit + '%, ' + item.amountInUsd + " USD\n"
-                    + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' / '+timeDiff2+' sec.' + "\n"
+                    + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' / ' + timeDiff2 + ' sec.' + "\n"
             }).join("\n");
             await tgBot.sendMessage(message);
 
-            if(pair1)
+            if (pair1)
                 before.pair0 = JSON.parse(JSON.stringify(pair1));
-            if(pair2)
+            if (pair2)
                 before.pair1 = JSON.parse(JSON.stringify(pair2));
 
             console.log('times:', {
@@ -384,7 +405,7 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
     const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
     timing.sign = (new Date().getTime() - timeStart) / 1000;
 
-    const tx= await Promise.any(providers.map(provider=>provider.sendTransaction(signedTx)))
+    const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
     if (tx) {
         console.log('tx send', tx.hash);
