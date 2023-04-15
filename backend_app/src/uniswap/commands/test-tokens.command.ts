@@ -30,7 +30,7 @@ export class TestTokensCommand {
 
     @Command({
         command: 'test:tokens <chunkSize>',
-        autoExit: false
+        autoExit: true
     })
     async create(
         @Positional({
@@ -64,7 +64,7 @@ export class TestTokensCommand {
             '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e'
         ];
         let count = 0;
-        //while (true) {
+        while (true) {
             const tokens = await this.tokenRepository.find({
                 where: {
                     isTested: IsNull()
@@ -95,7 +95,7 @@ export class TestTokensCommand {
                             console.log(e.toString());
                             if (!e.toString().match(/VM Exception while processing transaction/i)) {
                                 //process.exit(1);
-                                await new Promise((done) => setTimeout(() => done(1), 10000));
+                                //await new Promise((done) => setTimeout(() => done(1), 10000));
                                 return done(true);
                             }
                             token.isTested = false;
@@ -107,7 +107,7 @@ export class TestTokensCommand {
                 }));
             }
         }
-    //}
+    }
 }
 
 const testToken = async (account: Wallet, token1Address: string) => {
