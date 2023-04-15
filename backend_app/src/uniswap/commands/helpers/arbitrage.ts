@@ -215,12 +215,6 @@ export const calculate = async (swap: {
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
-
-        const pair1original = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
-            (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
-        ));
-        console.log(pair1original, pair1);
-
         const timeDiff02 = (new Date().getTime() - timeStart.getTime()) / 1000;
         console.log('TIME UPDATE RESERVERS = ', timeDiff02);
         const items = processFindSuccess({variants, pairs, amount0, amount1});

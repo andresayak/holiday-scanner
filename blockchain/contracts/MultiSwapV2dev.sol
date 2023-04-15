@@ -23,7 +23,7 @@ library SafeMath {
     }
 }
 
-contract MultiSwapV2 {
+contract MultiSwapV2Dev {
     using SafeMath for uint;
     address public immutable owner;
 

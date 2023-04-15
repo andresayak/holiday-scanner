@@ -8,8 +8,12 @@ async function main() {
     const balance = await account.getBalance();
     console.log(' - account address: ' + account.address);
     console.log(' - account balance: ' + balanceHuman(balance));
-return;
-    const multiSwap = await (await ethers.getContractFactory("MultiSwapV2")).connect(account).deploy();
+
+    const contact = await ethers.getContractFactory("MultiSwapV2");
+
+    console.log('contact', contact.bytecode);
+    return;
+    const multiSwap = await contact.connect(account).deploy();
     await multiSwap.deployed();
 
     console.log('MULTI_SWAP_ADDRESS='+multiSwap.address);

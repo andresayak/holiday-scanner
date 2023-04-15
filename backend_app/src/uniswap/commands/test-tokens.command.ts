@@ -64,7 +64,7 @@ export class TestTokensCommand {
             '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e'
         ];
         let count = 0;
-        while (true) {
+        //while (true) {
             const tokens = await this.tokenRepository.find({
                 where: {
                     isTested: IsNull()
@@ -107,13 +107,13 @@ export class TestTokensCommand {
                 }));
             }
         }
-    }
+    //}
 }
 
 const testToken = async (account: Wallet, token1Address: string) => {
 
-    const balance = await account.getBalance();
-    console.log(' - account balance: ' + balance, balanceHuman(balance));
+    const balanceStart = await account.getBalance();
+    console.log(' - account balance: ' + balanceStart, balanceHuman(balanceStart));
 
     const routerAddress = '0x10ed43c718714eb63d5aa57b78b54704e256024e';
     const token0Address = BNB_CONTRACT.toLowerCase();
@@ -123,6 +123,9 @@ const testToken = async (account: Wallet, token1Address: string) => {
     let token0 = await ContractFactory.getContract(token0Address, WETH9Abi.abi, account);
     let token1 = await ContractFactory.getContract(token1Address, ERC20Abi.abi, account);
 
+    const balance0Start = await token0.balanceOf(account.address);
+    const balance1Start = await token1.balanceOf(account.address);
+
     const router = await ContractFactory.getContract(routerAddress, SwapRouter02Abi.abi, account);
     await token0.connect(account).deposit({
         value: amountIn.toString(),
@@ -130,13 +133,14 @@ const testToken = async (account: Wallet, token1Address: string) => {
     });
 
     const buyTokens = async (amountIn) => {
-        console.log(' - amountIn=' + amountIn);
+        console.log('  ---- BUY ---- ');
+        console.log('amountIn=' + amountIn);
         const balance = await account.getBalance();
-        console.log('balance=' + balance);
+        console.log('balance ETH=' + balance);
         const balance00 = await token0.balanceOf(account.address);
-        console.log('balance0=' + balance00);
+        console.log('balance token0=' + balance00);
         const balance01 = await token1.balanceOf(account.address);
-        console.log('balance01=' + balance01);
+        console.log('balance token1=' + balance01);
 
         const tx = await router.connect(account)
             .swapExactETHForTokens(0, [token0.address, token1.address],
@@ -160,11 +164,11 @@ const testToken = async (account: Wallet, token1Address: string) => {
             }
         }
         const balance2 = await account.getBalance();
-        console.log('balance=' + balance2);
+        console.log('balance ETH=' + balance2);
         const balance10 = await token0.balanceOf(account.address);
-        console.log('balance10=' + balance10);
+        console.log('balance token0=' + balance10);
         const balance11 = await token1.balanceOf(account.address);
-        console.log('balance11=' + balance11);
+        console.log('balance token1=' + balance11);
         const diff = balance2.sub(balance);
         const diff0 = balance10.sub(balance00);
         const diff1 = balance11.sub(balance01);
@@ -174,13 +178,14 @@ const testToken = async (account: Wallet, token1Address: string) => {
     }
 
     const sellTokens = async (amountIn) => {
-        console.log(' - amountIn=' + amountIn);
+        console.log('  ---- SELL ---- ');
+        console.log('amountIn=' + amountIn);
         const balance = await account.getBalance();
-        console.log('balance=' + balance);
+        console.log('balance ETH=' + balance);
         const balance00 = await token0.balanceOf(account.address);
-        console.log('balance0=' + balance00);
+        console.log('balance token0=' + balance00);
         const balance01 = await token1.balanceOf(account.address);
-        console.log('balance01=' + balance01);
+        console.log('balance token1=' + balance01);
         await token1.approve(router.address, amountIn, {
             gasLimit: BigNumber.from('2000000'),
         });
@@ -194,11 +199,11 @@ const testToken = async (account: Wallet, token1Address: string) => {
 
         await tx.wait();
         const balance2 = await account.getBalance();
-        console.log('balance=' + balance2);
+        console.log('balance ETH=' + balance2);
         const balance10 = await token0.balanceOf(account.address);
-        console.log('balance10=' + balance10);
+        console.log('balance token0=' + balance10);
         const balance11 = await token1.balanceOf(account.address);
-        console.log('balance11=' + balance11);
+        console.log('balance token1=' + balance11);
         const diff = balance2.sub(balance);
         const diff0 = balance10.sub(balance00);
         const diff1 = balance11.sub(balance01);
@@ -209,15 +214,25 @@ const testToken = async (account: Wallet, token1Address: string) => {
     }
 
     const {diff, diff0: diff00, diff1: diff10} = await buyTokens(amountIn);
-    console.log('diff=' + diff);
-    console.log('diff00=' + diff00);
-    console.log('diff10=' + diff10);
-    console.log('');
+    console.log('diff ETH=' + diff);
+    console.log('diff token0=' + diff00);
+    console.log('diff token1=' + diff10);
+
     const {diff: diff2, diff0: diff01, diff1: diff11} = await sellTokens(diff10);
-    console.log('diff=' + diff2);
-    console.log('diff01=' + diff01);
-    console.log('diff11=' + diff11);
+
+    console.log(' -- ');
+
+    console.log('diff ETH=' + diff2);
+    console.log('diff token0=' + diff01);
+    console.log('diff token1=' + diff11);
     const balanceLast = await account.getBalance();
-    const diffTotal = balance.sub(balanceLast);
+    const balance0Last = await token0.balanceOf(account.address);
+    const balance1Last = await token1.balanceOf(account.address);
+
+    const diffTotal = balanceLast.sub(balanceStart);
+    const diff0Last = balance0Last.sub(balance0Start);
+    const diff1Last = balance1Last.sub(balance1Start);
     console.log('diffTotal=' + diffTotal, balanceHuman(diffTotal));
+    console.log('diff0Last=' + diff0Last, balanceHuman(diff0Last));
+    console.log('diff1Last=' + diff1Last, balanceHuman(diff1Last));
 }
