@@ -20,6 +20,15 @@ Object.defineProperties(BigNumber.prototype, {
     },
 });
 
+const copyPair = (data: any) =>{
+    if(data){
+        let json = JSON.parse(JSON.stringify(data));
+        json.reserve0 = data.reserve0;
+        json.reserve1 = data.reserve1;
+        return json;
+    }
+    return null;
+}
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
     '0xfb5b838b6cfeedc2873ab27866079ac55363d37e',
@@ -151,11 +160,12 @@ export const calculate = async (swap: {
         console.log('not pairs');
         return;
     }
+
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
 
-        const pair1 = JSON.parse(JSON.stringify(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+        const pair1 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
-        ))));
+        )));
         if (!pair1) {
             console.log('target pair1 not found', swap.factory, token0, token1);
             return;
@@ -174,9 +184,9 @@ export const calculate = async (swap: {
         const amountInMax = swap.json.result.amountInMax ?? BigNumber.from(0);
         let pair2;
         if (token2) {
-            const pair2 = JSON.parse(JSON.stringify(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+            const pair2 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
                 (pair.token0 == token1 && pair.token1 == token2) || (pair.token0 == token2 && pair.token1 == token1)
-            ))));
+            )));
             if (!pair2) {
                 console.log('target pair2 not found', swap.factory, token1, token2);
                 return;
