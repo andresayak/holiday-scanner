@@ -92,7 +92,10 @@ export class ScanReservesCommand {
                     for (const event of logs) {
                         try {
                             const result = this.iface.decodeEventLog('Sync', event.data, event.topics);
-                            pairs[event.address.toLowerCase()] = result;
+                            pairs[event.address.toLowerCase()] = [
+                                result[0].toString(),
+                                result[1].toString(),
+                            ];
                         } catch (e) {
 
                         }
@@ -122,8 +125,8 @@ export class ScanReservesCommand {
                                 pairData = {
                                     ...pairData,
                                     blockNumber,
-                                    reserve0: result[0].toString(),
-                                    reserve1: result[1].toString(),
+                                    reserve0: result[0],
+                                    reserve1: result[1],
                                 };
                                 //await this.pairRepository.save(pair);
                                 await new Promise((save) => this.redisPublisherClient.set('pair_' + pairData.token0 + '_' + pairData.token1, JSON.stringify(pairData), save));

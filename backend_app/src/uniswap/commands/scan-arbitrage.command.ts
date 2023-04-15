@@ -1,7 +1,7 @@
 import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
-import {ContractFactory, ethers, utils, Wallet} from 'ethers';
-import {Repository} from "typeorm";
+import {BigNumber, BytesLike, ContractFactory, ethers, utils, Wallet} from 'ethers';
+import {IsNull, Not, Repository} from "typeorm";
 import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
@@ -27,18 +27,39 @@ const swapInterface = [
     'function swapTokensForExactTokens(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)',
     'function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)',
     'function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)',
+    'function multicall(uint256 deadline,bytes[] data)',
 
     'event Sync(uint112 reserve0, uint112 reserve1)',
     'event Transfer(address indexed from, address indexed to, uint256 value)',
     'event Swap(address indexed sender, uint256 amount0In, uint256 amount1In, uint256 amount0Out, uint256 amount1Out, address indexed to)',
 ];
 
+const swapInterface2 = [
+    'function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to)',
+    'function swapETHForExactTokens(uint amountOut, address[] calldata path, address to)',
+    'function swapExactETHForTokensSupportingFeeOnTransferTokens(uint amountOutMin,address[] calldata path,address to)',
+    'function swapExactTokensForETHSupportingFeeOnTransferTokens(uint amountIn, uint amountOutMin, address[] calldata path,address to)',
+    'function swapExactTokensForTokensSupportingFeeOnTransferTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to)',
+    'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to)',
+    'function swapTokensForExactTokens(uint amountOut, uint amountInMax, address[] calldata path, address to)',
+    'function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to)',
+    'function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to)',
+];
+
 const methods = ['swapExactETHForTokens', 'swapETHForExactTokens', 'swapExactETHForTokensSupportingFeeOnTransferTokens',
     'swapExactTokensForETHSupportingFeeOnTransferTokens', 'swapExactTokensForTokensSupportingFeeOnTransferTokens', 'swapExactTokensForTokens',
-    'swapTokensForExactTokens', 'swapTokensForExactTokens', 'swapTokensForExactETH', 'swapExactTokensForETH',
+    'swapTokensForExactTokens', 'swapTokensForExactTokens', 'swapTokensForExactETH', 'swapExactTokensForETH', 'multicall'
+];
+
+export const multicallRouters = {
+    '0x13f4ea83d0bd40e75c8222255bc855a974568dd4': '0x10ED43C718714eb63d5aA57B78B54704E256024E',
+}
+const multicallAddresses = [
+    '0x13f4EA83D0bd40E75C8222255bc855a974568Dd4'
 ];
 
 const iface = new utils.Interface(swapInterface);
+const iface2 = new utils.Interface(swapInterface2);
 
 @Injectable()
 export class ScanArbitrageCommand {
@@ -47,11 +68,11 @@ export class ScanArbitrageCommand {
     lastBlockTime: number = 0;
     lastSyncBlock: number = 0;
     openTrading = false;
-    pairs: PairEntity[] = [];
+    pairs: any = {};
     transactions = [];
     blockUpdated: boolean;
-    lastVariants: any[] | null;
-    variants: any[] = [];
+    variants: any = {};
+    cacheInned = false;
     lastPairs: PairsType | null;
     listeners: {
         variantsUpdate: ((variants: any[]) => void)[],
@@ -109,6 +130,16 @@ export class ScanArbitrageCommand {
             amount1: string,
     ) {
 
+        console.log('sync pairs...');
+        const allPairs = await this.pairRepository.find({
+            where: {
+                fee: Not(IsNull())
+            }
+        });
+        for(const pair of allPairs) {
+            this.pairs[pair.address] = pair;
+        }
+
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
         const provider = this.providers('http', this.envService.get('ETH_NETWORK'), provider1Name);
@@ -143,10 +174,15 @@ export class ScanArbitrageCommand {
                 try {
                     const target: TransactionResponse | null = await wsProvider.getTransaction(hash);
                     if (target && target.to && target.nonce !== null) {
-                        const router = routers.find((router) => router.address.toLowerCase() === target.to.toLowerCase())
+                        const toAddress = target.to.toLowerCase();
+                        let routerAddress = toAddress;
+                        if(multicallAddresses.includes(toAddress)){
+                            routerAddress = multicallRouters[toAddress];
+                        }
+                        const router = routers.find((router) => router.address.toLowerCase() === routerAddress)
                         if (target.gasPrice.gte('4000000000') && router) {
                             console.log('t', (new Date().getTime() - timeStart.getTime()) / 1000, 'attems: ' + attems);
-                            const getMethod = () => {
+                            const getMethod = (interfaces: utils.Interface, data: BytesLike) => {
                                 for (const method of methods) {
                                     let result;
                                     try {
@@ -159,7 +195,24 @@ export class ScanArbitrageCommand {
                                 }
                                 return null;
                             }
-                            const json = getMethod();
+                            let json = getMethod(iface, target.data);
+
+                            if(json){
+                                if (json.method == 'multicall') {
+                                    console.log('multicall result', json.result);
+                                    if (json.result.data.length != 1) {
+                                        console.log('many swaps');
+                                        return;
+                                    }
+                                    json = getMethod(iface2, json.result.data[0]);
+                                    console.log('multicall', json);
+                                    if (!json) {
+                                        console.log('invalid multicall data');
+                                        return;
+                                    }
+                                }
+                            }
+
                             if (json && !json.method.match(/Supporting/)) {
                                 //const deadline = (parseInt(json.result.deadline) - Math.floor(new Date().getTime() / 1000));
                                 const swap = {
@@ -170,7 +223,8 @@ export class ScanArbitrageCommand {
                                 try {
                                     await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
                                         multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce,
-                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1, this.tgBot, this.transactionRepository
+                                        parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1, this.tgBot, this.transactionRepository,
+                                        this.variants, this.pairs
                                     );
                                 } catch (e) {
                                     console.log(e)
@@ -190,7 +244,7 @@ export class ScanArbitrageCommand {
 
         wsProvider.on("pending", (hash) => {
             const timeStart = new Date();
-            if (typeof hash == 'string' && this.blockUpdated) {
+            if (typeof hash == 'string' && this.blockUpdated && this.cacheInned) {
                 getTransaction(hash, this.currentBlock, timeStart);
             }
         });
@@ -217,13 +271,68 @@ export class ScanArbitrageCommand {
             const json = JSON.parse(data);
             this.lastSyncBlock = json.blockNumber;
             const diff = this.lastSyncBlock - this.currentBlock;
+            Object.entries(json.pairs).map(([pairAddress, data])=>{
+                if(this.pairs[pairAddress]){
+                    this.pairs[pairAddress].blockNumber = json.blockNumber;
+                    this.pairs[pairAddress].reserve0 = BigNumber.from(data[0]);
+                    this.pairs[pairAddress].reserve1 = BigNumber.from(data[1]);
+                }
+            })
             if (diff < 0) {
                 console.log('wait sync, syncBlock=', json.blockNumber, 'currentBlock=', this.currentBlock, 'diff: ' + diff);
             } else {
-                console.log('block', json.blockNumber, 'update', ((new Date().getTime() - this.lastBlockTime) / 1000) + ' sec');
+                console.log('block', json.blockNumber, 'update', ((new Date().getTime() - this.lastBlockTime) / 1000) + ' sec', 'pairs='+Object.values(this.pairs).length, 'variants='+Object.values(this.variants).length);
                 this.blockUpdated = true;
             }
         });
+
+        let countPair = 0;
+        for(const pair of allPairs) {
+            countPair++;
+            await new Promise((done) => this.redisPublisherClient.get('pair_' + pair.address, (err, reply) => {
+                if (reply) {
+                    const data = JSON.parse(reply);
+                    if (data) {
+                        this.pairs[pair.address] = pair;
+                        this.pairs[pair.address].blockNumber = data.blockNumber;
+                        this.pairs[pair.address].reserve0 = BigNumber.from(data.reserve0);
+                        this.pairs[pair.address].reserve1 = BigNumber.from(data.reserve1);
+                    }
+                }
+                done(true);
+            }));
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+            process.stdout.write('sync pairs...['+countPair+'/'+allPairs.length+']');
+        }
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+        console.log('sync variants...');
+        let countVariant = 0;
+        let allTokens = await this.tokenRepository.find({
+            where: {
+                isTested: true,
+            }
+        });
+        for(const token of allTokens) {
+            countVariant++;
+            await new Promise((done) => this.redisPublisherClient.get('variants_' + token.address, (err, reply) => {
+                if (reply) {
+                    const data = JSON.parse(reply);
+                    console.log('data', data);
+                    if (data) {
+                        this.variants[token.address] = data.variants;
+                    }
+                }
+                done(true);
+            }));
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+            process.stdout.write('sync variants...['+countVariant+'/'+allTokens.length+']');
+        }
+        process.stdout.clearLine(0);
+        process.stdout.cursorTo(0);
+        this.cacheInned = true;
     }
 
 }

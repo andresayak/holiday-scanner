@@ -66,7 +66,7 @@ export const calculate = async (swap: {
                                 multiSwapContract: Contract, wallet: Wallet, timeStart: Date, redisPublisherClient: RedisClient, isTestMode: boolean,
                                 providers: JsonRpcProvider[],
                                 nonce: number, upNonce: () => void, chainId: number, amount0: string, amount1: string, tgBot: TgBot,
-                                transactionRepository: Repository<TransactionEntity>
+                                transactionRepository: Repository<TransactionEntity>, allVariants: any, allPairs: any
 ) => {
     const timeProcessing = (new Date().getTime() - timeStart.getTime()) / 1000;
     console.log('timeProcessing', timeProcessing);
@@ -91,7 +91,13 @@ export const calculate = async (swap: {
         return;
     }
     const timeCheckVariantsStart = new Date().getTime();
-    const variants = await checkVariants(tokenInner, redisPublisherClient);
+    //const variants = await checkVariants(tokenInner, redisPublisherClient);
+    let variants = [];
+    tokenInner.map(tokenAddress => {
+        if(allVariants[tokenAddress]){
+            variants.push(...allVariants[tokenAddress]);
+        }
+    });
     const timeCheckVariants = (new Date().getTime() - timeCheckVariantsStart) / 1000;
     console.log('timeCheckVariants', timeCheckVariants);
     if (!variants.length) {
@@ -99,13 +105,18 @@ export const calculate = async (swap: {
         return;
     }
     const pairs: { [k: string]: PairEntity } = {};
-    let allPairs = []
+    let needPairs = []
     for (const variant of variants) {
-        allPairs = [...allPairs, ...variant.pairs];
+        needPairs = [...needPairs, ...variant.pairs];
     }
-    allPairs = allPairs.filter((value, index, array) => array.indexOf(value) === index);
+    needPairs = needPairs.filter((value, index, array) => array.indexOf(value) === index);
     const timeFetchPairsStart = new Date().getTime();
-    await Promise.all(allPairs.map(pairAddress => {
+    needPairs.map(pairAddress => {
+        if(allPairs[pairAddress]){
+            pairs[pairAddress] = allPairs[pairAddress];
+        }
+    });
+    /*await Promise.all(needPairs.map(pairAddress => {
         return new Promise((done) => {
             redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
                 if (reply) {
@@ -123,7 +134,7 @@ export const calculate = async (swap: {
                 done(true);
             });
         });
-    }));
+    }));*/
     const timeFetchPairs = (new Date().getTime() - timeFetchPairsStart) / 1000;
     console.log('timeFetchPairs', timeFetchPairs);
     const timeFetch = (new Date().getTime() - timeStart.getTime()) / 1000;
@@ -133,6 +144,7 @@ export const calculate = async (swap: {
         return;
     }
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
+
         const pair1 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
         ));
@@ -177,6 +189,8 @@ export const calculate = async (swap: {
             after.amountRealIn1 = amountRealIn1.toString();
             after.amountRealOut1 = amountRealOut1.toString();
             after.reserves1 = [pair2.reserve0, pair2.reserve1];
+
+
         } else {
             const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0}
                 = updateReserves(pair1, token0, amountIn, amountOut, amountInMax, amountOutMin);
@@ -184,6 +198,12 @@ export const calculate = async (swap: {
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
+
+        const pair1original = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+            (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
+        ));
+        console.log(pair1original, pair1);
+
         const timeDiff02 = (new Date().getTime() - timeStart.getTime()) / 1000;
         console.log('TIME UPDATE RESERVERS = ', timeDiff02);
         const items = processFindSuccess({variants, pairs, amount0, amount1});
