@@ -1,9 +1,9 @@
-import {BigNumber, Contract, ContractFactory, Signer, utils, Wallet} from "ethers";
-import {balanceHuman, BNB_CONTRACT, getAmountIn, getAmountOut, sortTokens, tokens} from "../../helpers/calc";
+import {BigNumber, Contract, utils, Wallet} from "ethers";
+import {balanceHuman, BNB_CONTRACT, tokens} from "../../helpers/calc";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {processFindSuccess, Swap} from "./processFindSuccess";
-import {In, IsNull, MoreThan, Not, Repository} from "typeorm";
-import {getVariants, VariantType} from "./getVariants";
+import {Repository} from "typeorm";
+import {VariantType} from "./getVariants";
 import {PairEntity} from "../../entities/pair.entity";
 import {updateReserves} from "./updateReserves";
 import * as fs from 'fs';
@@ -11,6 +11,14 @@ import {RedisClient} from "redis";
 import {JsonRpcProvider} from "@ethersproject/providers";
 import {TgBot} from "../../TgBot";
 import {TransactionEntity} from "../../entities/transaction.entity";
+
+Object.defineProperties(BigNumber.prototype, {
+    toJSON: {
+        value: function (this: BigNumber) {
+            return this.toString();
+        },
+    },
+});
 
 const blacklist = [
     '0xacfc95585d80ab62f67a14c566c1b7a49fe91167',
@@ -94,7 +102,7 @@ export const calculate = async (swap: {
     //const variants = await checkVariants(tokenInner, redisPublisherClient);
     let variants = [];
     tokenInner.map(tokenAddress => {
-        if(allVariants[tokenAddress]){
+        if (allVariants[tokenAddress]) {
             variants.push(...allVariants[tokenAddress]);
         }
     });
@@ -112,7 +120,7 @@ export const calculate = async (swap: {
     needPairs = needPairs.filter((value, index, array) => array.indexOf(value) === index);
     const timeFetchPairsStart = new Date().getTime();
     needPairs.map(pairAddress => {
-        if(allPairs[pairAddress]){
+        if (allPairs[pairAddress]) {
             pairs[pairAddress] = allPairs[pairAddress];
         }
     });
@@ -189,7 +197,6 @@ export const calculate = async (swap: {
             after.amountRealIn1 = amountRealIn1.toString();
             after.amountRealOut1 = amountRealOut1.toString();
             after.reserves1 = [pair2.reserve0, pair2.reserve1];
-
 
         } else {
             const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0}
