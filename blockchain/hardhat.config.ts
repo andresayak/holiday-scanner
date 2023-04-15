@@ -63,7 +63,7 @@ module.exports = {
         },
         bsc_mainnet: {
             chainId: 56,
-            url: `https://rpc.ankr.com/bsc/${process.env.ANKR_PROVIDER_KEY}`,
+            url: `https://bsc-dataseed.binance.org/`,// `https://rpc.ankr.com/bsc/${process.env.ANKR_PROVIDER_KEY}`,
             accounts: {
                 mnemonic: process.env.MNEMONIC,
             },

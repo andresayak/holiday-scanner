@@ -12,7 +12,7 @@ async function main() {
     const contact = await ethers.getContractFactory("MultiSwapV2");
 
     console.log('contact', contact.bytecode);
-    return;
+return;
     const multiSwap = await contact.connect(account).deploy();
     await multiSwap.deployed();
 
