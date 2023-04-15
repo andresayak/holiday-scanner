@@ -145,9 +145,9 @@ export const calculate = async (swap: {
     }
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
 
-        const pair1 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+        const pair1 = JSON.parse(JSON.stringify(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
-        ));
+        ))));
         if (!pair1) {
             console.log('target pair1 not found', swap.factory, token0, token1);
             return;
@@ -166,9 +166,9 @@ export const calculate = async (swap: {
         const amountInMax = swap.json.result.amountInMax ?? BigNumber.from(0);
         let pair2;
         if (token2) {
-            const pair2 = Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+            const pair2 = JSON.parse(JSON.stringify(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
                 (pair.token0 == token1 && pair.token1 == token2) || (pair.token0 == token2 && pair.token1 == token1)
-            ));
+            ))));
             if (!pair2) {
                 console.log('target pair2 not found', swap.factory, token1, token2);
                 return;

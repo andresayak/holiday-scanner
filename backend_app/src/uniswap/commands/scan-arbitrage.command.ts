@@ -319,7 +319,6 @@ export class ScanArbitrageCommand {
             await new Promise((done) => this.redisPublisherClient.get('variants_' + token.address, (err, reply) => {
                 if (reply) {
                     const data = JSON.parse(reply);
-                    console.log('data', data);
                     if (data) {
                         this.variants[token.address] = data.variants;
                     }
