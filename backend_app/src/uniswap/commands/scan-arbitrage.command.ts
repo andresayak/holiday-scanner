@@ -52,7 +52,7 @@ const methods = ['swapExactETHForTokens', 'swapETHForExactTokens', 'swapExactETH
 ];
 
 export const multicallRouters = {
-    '0x13f4ea83d0bd40e75c8222255bc855a974568dd4': '0x10ED43C718714eb63d5aA57B78B54704E256024E',
+    '0x13f4ea83d0bd40e75c8222255bc855a974568dd4': '0x10ed43c718714eb63d5aa57b78b54704e256024e',
 }
 const multicallAddresses = [
     '0x13f4ea83d0bd40e75c8222255bc855a974568dd4'
