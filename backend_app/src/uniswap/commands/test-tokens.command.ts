@@ -96,7 +96,7 @@ export class TestTokensCommand {
                             if (!e.toString().match(/VM Exception while processing transaction/i)) {
                                 //process.exit(1);
                                 //await new Promise((done) => setTimeout(() => done(1), 10000));
-                                return done(true);
+                                //return done(true);
                             }
                             token.isTested = false;
                         }
