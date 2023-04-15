@@ -51,9 +51,9 @@ module.exports = {
         hardhat: {
             allowUnlimitedContractSize: true,
             forking: {
-                url: `https://rpc.ankr.com/bsc/${process.env.ANKR_PROVIDER_KEY}`,
+                url: `https://nd-358-880-925.p2pify.com/3f4a38bcdb7be9e1049392ecaa837cd9`,
                 //url: process.env.CHAINSTACK_PROVIDER_URL,
-                blockNumber: 27368025
+               //blockNumber: 27368025
             },
             mining: {
               auto: true,
