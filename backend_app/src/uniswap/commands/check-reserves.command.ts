@@ -7,7 +7,7 @@ import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
-import {EthWebsocketProviderFactoryType} from "../uniswap.providers";
+import {EthProviderFactoryType, EthWebsocketProviderFactoryType} from "../uniswap.providers";
 import {Timeout} from '@nestjs/schedule';
 import * as process from "process";
 import {TgBot} from "../TgBot";
@@ -24,8 +24,8 @@ export class CheckReservesCommand {
                 private readonly redisPublisherClient: RedisClient,
                 @Inject('PAIR_REPOSITORY')
                 private readonly pairRepository: Repository<PairEntity>,
-                @Inject('ETH_WS_PROVIDER_FACTORY')
-                private readonly providers: EthWebsocketProviderFactoryType,
+                @Inject('ETH_PROVIDERS')
+                private readonly providers: EthProviderFactoryType,
                 private readonly tgBot: TgBot,
     ) {
 
@@ -54,11 +54,9 @@ export class CheckReservesCommand {
             providerName: string
     ) {
 
-        const provider = this.providers(this.envService.get('ETH_HOST'), providerName);
+        const provider = this.providers('http', this.envService.get('ETH_HOST'), providerName);
         const wallet = new Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', provider);
-        const pairs = await this.pairRepository.find({
-            take: 10
-        });
+        const pairs = await this.pairRepository.find();
 
         let errorCount = 0;
         let emptyCount = 0;
