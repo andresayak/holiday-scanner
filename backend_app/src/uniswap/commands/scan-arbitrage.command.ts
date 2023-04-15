@@ -186,7 +186,7 @@ export class ScanArbitrageCommand {
                                 for (const method of methods) {
                                     let result;
                                     try {
-                                        result = iface.decodeFunctionData(method, target.data);
+                                        result = interfaces.decodeFunctionData(method, data);
                                         return {
                                             result, method
                                         };
