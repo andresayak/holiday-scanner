@@ -199,13 +199,11 @@ export class ScanArbitrageCommand {
 
                             if(json){
                                 if (json.method == 'multicall') {
-                                    console.log('multicall result', json.result);
                                     if (json.result.data.length != 1) {
                                         console.log('many swaps');
                                         return;
                                     }
                                     json = getMethod(iface2, json.result.data[0]);
-                                    console.log('multicall', json);
                                     if (!json) {
                                         console.log('invalid multicall data');
                                         return;
