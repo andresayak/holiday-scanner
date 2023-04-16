@@ -206,16 +206,17 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
         let optimalAmountOutsMin = [];
         const step = maxAmountIn.div(10);
         for (let amountIn = maxAmountIn; amountIn.gt(step); amountIn = amountIn.sub(step)) {
-            console.log('amountIn='+amountIn );
+
             let amountOutsMin = [];
             for (const index in variant.pairs) {
                 const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
                 amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
             }
             const amountOut = amountOutsMin[amountOutsMin.length - 1];
-            if(amountOut.lt(amountIn)){
+            console.log('amountIn='+amountIn, 'amountOut='+amountOut);
+            /*if(amountOut.lt(amountIn)){
                 continue;
-            }
+            }*/
             const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
             const real = amountIn.mul(profit).div(10000);
             if (real.gt(maxRealProfit)) {
