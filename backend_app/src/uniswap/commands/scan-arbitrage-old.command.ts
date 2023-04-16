@@ -171,10 +171,10 @@ export class ScanArbitrageCommand {
                                     deadline
                                 };
                                 try {
-                                    await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
+                                    /*await calculate(swap, this.pairRepository, this.envService.get('ETH_NETWORK'), this.startBlock, this.currentBlock,
                                         multiSwapContract, wallet, timeStart, this.redisPublisherClient, isTestMode, providers, nonce, upNonce,
                                         parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')), amount0, amount1, this.tgBot, this.transactionRepository
-                                    );
+                                    );*/
                                 }catch (e) {
                                     console.log(e)
                                 }
