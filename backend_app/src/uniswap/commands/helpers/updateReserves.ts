@@ -23,6 +23,8 @@ export const updateReserves = (pair, token0: string, amountIn: BigNumber, amount
         amountRealOut = amountOut;
         amountRealIn = getAmountIn(amountOut, reserves[0], reserves[1], pair.fee, pair.fee_scale);
         if (amountInMax && amountInMax.gt(0) && amountInMax.lt(amountRealIn)) {
+            console.log('amountIn='+amountIn);
+            console.log('amountOut='+amountOut);
             throw new Error('amountInReal more amountInMax');
             return;
         }
