@@ -131,14 +131,14 @@ export class ScanArbitrageCommand {
     ) {
 
         console.log('sync pairs...');
-        const allPairs = await this.pairRepository.find({
+        /*const allPairs = await this.pairRepository.find({
             where: {
                 fee: Not(IsNull())
             }
         });
         for(const pair of allPairs) {
             this.pairs[pair.address] = pair;
-        }
+        }*/
 
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);

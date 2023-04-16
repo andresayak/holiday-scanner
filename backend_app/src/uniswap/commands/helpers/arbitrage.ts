@@ -195,9 +195,10 @@ export const calculate = async (swap: {
                 return;
             }
 
-            console.log('pair1', pair1);
+
             const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0, pair}
                 = updateReserves(pair1, token0, amountIn, BigNumber.from(0), amountInMax, BigNumber.from(0));
+            console.log('pair1', pair1);
             console.log('pair', pair);
             after.amountRealIn0 = amountRealIn0.toString();
             after.amountRealOut0 = amountRealOut0.toString();
@@ -211,8 +212,11 @@ export const calculate = async (swap: {
             after.reserves1 = [pair2.reserve0, pair2.reserve1];
 
         } else {
-            const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0}
+            const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0, pair}
                 = updateReserves(pair1, token0, amountIn, amountOut, amountInMax, amountOutMin);
+            console.log('pair1', pair1);
+            console.log('pair', pair);
+
             after.amountRealIn0 = amountRealIn0.toString();
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
