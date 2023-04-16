@@ -109,9 +109,6 @@ export const calculate = async (swap: {
     }
     const timeCheckVariantsStart = new Date().getTime();
     const variants = await checkVariants(tokenInner, redisPublisherClient);
-    if(variants.length){
-        console.log('variant', variants[0]);
-    }
     /*let variants = [];
     tokenInner.map(tokenAddress => {
         if (allVariants[tokenAddress]) {
@@ -165,7 +162,7 @@ export const calculate = async (swap: {
     }
 
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
-        const pair1 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+        let pair1 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
         )));
         if (!pair1) {
@@ -186,7 +183,7 @@ export const calculate = async (swap: {
         const amountInMax = swap.json.result.amountInMax ?? BigNumber.from(0);
         let pair2;
         if (token2) {
-            const pair2 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+            let pair2 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
                 (pair.token0 == token1 && pair.token1 == token2) || (pair.token0 == token2 && pair.token1 == token1)
             )));
             if (!pair2) {
@@ -198,14 +195,17 @@ export const calculate = async (swap: {
                 return;
             }
 
-            const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0}
+            console.log('pair1', pair1);
+            const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0, pair}
                 = updateReserves(pair1, token0, amountIn, BigNumber.from(0), amountInMax, BigNumber.from(0));
+            console.log('pair', pair);
             after.amountRealIn0 = amountRealIn0.toString();
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
 
             const {amountRealIn: amountRealIn1, amountRealOut: amountRealOut1}
                 = updateReserves(pair2, token1, amountRealOut0, amountOut, BigNumber.from(0), amountOutMin);
+            pair2 = pair;
             after.amountRealIn1 = amountRealIn1.toString();
             after.amountRealOut1 = amountRealOut1.toString();
             after.reserves1 = [pair2.reserve0, pair2.reserve1];
