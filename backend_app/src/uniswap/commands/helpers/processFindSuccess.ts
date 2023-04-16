@@ -157,7 +157,6 @@ export const processSwap = (props: SwapPropsType): SuccessType[] => {
         .sort((a, b) => (b.profit - a.profit));
 }*/
 
-const zero = BigNumber.from('0');
 export const processFindSuccess = (hash: string, props: PropsType): SuccessType[] => {
     const {variants, pairs, amount0, amount1} = props;
     let success: SuccessType[] = [];
@@ -200,10 +199,10 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
     for (const item of cases) {
         const {variant, reserves, fees, feeScales} = item;
         const maxAmountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
-        let maxProfit = zero;
-        let maxRealProfit = zero;
-        let optimalAmountIn = zero;
-        let optimalAmountOut = zero;
+        let maxProfit = BigNumber.from('0');
+        let maxRealProfit = BigNumber.from('0');
+        let optimalAmountIn = BigNumber.from('0');
+        let optimalAmountOut = BigNumber.from('0');
         let optimalAmountOutsMin = [];
         const step = maxAmountIn.div(10);
         for (let amountIn = maxAmountIn; amountIn.gt(step); amountIn = amountIn.sub(step)) {
@@ -218,7 +217,7 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
             //}
             const profit = amountOut.sub(amountIn).mul(1000).div(amountIn);
             const real = amountIn.mul(profit).div(1000);
-
+console.log('real='+ real);
             if (real.gt(maxRealProfit)) {
                 maxProfit = profit;
                 maxRealProfit = real;
