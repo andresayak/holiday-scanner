@@ -216,8 +216,8 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
             if(amountOut.lt(amountIn)){
                 continue;
             }
-            const profit = amountOut.sub(amountIn).mul(1000).div(amountIn);
-            const real = amountIn.mul(profit).div(1000);
+            const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
+            const real = amountIn.mul(profit).div(10000);
             if (real.gt(maxRealProfit)) {
                 maxProfit = profit;
                 maxRealProfit = real;
