@@ -226,6 +226,7 @@ export class ScanArbitrageCommand {
                                     );
                                 } catch (e) {
                                     console.log(e)
+                                    this.tgBot.sendMessage('ERROR: '+e.toString());
                                 }
                             }
                         }
