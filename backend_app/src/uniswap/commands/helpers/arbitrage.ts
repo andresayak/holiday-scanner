@@ -108,13 +108,16 @@ export const calculate = async (swap: {
         return;
     }
     const timeCheckVariantsStart = new Date().getTime();
-    //const variants = await checkVariants(tokenInner, redisPublisherClient);
-    let variants = [];
+    const variants = await checkVariants(tokenInner, redisPublisherClient);
+    if(variants.length){
+        console.log('variant', variants[0]);
+    }
+    /*let variants = [];
     tokenInner.map(tokenAddress => {
         if (allVariants[tokenAddress]) {
             variants.push(...allVariants[tokenAddress]);
         }
-    });
+    });*/
     const timeCheckVariants = (new Date().getTime() - timeCheckVariantsStart) / 1000;
     console.log(target.hash, 'timeCheckVariants', timeCheckVariants);
     if (!variants.length) {
