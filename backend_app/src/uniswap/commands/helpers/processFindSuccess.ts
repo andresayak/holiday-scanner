@@ -213,12 +213,11 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
                 amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
             }
             const amountOut = amountOutsMin[amountOutsMin.length - 1];
-            //if(amountOut.lt(amountIn)){
-            //    continue;
-            //}
+            if(amountOut.lt(amountIn)){
+                continue;
+            }
             const profit = amountOut.sub(amountIn).mul(1000).div(amountIn);
             const real = amountIn.mul(profit).div(1000);
-console.log('real='+ real);
             if (real.gt(maxRealProfit)) {
                 maxProfit = profit;
                 maxRealProfit = real;
@@ -231,9 +230,8 @@ console.log('real='+ real);
             }
         }
         const profitNumber = parseInt(maxProfit.toString()) / 100;
+        console.log(hash, 'profitNumber=' + profitNumber +', maxRealProfit=' + maxRealProfit);
         if (profitNumber > 0 && maxRealProfit) {
-            console.log(hash, 'profitNumber=' + profitNumber +', maxRealProfit=' + maxRealProfit);
-
             const price = variant.path[0] == BNB_CONTRACT.toLowerCase() ? BNB_PRICE_USD : 1;
             const amountInUsd = price * parseFloat(utils.formatEther(maxRealProfit));
             if (amountInUsd > 0.5) {
