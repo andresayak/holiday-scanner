@@ -171,7 +171,10 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
             if (pairs[pairAddress]) {
                 const pair = pairs[pairAddress];
                 if(pair.fee){
-                    const token0 = variant.path[index+1];
+                    const token0 = variant.path[index];
+                    if(pair.token0 !== token0 && pair.token1 !== token0){
+                        throw Error('invalid pair, not have tokens');
+                    }
                     const reserve0 = token0 == pair.token0 ? pair.reserve0 : pair.reserve1;
                     const reserve1 = token0 == pair.token0 ? pair.reserve1 : pair.reserve0;
                     reserves.push([reserve0, reserve1]);
