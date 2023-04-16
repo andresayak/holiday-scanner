@@ -181,7 +181,7 @@ export class ScanArbitrageCommand {
                         }
                         const router = routers.find((router) => router.address.toLowerCase() === routerAddress)
                         if (target.gasPrice.gte('4000000000') && target.gasPrice.lte('8000000000') && router) {
-                            console.log('t', (new Date().getTime() - timeStart.getTime()) / 1000, 'attems: ' + attems);
+                            console.log(hash, 't', (new Date().getTime() - timeStart.getTime()) / 1000, 'attems: ' + attems);
                             const getMethod = (interfaces: utils.Interface, data: BytesLike) => {
                                 for (const method of methods) {
                                     let result;
@@ -200,12 +200,12 @@ export class ScanArbitrageCommand {
                             if(json){
                                 if (json.method == 'multicall') {
                                     if (json.result.data.length != 1) {
-                                        console.log('many swaps');
+                                        console.log(hash, 'many swaps');
                                         return;
                                     }
                                     json = getMethod(iface2, json.result.data[0]);
                                     if (!json) {
-                                        console.log('invalid multicall data');
+                                        console.log(hash, 'invalid multicall data');
                                         return;
                                     }
                                 }

@@ -158,7 +158,7 @@ export const processSwap = (props: SwapPropsType): SuccessType[] => {
 }*/
 
 const zero = BigNumber.from('0');
-export const processFindSuccess = (props: PropsType): SuccessType[] => {
+export const processFindSuccess = (hash: string, props: PropsType): SuccessType[] => {
     const {variants, pairs, amount0, amount1} = props;
     let success: SuccessType[] = [];
     let cases = [];
@@ -194,8 +194,8 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
     }
 
     const timeCases = (new Date().getTime() - timeCaseStart) / 1000;
-    console.log('timeCases', timeCases);
-    console.log('cases', cases.length);
+    console.log(hash, 'timeCases', timeCases);
+    console.log(hash, 'cases', cases.length);
     const timeSearchStart = new Date().getTime();
     for (const item of cases) {
         const {variant, reserves, fees, feeScales} = item;
@@ -232,7 +232,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
         }
         const profitNumber = parseInt(maxProfit.toString()) / 100;
         if (profitNumber > 0 && maxRealProfit) {
-            console.log('profitNumber=' + profitNumber +', maxRealProfit=' + maxRealProfit);
+            console.log(hash, 'profitNumber=' + profitNumber +', maxRealProfit=' + maxRealProfit);
 
             const price = variant.path[0] == BNB_CONTRACT.toLowerCase() ? BNB_PRICE_USD : 1;
             const amountInUsd = price * parseFloat(utils.formatEther(maxRealProfit));
@@ -251,7 +251,7 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                     amountInUsd
                 });
                 const timeSearch = (new Date().getTime() - timeSearchStart) / 1000;
-                console.log('timeSearch', timeSearch);
+                console.log(hash, 'timeSearch', timeSearch);
                 return success;
             }
         }

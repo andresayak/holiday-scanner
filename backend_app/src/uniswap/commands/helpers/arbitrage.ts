@@ -86,8 +86,8 @@ export const calculate = async (swap: {
                                 transactionRepository: Repository<TransactionEntity>, allVariants: any, allPairs: any
 ) => {
     const timeProcessing = (new Date().getTime() - timeStart.getTime()) / 1000;
-    console.log('timeProcessing', timeProcessing);
     const {target} = swap;
+    console.log(target.hash, 'timeProcessing', timeProcessing);
     const token0 = swap.json.result.path[0].toLowerCase();
     const token1 = swap.json.result.path[1].toLowerCase();
     const token2 = swap.json.result.path[2]?.toLowerCase();
@@ -116,9 +116,9 @@ export const calculate = async (swap: {
         }
     });
     const timeCheckVariants = (new Date().getTime() - timeCheckVariantsStart) / 1000;
-    console.log('timeCheckVariants', timeCheckVariants);
+    console.log(target.hash, 'timeCheckVariants', timeCheckVariants);
     if (!variants.length) {
-        console.log('not variants', tokenInner);
+        console.log(target.hash, 'not variants', tokenInner);
         return;
     }
     const pairs: { [k: string]: PairEntity } = {};
@@ -153,25 +153,24 @@ export const calculate = async (swap: {
         });
     }));*/
     const timeFetchPairs = (new Date().getTime() - timeFetchPairsStart) / 1000;
-    console.log('timeFetchPairs', timeFetchPairs);
+    console.log(target.hash, 'timeFetchPairs', timeFetchPairs);
     const timeFetch = (new Date().getTime() - timeStart.getTime()) / 1000;
-    console.log('TIME FETCH', timeFetch)
+    console.log(target.hash, 'TIME FETCH', timeFetch)
     if (!Object.keys(pairs).length) {
-        console.log('not pairs');
+        console.log(target.hash, 'not pairs');
         return;
     }
 
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
-
         const pair1 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
         )));
         if (!pair1) {
-            console.log('target pair1 not found', swap.factory, token0, token1);
+            console.log(target.hash, 'target pair1 not found', swap.factory, token0, token1);
             return;
         }
         if (!pair1.fee) {
-            console.log('target pair1 not have fee', pair1);
+            console.log(target.hash, 'target pair1 not have fee', pair1);
             return;
         }
 
@@ -188,11 +187,11 @@ export const calculate = async (swap: {
                 (pair.token0 == token1 && pair.token1 == token2) || (pair.token0 == token2 && pair.token1 == token1)
             )));
             if (!pair2) {
-                console.log('target pair2 not found', swap.factory, token1, token2);
+                console.log(target.hash, 'target pair2 not found', swap.factory, token1, token2);
                 return;
             }
             if (!pair2.fee) {
-                console.log('target pair2 not have fee', pair2);
+                console.log(target.hash, 'target pair2 not have fee', pair2);
                 return;
             }
 
@@ -216,16 +215,16 @@ export const calculate = async (swap: {
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
         }
         const timeDiff02 = (new Date().getTime() - timeStart.getTime()) / 1000;
-        console.log('TIME UPDATE RESERVERS = ', timeDiff02);
-        const items = processFindSuccess({variants, pairs, amount0, amount1});
+        console.log(target.hash, 'TIME UPDATE RESERVERS = ', timeDiff02);
+        const items = processFindSuccess(target.hash, {variants, pairs, amount0, amount1});
         const timeDiff0 = (new Date().getTime() - timeStart.getTime()) / 1000;
-        console.log('TIME AFTER SUCCESS = ', timeDiff0);
+        console.log(target.hash, 'TIME AFTER SUCCESS = ', timeDiff0);
         if (items.length) {
             const success = items[0];
             let hash = '';
             let timing;
             if (isTestMode) {
-                console.log('TEST MODE ENABLED');
+                console.log(target.hash, 'TEST MODE ENABLED');
             } else {
                 const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
                 if (sendResult) {
@@ -251,7 +250,7 @@ export const calculate = async (swap: {
                         blockInfoMy = ' [tx empty]';
                     }
                 } catch (e) {
-                    console.log('error ', e);
+                    console.log(target.hash, 'error ', e);
                     blockInfoMy = ' [error: ]';
                 }
 
@@ -268,7 +267,7 @@ export const calculate = async (swap: {
                         blockInfoTarget = ' [tx empty]';
                     }
                 } catch (e) {
-                    console.log('error ', e);
+                    console.log(target.hash, 'error ', e);
                     blockInfoTarget = ' [error]';
                 }
             }
@@ -287,7 +286,7 @@ export const calculate = async (swap: {
             if (pair2)
                 before.pair1 = JSON.parse(JSON.stringify(pair2));
 
-            console.log('times:', {
+            console.log(target.hash, 'times:', {
                 timeProcessing,
                 timeFetch,
                 timeDiff0, timeDiff2, timing
@@ -317,10 +316,10 @@ export const calculate = async (swap: {
                     }
                 }, before, after, success
             };
-            console.log('data', JSON.stringify(data));
+            console.log(target.hash, 'data', JSON.stringify(data));
             const filename = currentBlock + "-" + (new Date().getTime());
             fs.writeFileSync("/var/www/backend_app/storage/swaps/" + filename, JSON.stringify(data, null, "\t"));
-            console.log('success', success);
+            console.log(target.hash, 'success', success);
 
             try {
                 await transactionRepository.create(new TransactionEntity({
@@ -341,12 +340,9 @@ export const calculate = async (swap: {
                     logs: filename,
                 }));
             } catch (e) {
-                console.log(e);
+                console.log(target.hash, e);
             }
 
-
-            console.log('gasPrice=' + swap.target.gasPrice);
-            console.log('gasLimit=' + swap.target.gasLimit);
             //process.exit(1);
             /*console.log('wait...');
             const receipt = await target.wait();
