@@ -213,9 +213,9 @@ export const processFindSuccess = (props: PropsType): SuccessType[] => {
                 amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
             }
             const amountOut = amountOutsMin[amountOutsMin.length - 1];
-            /*if(amountOut.lt(amountIn)){
+            if(amountOut.lt(amountIn)){
                 continue;
-            }*/
+            }
             const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
             const real = amountIn.mul(profit).div(10000);
 
