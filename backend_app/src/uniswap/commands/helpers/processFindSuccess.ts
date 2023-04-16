@@ -206,6 +206,7 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
         let optimalAmountOutsMin = [];
         const step = maxAmountIn.div(10);
         for (let amountIn = maxAmountIn; amountIn.gt(step); amountIn = amountIn.sub(step)) {
+            console.log('amountIn='+amountIn );
             let amountOutsMin = [];
             for (const index in variant.pairs) {
                 const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
