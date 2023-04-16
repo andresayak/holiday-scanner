@@ -213,11 +213,11 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
                 amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
             }
             const amountOut = amountOutsMin[amountOutsMin.length - 1];
-            if(amountOut.lt(amountIn)){
-                continue;
-            }
-            const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
-            const real = amountIn.mul(profit).div(10000);
+            //if(amountOut.lt(amountIn)){
+            //    continue;
+            //}
+            const profit = amountOut.sub(amountIn).mul(1000).div(amountIn);
+            const real = amountIn.mul(profit).div(1000);
 
             if (real.gt(maxRealProfit)) {
                 maxProfit = profit;
