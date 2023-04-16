@@ -208,6 +208,7 @@ export class ScanArbitrageCommand {
                                         console.log(hash, 'invalid multicall data');
                                         return;
                                     }
+                                    console.log('json', json);
                                 }
                             }
 
@@ -226,7 +227,6 @@ export class ScanArbitrageCommand {
                                     );
                                 } catch (e) {
                                     console.log(e)
-                                    this.tgBot.sendMessage('ERROR: '+e.toString());
                                 }
                             }
                         }
@@ -285,7 +285,7 @@ export class ScanArbitrageCommand {
             }
         });
 
-        let countPair = 0;
+        /*let countPair = 0;
         for(const pair of allPairs) {
             countPair++;
             await new Promise((done) => this.redisPublisherClient.get('pair_' + pair.address, (err, reply) => {
@@ -329,7 +329,7 @@ export class ScanArbitrageCommand {
             process.stdout.write('sync variants...['+countVariant+'/'+allTokens.length+']');
         }
         process.stdout.clearLine(0);
-        process.stdout.cursorTo(0);
+        process.stdout.cursorTo(0);*/
         this.cacheInned = true;
     }
 

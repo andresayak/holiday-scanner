@@ -131,12 +131,12 @@ export const calculate = async (swap: {
     }
     needPairs = needPairs.filter((value, index, array) => array.indexOf(value) === index);
     const timeFetchPairsStart = new Date().getTime();
-    needPairs.map(pairAddress => {
+    /*needPairs.map(pairAddress => {
         if (allPairs[pairAddress]) {
             pairs[pairAddress] = allPairs[pairAddress];
         }
-    });
-    /*await Promise.all(needPairs.map(pairAddress => {
+    });*/
+    await Promise.all(needPairs.map(pairAddress => {
         return new Promise((done) => {
             redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
                 if (reply) {
@@ -154,7 +154,7 @@ export const calculate = async (swap: {
                 done(true);
             });
         });
-    }));*/
+    }));
     const timeFetchPairs = (new Date().getTime() - timeFetchPairsStart) / 1000;
     console.log(target.hash, 'timeFetchPairs', timeFetchPairs);
     const timeFetch = (new Date().getTime() - timeStart.getTime()) / 1000;
