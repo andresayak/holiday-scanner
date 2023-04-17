@@ -51,6 +51,12 @@ export const providers = [
                         url = 'ws://host:58545';
                     }else if(provider == 'chainstack'){
                         url = envService.get("CHAINSTACK_WS_URL");
+                    }else if(provider == 'nodereal'){
+                        url = envService.get("NODEREAL_WS_URL");
+                    }else if(provider == 'getblock'){
+                        url = envService.get("GETBLOCK_WS_URL");
+                    }else if(provider == 'blockvision'){
+                        url = envService.get("GETBLOCK_WS_URL");
                     }else{
                         url = provider;
                     }
@@ -89,6 +95,12 @@ export const providers = [
                         url = 'http://host:58545';
                     }else if(provider == 'chainstack'){
                         url = envService.get("CHAINSTACK_HTTP_URL");
+                    }else if(provider == 'nodereal'){
+                        url = envService.get("NODEREAL_HTTP_URL");
+                    }else if(provider == 'getblock'){
+                        url = envService.get("GETBLOCK_HTTP_URL");
+                    }else if(provider == 'blockvision'){
+                        url = envService.get("BLOCKVISION_HTTP_URL");
                     }else{
                         url = provider;
                     }
