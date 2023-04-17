@@ -210,7 +210,7 @@ export class ScanArbitrageCommand {
                                 console.log('json', json);
                             }
 
-                            if (json && !json.method.match(/Supporting/)) {
+                            if (json){//} && !json.method.match(/Supporting/)) {
                                 //const deadline = (parseInt(json.result.deadline) - Math.floor(new Date().getTime() / 1000));
                                 const swap = {
                                     target, json,

@@ -19,6 +19,7 @@ import {ScanVariants3Command} from "./scan-variants3.command";
 import {TestWsCommand} from "./test-ws.command";
 import {CheckPendingCommand} from "./check-pending.command";
 import {CheckReservesCommand} from "./check-reserves.command";
+import {ScanPendingCommand} from "./scan-pending.command";
 
 export default [
     ScanTransactionsCommand,
@@ -41,5 +42,6 @@ export default [
     TestSwapCommand,
     TestWsCommand,
     CheckPendingCommand,
-    CheckReservesCommand
+    CheckReservesCommand,
+    ScanPendingCommand
 ];

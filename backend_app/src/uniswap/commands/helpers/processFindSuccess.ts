@@ -170,17 +170,15 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
             const pairAddress = variant.pairs[index];
             if (pairs[pairAddress]) {
                 const pair = pairs[pairAddress];
-                if(pair.fee){
-                    const token0 = variant.path[index];
-                    if(pair.token0 !== token0 && pair.token1 !== token0){
-                        throw Error('invalid pair, not have tokens');
-                    }
-                    const reserve0 = token0 == pair.token0 ? pair.reserve0 : pair.reserve1;
-                    const reserve1 = token0 == pair.token0 ? pair.reserve1 : pair.reserve0;
-                    reserves.push([reserve0, reserve1]);
-                    fees.push(pair.fee);
-                    feeScales.push(pair.fee_scale);
+                const token0 = variant.path[index];
+                if (pair.token0 !== token0 && pair.token1 !== token0) {
+                    throw Error('invalid pair, not have tokens');
                 }
+                const reserve0 = token0 == pair.token0 ? pair.reserve0 : pair.reserve1;
+                const reserve1 = token0 == pair.token0 ? pair.reserve1 : pair.reserve0;
+                reserves.push([reserve0, reserve1]);
+                fees.push(pair.fee);
+                feeScales.push(pair.fee_scale);
             } else {
                 break;
             }
@@ -202,8 +200,8 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
     for (const item of cases) {
         const {variant, reserves, fees, feeScales} = item;
         console.log('variant', variant);
-        console.log('reserve0='+ reserves[0]);
-        console.log('reserve1='+ reserves[1]);
+        console.log('reserve0=' + reserves[0]);
+        console.log('reserve1=' + reserves[1]);
         const maxAmountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
         let maxProfit = BigNumber.from('0');
         let maxRealProfit = BigNumber.from('0');
@@ -218,8 +216,7 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
                 amountOutsMin.push(getAmountOut(amountInCurrent, reserves[index][0], reserves[index][1], fees[index], feeScales[index]));
             }
             const amountOut = amountOutsMin[amountOutsMin.length - 1];
-            console.log('amountIn='+amountIn, 'amountOut='+amountOut);
-            if(amountOut.lt(amountIn)){
+            if (amountOut.lt(amountIn)) {
                 continue;
             }
             const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
@@ -231,7 +228,7 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
                 optimalAmountOut = amountOut;
                 optimalAmountOutsMin = amountOutsMin;
             }
-            if(maxRealProfit.gt(0) && !real.gt(maxRealProfit)){
+            if (maxRealProfit.gt(0) && !real.gt(maxRealProfit)) {
                 break;
             }
         }
