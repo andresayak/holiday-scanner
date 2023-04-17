@@ -241,8 +241,11 @@ export class ScanArbitrageCommand {
 
         wsProvider.on("pending", (hash) => {
             const timeStart = new Date();
-            if (typeof hash == 'string' && this.blockUpdated && this.cacheInned) {
-                getTransaction(hash, this.currentBlock, timeStart);
+            if (typeof hash == 'string') {
+                if(this.blockUpdated && this.cacheInned)
+                    getTransaction(hash, this.currentBlock, timeStart);
+            }else{
+                console.log('hash', hash);
             }
         });
 

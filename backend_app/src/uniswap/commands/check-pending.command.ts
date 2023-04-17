@@ -55,6 +55,7 @@ export class CheckPendingCommand {
         let total = 0;
         const processPending = (txHash: string | TransactionResponse, providerName: string) => {
             total++;
+            console.log('txHash', txHash);
             if (typeof txHash == 'string') {
                 this.processingTransactions[txHash] = setTimeout(() => {
                     invalidCount++;
@@ -93,6 +94,7 @@ export class CheckPendingCommand {
         const processTxHash = (hash: string, target: TransactionResponse) => {
             successCount++;
             stat();
+            console.log('target' ,target);
         }
 
         const stat = ()=>{
