@@ -1,5 +1,11 @@
 const urls = [
-    //'https://speedy-nodes-nyc.moralis.io/fd1d27838850000174a07146/bsc/mainnet',
+    'https://rpc-bsc.48.club',
+    'https://koge-rpc-bsc.48.club',
+    'https://rpc.ankr.com/bsc',
+    'https://bsc.blockpi.network/v1/rpc/public',
+    'https://bsc.publicnode.com',
+    'https://bscrpc.com',
+    'https://bsc-mainnet.public.blastapi.io',
     'https://bsc-dataseed.binance.org/',
     'https://bsc-dataseed1.defibit.io/',
     'https://bsc-dataseed1.ninicoin.io/',
