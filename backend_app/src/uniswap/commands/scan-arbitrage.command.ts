@@ -197,19 +197,17 @@ export class ScanArbitrageCommand {
                             }
                             let json = getMethod(iface, target.data);
 
-                            if(json){
-                                if (json.method == 'multicall') {
-                                    if (json.result.data.length != 1) {
-                                        console.log(hash, 'many swaps');
-                                        return;
-                                    }
-                                    json = getMethod(iface2, json.result.data[0]);
-                                    if (!json) {
-                                        console.log(hash, 'invalid multicall data');
-                                        return;
-                                    }
-                                    console.log('json', json);
+                            if (json && json.method == 'multicall') {
+                                if (json.result.data.length != 1) {
+                                    console.log(hash, 'many swaps');
+                                    return;
                                 }
+                                json = getMethod(iface2, json.result.data[0]);
+                                if (!json) {
+                                    console.log(hash, 'invalid multicall data');
+                                    return;
+                                }
+                                console.log('json', json);
                             }
 
                             if (json && !json.method.match(/Supporting/)) {

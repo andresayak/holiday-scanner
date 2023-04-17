@@ -162,7 +162,7 @@ export const calculate = async (swap: {
     }
 
     if (Object.keys(pairs).length > 1 && swap.json.result.path.length == 2 || swap.json.result.path.length == 3) {
-        let pair1 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+        let pair1 = (Object.values(pairs).find((pair) => pair.factory == swap.factory && (
             (pair.token0 == token0 && pair.token1 == token1) || (pair.token1 == token0 && pair.token0 == token1)
         )));
         if (!pair1) {
@@ -183,7 +183,7 @@ export const calculate = async (swap: {
         const amountInMax = swap.json.result.amountInMax ?? BigNumber.from(0);
         let pair2;
         if (token2) {
-            let pair2 = copyPair(Object.values(pairs).find((pair) => pair.factory == swap.factory && (
+            let pair2 = (Object.values(pairs).find((pair) => pair.factory == swap.factory && (
                 (pair.token0 == token1 && pair.token1 == token2) || (pair.token0 == token2 && pair.token1 == token1)
             )));
             if (!pair2) {
