@@ -108,13 +108,13 @@ export const calculate = async (swap: {
         return;
     }
     const timeCheckVariantsStart = new Date().getTime();
-    const variants = await checkVariants(tokenInner, redisPublisherClient);
-    /*let variants = [];
+    //const variants = await checkVariants(tokenInner, redisPublisherClient);
+    let variants = [];
     tokenInner.map(tokenAddress => {
         if (allVariants[tokenAddress]) {
             variants.push(...allVariants[tokenAddress]);
         }
-    });*/
+    });
     const timeCheckVariants = (new Date().getTime() - timeCheckVariantsStart) / 1000;
     console.log(target.hash, 'timeCheckVariants', timeCheckVariants);
     if (!variants.length) {
@@ -128,12 +128,12 @@ export const calculate = async (swap: {
     }
     needPairs = needPairs.filter((value, index, array) => array.indexOf(value) === index);
     const timeFetchPairsStart = new Date().getTime();
-    /*needPairs.map(pairAddress => {
+    needPairs.map(pairAddress => {
         if (allPairs[pairAddress]) {
             pairs[pairAddress] = allPairs[pairAddress];
         }
-    });*/
-    await Promise.all(needPairs.map(pairAddress => {
+    });
+    /*await Promise.all(needPairs.map(pairAddress => {
         return new Promise((done) => {
             redisPublisherClient.get('pair_' + pairAddress, (err, reply) => {
                 if (reply) {
@@ -151,7 +151,7 @@ export const calculate = async (swap: {
                 done(true);
             });
         });
-    }));
+    }));*/
     const timeFetchPairs = (new Date().getTime() - timeFetchPairsStart) / 1000;
     console.log(target.hash, 'timeFetchPairs', timeFetchPairs);
     const timeFetch = (new Date().getTime() - timeStart.getTime()) / 1000;
@@ -194,12 +194,8 @@ export const calculate = async (swap: {
                 console.log(target.hash, 'target pair2 not have fee', pair2);
                 return;
             }
-            console.log('pair1='+ pair1.reserve0);
-            console.log('pair1='+ pair1.reserve1);
             const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0, pair}
                 = updateReserves(pair1, token0, amountIn, BigNumber.from(0), amountInMax, BigNumber.from(0));
-            console.log('pair1='+ pair1.reserve0);
-            console.log('pair1='+ pair1.reserve1);
             after.amountRealIn0 = amountRealIn0.toString();
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
@@ -216,12 +212,8 @@ export const calculate = async (swap: {
             after.reserves1 = [pair2.reserve0, pair2.reserve1];
 
         } else {
-            console.log('pair1='+ pair1.reserve0);
-            console.log('pair1='+ pair1.reserve1);
             const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0, pair}
                 = updateReserves(pair1, token0, amountIn, amountOut, amountInMax, amountOutMin);
-            console.log('pair1='+ pair1.reserve0);
-            console.log('pair1='+ pair1.reserve1);
             after.amountRealIn0 = amountRealIn0.toString();
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];

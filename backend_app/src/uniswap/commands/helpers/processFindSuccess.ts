@@ -212,7 +212,6 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
         let optimalAmountOutsMin = [];
         const step = maxAmountIn.div(10);
         for (let amountIn = maxAmountIn; amountIn.gt(step); amountIn = amountIn.sub(step)) {
-
             let amountOutsMin = [];
             for (const index in variant.pairs) {
                 const amountInCurrent = parseInt(index) == 0 ? amountIn : amountOutsMin[parseInt(index) - 1];
@@ -220,9 +219,9 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
             }
             const amountOut = amountOutsMin[amountOutsMin.length - 1];
             console.log('amountIn='+amountIn, 'amountOut='+amountOut);
-            /*if(amountOut.lt(amountIn)){
+            if(amountOut.lt(amountIn)){
                 continue;
-            }*/
+            }
             const profit = amountOut.sub(amountIn).mul(10000).div(amountIn);
             const real = amountIn.mul(profit).div(10000);
             if (real.gt(maxRealProfit)) {
@@ -237,7 +236,6 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
             }
         }
         const profitNumber = parseInt(maxProfit.toString()) / 100;
-        console.log(hash, 'profitNumber=' + profitNumber +', maxRealProfit=' + maxRealProfit);
         if (profitNumber > 0 && maxRealProfit) {
             const price = variant.path[0] == BNB_CONTRACT.toLowerCase() ? BNB_PRICE_USD : 1;
             const amountInUsd = price * parseFloat(utils.formatEther(maxRealProfit));

@@ -131,14 +131,14 @@ export class ScanArbitrageCommand {
     ) {
 
         console.log('sync pairs...');
-        /*const allPairs = await this.pairRepository.find({
+        const allPairs = await this.pairRepository.find({
             where: {
                 fee: Not(IsNull())
             }
         });
         for(const pair of allPairs) {
             this.pairs[pair.address] = pair;
-        }*/
+        }
 
         const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
@@ -283,7 +283,7 @@ export class ScanArbitrageCommand {
             }
         });
 
-        /*let countPair = 0;
+        let countPair = 0;
         for(const pair of allPairs) {
             countPair++;
             await new Promise((done) => this.redisPublisherClient.get('pair_' + pair.address, (err, reply) => {
@@ -327,7 +327,7 @@ export class ScanArbitrageCommand {
             process.stdout.write('sync variants...['+countVariant+'/'+allTokens.length+']');
         }
         process.stdout.clearLine(0);
-        process.stdout.cursorTo(0);*/
+        process.stdout.cursorTo(0);
         this.cacheInned = true;
     }
 

@@ -34,8 +34,6 @@ export const updateReserves = (pair, token0: string, amountIn: BigNumber, amount
         console.log('amountInMax='+amountInMax);
         throw new Error('amountIn and amountOut not present');
     }
-    console.log('amountRealIn='+amountRealIn);
-    console.log('amountRealOut='+amountRealOut);
 
     reserves_after = [
         reserves[0].add(amountRealIn),//.sub(amountRealOut),
