@@ -235,6 +235,7 @@ export const calculate = async (swap: {
                     providers, chainId);
                 if (sendResult) {
                     upNonce();
+                    upNonce();
                     hash = sendResult.hash;
                     timing = sendResult.timing;
                 }
@@ -497,11 +498,10 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
         success.path,
         [fee1, fee2],
         success.feeScales,
-        params
+        params,
+        chainId
     );
-    tx.chainId = chainId;
     const signedTx = await signer.signTransaction(tx);
-
 
     const targetTx = {
         nonce: target.nonce,
