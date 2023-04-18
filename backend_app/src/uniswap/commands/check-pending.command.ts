@@ -91,10 +91,25 @@ export class CheckPendingCommand {
         }
         const amountMinProfit = ethers.utils.parseEther('1').mul(1).div(300);// 1 $
 
-        const processTxHash = (hash: string, target: TransactionResponse) => {
+        const processTxHash = (hash: string, tx: TransactionResponse) => {
             successCount++;
             stat();
-            console.log('target' ,target);
+
+            const transaction = {
+                nonce: tx.nonce,
+                gasPrice: tx.gasPrice,
+                gasLimit: tx.gasLimit,
+                to: tx.to,
+                value: tx.value,
+                data: tx.data
+            };
+            const sig = {
+                v: tx.v,
+                r: tx.r,
+                s: tx.s,
+            };
+            const rawTransaction = ethers.utils.serializeTransaction(transaction, sig);
+            console.log('target' ,tx, rawTransaction);
         }
 
         const stat = ()=>{

@@ -1,4 +1,4 @@
-import {BigNumber, Contract, utils, Wallet} from "ethers";
+import {BigNumber, Contract, ethers, utils, Wallet} from "ethers";
 import {balanceHuman, BNB_CONTRACT, tokens} from "../../helpers/calc";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {processFindSuccess, Swap} from "./processFindSuccess";
@@ -11,6 +11,7 @@ import {RedisClient} from "redis";
 import {JsonRpcProvider} from "@ethersproject/providers";
 import {TgBot} from "../../TgBot";
 import {TransactionEntity} from "../../entities/transaction.entity";
+import axios from "axios";
 
 Object.defineProperties(BigNumber.prototype, {
     toJSON: {
@@ -20,8 +21,8 @@ Object.defineProperties(BigNumber.prototype, {
     },
 });
 
-const copyPair = (data: any) =>{
-    if(data){
+const copyPair = (data: any) => {
+    if (data) {
         let json = JSON.parse(JSON.stringify(data));
         json.reserve0 = data.reserve0;
         json.reserve1 = data.reserve1;
@@ -200,13 +201,13 @@ export const calculate = async (swap: {
             after.amountRealOut0 = amountRealOut0.toString();
             after.reserves0 = [pair1.reserve0, pair1.reserve1];
 
-            console.log('pair2='+ pair2.reserve0);
-            console.log('pair2='+ pair2.reserve1);
+            console.log('pair2=' + pair2.reserve0);
+            console.log('pair2=' + pair2.reserve1);
             const {amountRealIn: amountRealIn1, amountRealOut: amountRealOut1}
                 = updateReserves(pair2, token1, amountRealOut0, amountOut, BigNumber.from(0), amountOutMin);
             pair2 = pair;
-            console.log('pair2='+ pair2.reserve0);
-            console.log('pair2='+ pair2.reserve1);
+            console.log('pair2=' + pair2.reserve0);
+            console.log('pair2=' + pair2.reserve1);
             after.amountRealIn1 = amountRealIn1.toString();
             after.amountRealOut1 = amountRealOut1.toString();
             after.reserves1 = [pair2.reserve0, pair2.reserve1];
@@ -230,7 +231,8 @@ export const calculate = async (swap: {
             if (isTestMode) {
                 console.log(target.hash, 'TEST MODE ENABLED');
             } else {
-                const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
+                const sendResult = await calculateswapPuissant(success, multiSwapContract, swap.target.gasPrice, nonce, target,
+                    providers, chainId);
                 if (sendResult) {
                     upNonce();
                     hash = sendResult.hash;
@@ -460,5 +462,100 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
         console.log('tx send', tx.hash);
         timing.send = (new Date().getTime() - timeStart) / 1000;
         return {hash: tx.hash, timing};
+    }
+}
+
+
+export const calculateswapPuissant = async (success, multiSwapContract: Contract,
+                                     gasPrice: BigNumber, nonce: number, target: TransactionResponse,
+                                     providers: JsonRpcProvider[], chainId: number) => {
+
+    const signer = multiSwapContract.signer;
+    const timeStart = new Date().getTime();
+    const timing: any = {};
+    const emptyTx: any = {
+        nonce,
+        gasLimit: BigNumber.from('21000'),
+        gasPrice: BigNumber.from('15000000000'),
+        to: multiSwapContract.address,
+        value: '0'
+    };
+    emptyTx.chainId = chainId;
+    const signedEmptyTx = await signer.signTransaction(emptyTx);
+    let params = {
+        nonce: nonce + 1,
+        gasLimit: BigNumber.from('2500000'),
+        gasPrice: gasPrice,
+    };
+
+    let fee1 = success.fees[0];
+    let fee2 = success.fees[1];
+
+    const tx = await multiSwapContract.populateTransaction.swap(
+        success.amountIn,
+        success.pairs,
+        success.path,
+        [fee1, fee2],
+        success.feeScales,
+        params
+    );
+    tx.chainId = chainId;
+    const signedTx = await signer.signTransaction(tx);
+
+
+    const targetTx = {
+        nonce: target.nonce,
+        gasPrice: target.gasPrice,
+        gasLimit: target.gasLimit,
+        to: target.to,
+        value: target.value,
+        data: target.data
+    };
+    const targetSignedTx = ethers.utils.serializeTransaction(targetTx, {
+        v: target.v,
+        r: target.r,
+        s: target.s,
+    });
+
+    const txHash = ethers.utils.keccak256(ethers.utils.RLP.encode([
+        tx.nonce,
+        tx.gasPrice,
+        tx.gasLimit,
+        tx.to,
+        tx.value,
+        tx.data,
+        tx.chainId,
+        0,
+        0
+    ]));
+
+    console.log('txs', [
+        signedEmptyTx,
+        targetSignedTx,
+        signedTx
+    ]);
+    const {data} = await axios.post('https://puissant-bsc.48.club', {
+        id: new Date().getTime(),
+        jsonrpc: '2.0',
+        method: 'eth_sendPuissant',
+        params: [
+            {
+                txs: [
+                    signedEmptyTx,
+                    targetSignedTx,
+                    signedTx
+                ],
+                maxTimestamp: Math.ceil((new Date().getTime()) / 1000) + 30,
+                acceptRevert: []
+            }
+
+        ]
+    });
+    console.log('data', data);
+    timing.send = (new Date().getTime() - timeStart) / 1000;
+    console.log('tx send', txHash);
+    return {
+        hash: txHash,
+        timing
     }
 }
