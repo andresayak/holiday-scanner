@@ -474,14 +474,14 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
     const signer = multiSwapContract.signer;
     const timeStart = new Date().getTime();
     const timing: any = {};
-    const emptyTx: any = {
+    const emptyTx = {
         nonce,
         gasLimit: BigNumber.from('21000'),
-        gasPrice: BigNumber.from('15000000000'),
+        gasPrice: BigNumber.from('60000000000'),
         to: multiSwapContract.address,
-        value: '0'
+        value: BigNumber.from('0'),
+        chainId
     };
-    emptyTx.chainId = chainId;
     const signedEmptyTx = await signer.signTransaction(emptyTx);
     let params = {
         nonce: nonce + 1,
@@ -517,7 +517,7 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
         s: target.s,
     });
 
-    const txHash = ethers.utils.keccak256(ethers.utils.RLP.encode([
+    /*const txHash = ethers.utils.keccak256(ethers.utils.RLP.encode([
         tx.nonce,
         tx.gasPrice,
         tx.gasLimit,
@@ -527,7 +527,7 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
         tx.chainId,
         0,
         0
-    ]));
+    ]));*/
 
     console.log('txs', [
         signedEmptyTx,
@@ -553,9 +553,9 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
     });
     console.log('data', data);
     timing.send = (new Date().getTime() - timeStart) / 1000;
-    console.log('tx send', txHash);
+    //console.log('tx send', txHash);
     return {
-        hash: txHash,
+        hash: '',//txHash,
         timing
     }
 }
