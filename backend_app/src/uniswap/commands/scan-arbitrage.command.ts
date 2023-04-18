@@ -224,6 +224,7 @@ export class ScanArbitrageCommand {
                                         this.variants, this.pairs
                                     );
                                 } catch (e) {
+                                    this.tgBot.sendMessage(e.toString());
                                     console.log(e)
                                 }
                             }
