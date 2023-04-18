@@ -498,9 +498,9 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
         success.path,
         [fee1, fee2],
         success.feeScales,
-        params,
-        chainId
+        params
     );
+    tx.chainId = chainId;
     const signedTx = await signer.signTransaction(tx);
 
     const targetTx = {
@@ -509,7 +509,8 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
         gasLimit: target.gasLimit,
         to: target.to,
         value: target.value,
-        data: target.data
+        data: target.data,
+        chainId
     };
     const targetSignedTx = ethers.utils.serializeTransaction(targetTx, {
         v: target.v,
