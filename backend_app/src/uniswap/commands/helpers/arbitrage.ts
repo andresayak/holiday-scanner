@@ -238,6 +238,9 @@ export const calculate = async (swap: {
                     upNonce();
                     hash = sendResult.hash;
                     timing = sendResult.timing;
+
+                    await tgBot.sendMessage(JSON.stringify(sendResult.data));
+
                 }
             }
             const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
@@ -557,6 +560,7 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
     //console.log('tx send', txHash);
     return {
         hash: '',//txHash,
-        timing
+        timing,
+        data
     }
 }

@@ -199,16 +199,13 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
     const timeSearchStart = new Date().getTime();
     for (const item of cases) {
         const {variant, reserves, fees, feeScales} = item;
-        console.log('variant', variant);
-        console.log('reserve0=' + reserves[0]);
-        console.log('reserve1=' + reserves[1]);
         const maxAmountIn = variant.path[0] == BNB_CONTRACT.toLowerCase() ? utils.parseEther(amount0) : utils.parseEther(amount1);
         let maxProfit = BigNumber.from('0');
         let maxRealProfit = BigNumber.from('0');
         let optimalAmountIn = BigNumber.from('0');
         let optimalAmountOut = BigNumber.from('0');
         let optimalAmountOutsMin = [];
-        const step = maxAmountIn.div(10);
+        const step = maxAmountIn.div(30);
         for (let amountIn = maxAmountIn; amountIn.gt(step); amountIn = amountIn.sub(step)) {
             let amountOutsMin = [];
             for (const index in variant.pairs) {
@@ -252,7 +249,7 @@ export const processFindSuccess = (hash: string, props: PropsType): SuccessType[
                 });
                 const timeSearch = (new Date().getTime() - timeSearchStart) / 1000;
                 console.log(hash, 'timeSearch', timeSearch);
-                return success;
+                //return success;
             }
         }
     }
