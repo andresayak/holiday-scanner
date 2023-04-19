@@ -228,6 +228,7 @@ export const calculate = async (swap: {
             const success = items[0];
             let hash = '';
             let timing;
+            let bundle_id;
             if (isTestMode) {
                 console.log(target.hash, 'TEST MODE ENABLED');
             } else {
@@ -238,7 +239,7 @@ export const calculate = async (swap: {
                     upNonce();
                     hash = sendResult.hash;
                     timing = sendResult.timing;
-
+                    bundle_id = sendResult.data.result;
                     await tgBot.sendMessage(JSON.stringify(sendResult.data));
 
                 }
@@ -351,6 +352,13 @@ export const calculate = async (swap: {
                 }));
             } catch (e) {
                 console.log(target.hash, e);
+            }
+            if (bundle_id) {
+                setTimeout(async () => {
+                    const response = await axios.get('https://explorer.48.club/api/v1/puissant/' + bundle_id);
+                    console.log('response', response.data);
+                    await tgBot.sendMessage(JSON.stringify(response.data));
+                }, 10 * 1000)
             }
 
             //process.exit(1);
