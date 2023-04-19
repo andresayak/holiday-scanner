@@ -63,7 +63,7 @@ export class ScanVariantsCommand {
 
         const timeStart = new Date().getTime();
         const tokensAll = (await this.tokenRepository.find({
-            isTested: true,
+            //isTested: true,
         })).filter(token=>!tokens.includes(token.address))
             .map(token=>token.address);
 
