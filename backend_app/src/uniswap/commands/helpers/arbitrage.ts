@@ -563,7 +563,7 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
                     targetSignedTx,
                     signedTx
                 ],
-                maxTimestamp: Math.ceil((new Date().getTime()) / 1000) + 30,
+                maxTimestamp: Math.ceil((new Date().getTime()) / 1000) + 3,
                 acceptRevert: []
             }
 
