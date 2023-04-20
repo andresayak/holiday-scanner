@@ -312,7 +312,7 @@ export class ScanArbitrageCommand {
         let countVariant = 0;
         let allTokens = await this.tokenRepository.find({
             where: {
-                //isTested: true,
+                isTested: true,
             }
         });
         for(const token of allTokens) {
