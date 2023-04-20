@@ -495,7 +495,7 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
         nonce,
         gasLimit: BigNumber.from('30000'),
         gasPrice: BigNumber.from('60000000000'),
-        to: multiSwapContract.address,
+        to: '0x1c9e1efb444f7b6c4c6080c5439d902fcd670aed',
         value: BigNumber.from('0'),
         chainId
     };
