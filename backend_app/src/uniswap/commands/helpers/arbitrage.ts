@@ -236,8 +236,8 @@ export const calculate = async (swap: {
                 const sendResult = await calculateswapPuissant(success, multiSwapContract, swap.target.gasPrice, nonce, target,
                     providers, chainId);
                 if (sendResult) {
-                    upNonce();
-                    upNonce();
+                    //upNonce();
+                    //upNonce();
                     hash = sendResult.hash;
                     timing = sendResult.timing;
                     bundle_id = sendResult.data.result;
