@@ -232,6 +232,7 @@ export const calculate = async (swap: {
             if (isTestMode) {
                 console.log(target.hash, 'TEST MODE ENABLED');
             } else {
+                let nonce = await wallet.provider.getTransactionCount(wallet.address);
                 const sendResult = await calculateswapPuissant(success, multiSwapContract, swap.target.gasPrice, nonce, target,
                     providers, chainId);
                 if (sendResult) {
