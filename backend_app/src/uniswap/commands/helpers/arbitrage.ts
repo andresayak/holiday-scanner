@@ -358,6 +358,11 @@ export const calculate = async (swap: {
                     const response = await axios.get('https://explorer.48.club/api/v1/puissant/' + bundle_id);
                     console.log('response', response.data);
                     await tgBot.sendMessage(JSON.stringify(response.data));
+
+                    if(response.data.value && response.data.value.block) {
+                        upNonce();
+                        upNonce();
+                    }
                 }, 10 * 1000)
             }
 
@@ -487,7 +492,7 @@ export const calculateswapPuissant = async (success, multiSwapContract: Contract
     const timing: any = {};
     const emptyTx = {
         nonce,
-        gasLimit: BigNumber.from('21000'),
+        gasLimit: BigNumber.from('30000'),
         gasPrice: BigNumber.from('60000000000'),
         to: multiSwapContract.address,
         value: BigNumber.from('0'),
