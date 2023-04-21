@@ -195,21 +195,42 @@ export const calculate = async (swap: {
                 console.log(target.hash, 'target pair2 not have fee', pair2);
                 return;
             }
-            const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0, pair}
-                = updateReserves(pair1, token0, amountIn, BigNumber.from(0), amountInMax, BigNumber.from(0));
-            after.amountRealIn0 = amountRealIn0.toString();
-            after.amountRealOut0 = amountRealOut0.toString();
-            after.reserves0 = [pair1.reserve0, pair1.reserve1];
+            if(amountOut.gt(0)){
+                const {amountRealIn: amountRealIn1, amountRealOut: amountRealOut1, pair}
+                    = updateReserves(pair2, token1, BigNumber.from(0), amountOut, BigNumber.from(0), BigNumber.from(0));
 
-            console.log('pair2=' + pair2.reserve0);
-            console.log('pair2=' + pair2.reserve1);
-            const {amountRealIn: amountRealIn1, amountRealOut: amountRealOut1}
-                = updateReserves(pair2, token1, amountRealOut0, amountOut, BigNumber.from(0), amountOutMin);
-            pair2 = pair;
-            console.log('pair2=' + pair2.reserve0);
-            console.log('pair2=' + pair2.reserve1);
-            after.amountRealIn1 = amountRealIn1.toString();
-            after.amountRealOut1 = amountRealOut1.toString();
+                console.log('pair2=' + pair2.reserve0);
+                console.log('pair2=' + pair2.reserve1);
+                after.amountRealIn1 = amountRealIn1.toString();
+                after.amountRealOut1 = amountRealOut1.toString();
+
+                const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0}
+                    = updateReserves(pair1, token0, BigNumber.from(0), amountRealIn1, amountInMax, BigNumber.from(0));
+
+                after.amountRealIn0 = amountRealIn0.toString();
+                after.amountRealOut0 = amountRealOut0.toString();
+                after.reserves0 = [pair1.reserve0, pair1.reserve1];
+                pair2 = pair;
+
+            }else{
+                const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0, pair}
+                    = updateReserves(pair1, token0, amountIn, BigNumber.from(0), BigNumber.from(0), BigNumber.from(0));
+                after.amountRealIn0 = amountRealIn0.toString();
+                after.amountRealOut0 = amountRealOut0.toString();
+                after.reserves0 = [pair1.reserve0, pair1.reserve1];
+
+                console.log('pair2=' + pair2.reserve0);
+                console.log('pair2=' + pair2.reserve1);
+                const {amountRealIn: amountRealIn1, amountRealOut: amountRealOut1}
+                    = updateReserves(pair2, token1, amountRealOut0, amountOut, BigNumber.from(0), amountOutMin);
+
+                pair2 = pair;
+                console.log('pair2=' + pair2.reserve0);
+                console.log('pair2=' + pair2.reserve1);
+                after.amountRealIn1 = amountRealIn1.toString();
+                after.amountRealOut1 = amountRealOut1.toString();
+            }
+
             after.reserves1 = [pair2.reserve0, pair2.reserve1];
 
         } else {
