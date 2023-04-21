@@ -233,15 +233,14 @@ export const calculate = async (swap: {
                 console.log(target.hash, 'TEST MODE ENABLED');
             } else {
                 let nonce = await wallet.provider.getTransactionCount(wallet.address);
-                const sendResult = await calculateswapPuissant(success, multiSwapContract, swap.target.gasPrice, nonce, target,
-                    providers, chainId);
+                const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
                 if (sendResult) {
-                    //upNonce();
+                    upNonce();
                     //upNonce();
                     hash = sendResult.hash;
                     timing = sendResult.timing;
-                    bundle_id = sendResult.data.result;
-                    await tgBot.sendMessage(JSON.stringify(sendResult.data));
+                    //bundle_id = sendResult.data.result;
+                    //await tgBot.sendMessage(JSON.stringify(sendResult.data));
 
                 }
             }
@@ -354,7 +353,7 @@ export const calculate = async (swap: {
             } catch (e) {
                 console.log(target.hash, e);
             }
-            if (bundle_id) {
+            /*if (bundle_id) {
                 setTimeout(async () => {
                     const response = await axios.get('https://explorer.48.club/api/v1/puissant/' + bundle_id);
                     console.log('response', response.data);
@@ -365,7 +364,7 @@ export const calculate = async (swap: {
                         upNonce();
                     }
                 }, 10 * 1000)
-            }
+            }*/
 
             //process.exit(1);
             /*console.log('wait...');

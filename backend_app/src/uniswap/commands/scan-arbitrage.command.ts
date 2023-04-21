@@ -180,7 +180,7 @@ export class ScanArbitrageCommand {
                             routerAddress = multicallRouters[toAddress];
                         }
                         const router = routers.find((router) => router.address.toLowerCase() === routerAddress)
-                        if (target.gasPrice.gte('4000000000') && target.gasPrice.lte('8000000000') && router) {
+                        if (target.gasPrice.gte('2000000000') && target.gasPrice.lte('8000000000') && router) {
                             console.log(hash, 't', (new Date().getTime() - timeStart.getTime()) / 1000, 'attems: ' + attems);
                             const getMethod = (interfaces: utils.Interface, data: BytesLike) => {
                                 for (const method of methods) {

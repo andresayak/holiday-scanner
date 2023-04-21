@@ -20,6 +20,7 @@ import {TestWsCommand} from "./test-ws.command";
 import {CheckPendingCommand} from "./check-pending.command";
 import {CheckReservesCommand} from "./check-reserves.command";
 import {ScanPendingCommand} from "./scan-pending.command";
+import {ScanMinersCommand} from "./scan-miners.command";
 
 export default [
     ScanTransactionsCommand,
@@ -43,5 +44,6 @@ export default [
     TestWsCommand,
     CheckPendingCommand,
     CheckReservesCommand,
-    ScanPendingCommand
+    ScanPendingCommand,
+    ScanMinersCommand
 ];
