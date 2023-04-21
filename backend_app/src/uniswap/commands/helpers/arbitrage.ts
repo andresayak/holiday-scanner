@@ -323,7 +323,7 @@ export const calculate = async (swap: {
                         amountOutMin: amountOutMin.toString(),
                         amountInMax: amountInMax.toString(),
                         path: swap.json.result.path,
-                        deadline: swap.json.result.deadline.toString()
+                        //deadline: swap.json.result.deadline.toString()
                     }
                 }, before, after, success
             };
