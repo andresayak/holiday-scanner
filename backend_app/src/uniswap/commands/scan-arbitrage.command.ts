@@ -173,6 +173,15 @@ export class ScanArbitrageCommand {
             while (attems < 10) {
                 try {
                     const target: TransactionResponse | null = await wsProvider.getTransaction(hash);
+                    if (target && target.from == wallet.address) {
+                        console.log(new Date().getTime(), 'my tx', target);
+                        this.tgBot.sendMessage(
+                            '[' + (this.lastBlockTime) + '] Block: ' + this.currentBlock + "\n"
+                            + '[' + (new Date().getTime()) + '] my tx in mempool: ' + target.hash
+                        );
+                        return;
+                    }
+
                     if (target && target.to && target.nonce !== null) {
                         const toAddress = target.to.toLowerCase();
                         let routerAddress = toAddress;
