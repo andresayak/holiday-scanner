@@ -6,7 +6,7 @@ const urls = [
     'https://bsc.publicnode.com',
     'https://bscrpc.com',
     'https://bsc-mainnet.public.blastapi.io',
-    /*'https://bsc-dataseed.binance.org/',
+    'https://bsc-dataseed.binance.org/',
     'https://bsc-dataseed1.defibit.io/',
     'https://bsc-dataseed1.ninicoin.io/',
     'https://bsc-dataseed2.defibit.io/',
@@ -18,7 +18,7 @@ const urls = [
     'https://bsc-dataseed1.binance.org/',
     'https://bsc-dataseed2.binance.org/',
     'https://bsc-dataseed3.binance.org/',
-    'https://bsc-dataseed4.binance.org/',*/
+    'https://bsc-dataseed4.binance.org/',
 ];
 
 const getBSCProviderUrl = () => {
