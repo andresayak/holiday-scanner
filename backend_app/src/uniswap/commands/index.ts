@@ -21,10 +21,12 @@ import {CheckPendingCommand} from "./check-pending.command";
 import {CheckReservesCommand} from "./check-reserves.command";
 import {ScanPendingCommand} from "./scan-pending.command";
 import {ScanMinersCommand} from "./scan-miners.command";
+import {ScanReservesIpcCommand} from "./scan-reserves-ipc.command";
 
 export default [
     ScanTransactionsCommand,
     ScanReservesCommand,
+    ScanReservesIpcCommand,
     ScanTradeCommand,
     ScanPairsContractsCommand,
     WalletCheckCommand,
