@@ -494,11 +494,34 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
     const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
     timing.sign = (new Date().getTime() - timeStart) / 1000;
 
-    const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
+    const time = new Date().getTime();
+    const json = await Promise.all(providers.map(provider => {
+        console.log('send', provider.connection.url);
+        return new Promise(done=>{
+            axios.post(provider.connection.url, {
+                method: 'eth_sendRawTransaction',
+                params: [signedTx],
+                id: 46,
+                jsonrpc: '2.0'
+            }).then(({data})=>{
+                console.log('data', new Date().getTime() - time, provider.connection.url, data);
+                if(!timing.send)
+                    timing.send = (new Date().getTime() - timeStart) / 1000;
+                done(data);
+            }).catch(error=>{
+                console.log('error', error);
+                done('error');
+            })
+        });
+    }));
+    const tx = {
+        hash: 'test',
+    }
+    console.log('json', json);
+    //const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
     if (tx) {
         console.log('tx send', tx.hash);
-        timing.send = (new Date().getTime() - timeStart) / 1000;
         return {hash: tx.hash, timing};
     }
 }
