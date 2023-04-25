@@ -524,7 +524,7 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
         });
     }));
     console.log('json', json);
-    process.exit(1);
+    //process.exit(1);
     const item: any = json.find((item: any) => item.result);
     //const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
