@@ -12,6 +12,7 @@ import {JsonRpcProvider} from "@ethersproject/providers";
 import {TgBot} from "../../TgBot";
 import {TransactionEntity} from "../../entities/transaction.entity";
 import axios from "axios";
+import * as process from "process";
 
 Object.defineProperties(BigNumber.prototype, {
     toJSON: {
@@ -518,6 +519,7 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
         hash: 'test',
     }
     console.log('json', json);
+    process.exit(1);
     //const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
     if (tx) {
