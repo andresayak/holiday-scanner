@@ -196,7 +196,7 @@ export const calculate = async (swap: {
                 console.log(target.hash, 'target pair2 not have fee', pair2);
                 return;
             }
-            if(amountOut.gt(0)){
+            if (amountOut.gt(0)) {
                 const {amountRealIn: amountRealIn1, amountRealOut: amountRealOut1, pair}
                     = updateReserves(pair2, token1, BigNumber.from(0), amountOut, BigNumber.from(0), BigNumber.from(0));
 
@@ -213,7 +213,7 @@ export const calculate = async (swap: {
                 after.reserves0 = [pair1.reserve0, pair1.reserve1];
                 pair2 = pair;
 
-            }else{
+            } else {
                 const {amountRealIn: amountRealIn0, amountRealOut: amountRealOut0, pair}
                     = updateReserves(pair1, token0, amountIn, BigNumber.from(0), BigNumber.from(0), BigNumber.from(0));
                 after.amountRealIn0 = amountRealIn0.toString();
@@ -498,40 +498,36 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
     const time = new Date().getTime();
     const json = await Promise.all(providers.map(provider => {
         console.log('send', provider.connection.url);
-        return new Promise(done=>{
+        return new Promise(done => {
             axios.post(provider.connection.url, {
                 method: 'eth_sendRawTransaction',
                 params: [signedTx],
                 id: 46,
                 jsonrpc: '2.0'
-            }).then(({data})=>{
+            }).then(({data}) => {
                 console.log('data', new Date().getTime() - time, provider.connection.url, data);
-                if(!timing.send)
+                if (!timing.send)
                     timing.send = (new Date().getTime() - timeStart) / 1000;
                 done(data);
-            }).catch(error=>{
+            }).catch(error => {
                 console.log('error', error);
                 done('error');
             })
         });
     }));
-    const tx = {
-        hash: 'test',
-    }
-    console.log('json', json);
-    process.exit(1);
+    const item: any = json.find((item: any) => item.result);
     //const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
-    if (tx) {
-        console.log('tx send', tx.hash);
-        return {hash: tx.hash, timing};
+    if (item) {
+        console.log('tx send', item.result);
+        return {hash: item.result, timing};
     }
 }
 
 
 export const calculateswapPuissant = async (success, multiSwapContract: Contract,
-                                     gasPrice: BigNumber, nonce: number, target: TransactionResponse,
-                                     providers: JsonRpcProvider[], chainId: number) => {
+                                            gasPrice: BigNumber, nonce: number, target: TransactionResponse,
+                                            providers: JsonRpcProvider[], chainId: number) => {
 
     const signer = multiSwapContract.signer;
     const timeStart = new Date().getTime();
