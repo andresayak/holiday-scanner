@@ -474,30 +474,38 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
 
     const timeStart = new Date().getTime();
     const timing: any = {};
-    let params = {
-        nonce,
-        gasLimit: BigNumber.from('2500000'),
-        gasPrice: gasPrice,
-    };
+    const hashes: string[] = [];
+    let i = 0;
+    for(const provider of providers){
+        let params = {
+            nonce,
+            gasLimit: BigNumber.from((2500000 + i).toString()),
+            gasPrice: gasPrice,
+        };
 
-    let fee1 = success.fees[0];
-    let fee2 = success.fees[1];
+        let fee1 = success.fees[0];
+        let fee2 = success.fees[1];
 
-    const txNotSigned = await multiSwapContract.populateTransaction.swap(
-        success.amountIn,
-        success.pairs,
-        success.path,
-        [fee1, fee2],
-        success.feeScales,
-        params
-    );
-    txNotSigned.chainId = chainId;
-    const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
+        const txNotSigned = await multiSwapContract.populateTransaction.swap(
+            success.amountIn,
+            success.pairs,
+            success.path,
+            [fee1, fee2],
+            success.feeScales,
+            params
+        );
+        txNotSigned.chainId = chainId;
+        hashes.push(await multiSwapContract.signer.signTransaction(txNotSigned));
+        i++;
+    }
+
     timing.sign = (new Date().getTime() - timeStart) / 1000;
 
     const time = new Date().getTime();
+    i = 0;
     const json = await Promise.all(providers.map(provider => {
         console.log('send', provider.connection.url);
+        const signedTx = hashes[i++];
         return new Promise(done => {
             axios.post(provider.connection.url, {
                 method: 'eth_sendRawTransaction',
@@ -515,6 +523,8 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
             })
         });
     }));
+    console.log('json', json);
+    process.exit(1);
     const item: any = json.find((item: any) => item.result);
     //const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
