@@ -6,6 +6,7 @@ import {TokenEntity} from "./entities/token.entity";
 import {RedisClient} from 'redis';
 import {ethers} from "ethers";
 import {RouterEntity} from "./entities/router.entity";
+import {PeerEntity} from "./entities/peer.entity";
 
 export type EthProviderFactoryType = (type: 'ws' | 'http', network?: string, provider?: string)
     => (ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider);
@@ -27,6 +28,11 @@ export const providers = [
     {
         provide: 'TOKEN_REPOSITORY',
         useFactory: (connection: Connection) => connection.getRepository(TokenEntity),
+        inject: ['DATABASE_CONNECTION'],
+    },
+    {
+        provide: 'PEER_REPOSITORY',
+        useFactory: (connection: Connection) => connection.getRepository(PeerEntity),
         inject: ['DATABASE_CONNECTION'],
     },
     {

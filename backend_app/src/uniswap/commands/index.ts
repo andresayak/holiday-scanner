@@ -22,6 +22,7 @@ import {CheckReservesCommand} from "./check-reserves.command";
 import {ScanPendingCommand} from "./scan-pending.command";
 import {ScanMinersCommand} from "./scan-miners.command";
 import {ScanReservesIpcCommand} from "./scan-reserves-ipc.command";
+import {CheckPeersCommand} from "./check-peers.command";
 
 export default [
     ScanTransactionsCommand,
@@ -47,5 +48,6 @@ export default [
     CheckPendingCommand,
     CheckReservesCommand,
     ScanPendingCommand,
-    ScanMinersCommand
+    ScanMinersCommand,
+    CheckPeersCommand
 ];
