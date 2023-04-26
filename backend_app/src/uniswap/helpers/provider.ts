@@ -1,4 +1,11 @@
 const urls = [
+    'https://bsc-mainnet.nodereal.io/v1/e07bd56d57074848a3feeac630c11e84',
+    'https://rpc.ankr.com/bsc/ae34d626dfb166a8007f6fd218cfb2b89a233601f34801f7b2a3462f950b487b',
+    'https://bsc.getblock.io/a88b719b-22e9-4810-a31f-ddf70a5a6f00/mainnet/',
+    'https://bsc-mainnet.blockvision.org/v1/2NuhVHLZswwHW8Ift8PKUxO6FZf',
+    'https://nd-077-818-081.p2pify.com/2356c4af71b23ecfef86b8b2c95464c0',
+    'https://frequent-purple-fire.bsc.discover.quiknode.pro/a7fe1973d82fde264b04d1cc84ebfeaa3d6b9e69/',
+    'https://app.zeeve.io/shared-api/bsc/64d8aa02bde32a8af1b9bb51cc434d87277d50d008d1bbe9/',
     'https://rpc-bsc.48.club',
     'https://koge-rpc-bsc.48.club',
     'https://rpc.ankr.com/bsc',
@@ -21,8 +28,4 @@ const urls = [
     'https://bsc-dataseed4.binance.org/',
 ];
 
-const getBSCProviderUrl = () => {
-    return urls[Math.floor(Math.random() * urls.length)];
-}
-
-export {urls, getBSCProviderUrl};
+export {urls};

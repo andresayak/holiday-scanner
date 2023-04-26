@@ -105,7 +105,6 @@ export const calculate = async (swap: {
     if (token2 && !tokens.includes(token2)) {
         tokenInner.push(token2);
     }
-
     if (!tokenInner.length) {
         return;
     }
@@ -248,18 +247,16 @@ export const calculate = async (swap: {
         console.log(target.hash, 'TIME AFTER SUCCESS = ', timeDiff0);
         if (items.length) {
             const success = items[0];
-            let hash = '';
+            let hashes: string[] = [];
             let timing;
             let bundle_id;
             if (isTestMode) {
                 console.log(target.hash, 'TEST MODE ENABLED');
             } else {
-                let nonce = await wallet.provider.getTransactionCount(wallet.address);
                 const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
                 if (sendResult) {
                     upNonce();
-                    //upNonce();
-                    hash = sendResult.hash;
+                    hashes = sendResult.hashes;
                     timing = sendResult.timing;
                     //bundle_id = sendResult.data.result;
                     //await tgBot.sendMessage(JSON.stringify(sendResult.data));
@@ -269,10 +266,19 @@ export const calculate = async (swap: {
             const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
 
             let blockInfoMy, blockInfoTarget = '';
-            if (hash) {
+            let hash = '';
+            if (hashes.length) {
                 try {
-                    const txMy = await multiSwapContract.provider.getTransaction(hash);
+                    await new Promise((done) => setTimeout(done, 100));
+                    const txMy = await Promise.any((hashes.map(async (hash) => {
+                        const tx = await multiSwapContract.provider.getTransaction(hash);
+                        if (tx) {
+                            return tx;
+                        }
+                        throw new Error(`Hash not found: ${hash}`);
+                    })));
                     if (txMy) {
+                        hash = txMy.hash;
                         const receiptMy = await txMy.wait();
                         if (receiptMy) {
                             blockInfoMy = " [" + receiptMy.blockNumber + ': ' + receiptMy.transactionIndex + "]";
@@ -474,9 +480,9 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
 
     const timeStart = new Date().getTime();
     const timing: any = {};
-    const hashes: string[] = [];
+    const signHashes: string[] = [];
     let i = 0;
-    for(const provider of providers){
+    for (const provider of providers) {
         let params = {
             nonce,
             gasLimit: BigNumber.from((2500000 + i).toString()),
@@ -495,7 +501,7 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
             params
         );
         txNotSigned.chainId = chainId;
-        hashes.push(await multiSwapContract.signer.signTransaction(txNotSigned));
+        signHashes.push(await multiSwapContract.signer.signTransaction(txNotSigned));
         i++;
     }
 
@@ -505,7 +511,7 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
     i = 0;
     const json = await Promise.all(providers.map(provider => {
         console.log('send', provider.connection.url);
-        const signedTx = hashes[i++];
+        const signedTx = signHashes[i++];
         return new Promise(done => {
             axios.post(provider.connection.url, {
                 method: 'eth_sendRawTransaction',
@@ -525,12 +531,12 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
     }));
     console.log('json', json);
     //process.exit(1);
-    const item: any = json.find((item: any) => item.result);
+    const hashes: string[] = json.filter((item: any) => item.result).map((item: any) => item.result);
     //const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
-    if (item) {
-        console.log('tx send', item.result);
-        return {hash: item.result, timing};
+    if (hashes.length) {
+        console.log('tx send', hashes);
+        return {hashes, timing};
     }
 }
 
