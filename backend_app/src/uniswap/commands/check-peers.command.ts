@@ -40,11 +40,12 @@ export class CheckPeersCommand {
         console.log('json', json);
 
         const peers = json['result'];
-        let i = 0;
+        let count = 0;
 
         const chunkSize = 20;
         for (let i = 0; i < peers.length; i += chunkSize) {
             const chunk = peers.slice(i, i + chunkSize);
+            console.log('page', i, i+chunkSize);
             await Promise.all(chunk.map((peer, index) => {
                 return new Promise(async (done) => {
                     const [ip_address, port] = peer.network.remoteAddress.split(':');
@@ -55,7 +56,7 @@ export class CheckPeersCommand {
                         const result = stdout.match(/min\/avg\/max\/mdev = [\d\.]+\/([\d\.]+)\/[\d\.]+\//);
                         done(result && result[1] ? parseFloat(result[1]) : null);
                     }));
-                    console.log(++i + '/' + peers.length, ip_address + '\t', ping, geo);
+                    console.log(++count + '/' + peers.length, ip_address + '\t', ping, geo);
                     let peerEntity = await this.peerRepository.findOne({
                         where: {
                             ip_address
