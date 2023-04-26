@@ -49,7 +49,7 @@ export class CheckPeersCommand {
             console.log('geo', geo);
 
             const exec = require('child_process').exec;
-            const ping = await new Promise<number>(done=>exec("ping -c 3 65.109.64.78", function (err, stdout, stderr) {
+            const ping = await new Promise<number>(done=>exec("ping -c 3 "+ip_address, function (err, stdout, stderr) {
                 if(stderr || err)
                 console.log('stderr', stderr, err);
                 const result = stdout.match(/min\/avg\/max\/mdev = [\d\.]+\/([\d\.]+)\/[\d\.]+\//);
