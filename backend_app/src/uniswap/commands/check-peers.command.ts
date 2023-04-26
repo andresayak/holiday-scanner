@@ -76,6 +76,7 @@ export class CheckPeersCommand {
                         ping
                     });
                     await this.peerRepository.save(peerEntity);
+                    done(true)
                 });
             }));
         }
