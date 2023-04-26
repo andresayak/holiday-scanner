@@ -40,10 +40,11 @@ export class CheckPeersCommand {
 
         //const filebody = fs.readFileSync("/var/www/backend_app/storage/peers.txt", 'utf-8');
         //const json = JSON.parse(filebody);
-        const peers = json['result'].filter((item)=>item.network.static);
+        const peers = json['result'];//.filter((item)=>item.network.static);
+        let i = 0;
         for(const peer of peers){
             const [ip_address, port] = peer.network.remoteAddress.split(':');
-            console.log(ip_address+'\t', );
+            console.log(++i+'/'+peers.length, ip_address+'\t', );
             const geo = await geoip.lookup(ip_address);
             console.log('geo', geo);
 
@@ -75,5 +76,6 @@ export class CheckPeersCommand {
             });
             await this.peerRepository.save(peerEntity);
         }
+        console.log('Done!');
     }
 }
