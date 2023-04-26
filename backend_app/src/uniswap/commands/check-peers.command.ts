@@ -59,11 +59,13 @@ export class CheckPeersCommand {
                     console.log(++count + '/' + peers.length, ip_address + '\t', ping, geo);
                     let peerEntity = await this.peerRepository.findOne({
                         where: {
-                            ip_address
+                            ip_address, port
                         }
                     });
                     if (!peerEntity) {
-                        peerEntity = new PeerEntity({});
+                        peerEntity = new PeerEntity({
+                            ip_address, port
+                        });
                     }
                     peerEntity.fill({
                         ip_address,
