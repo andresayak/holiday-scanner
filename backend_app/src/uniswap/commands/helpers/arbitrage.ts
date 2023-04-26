@@ -263,6 +263,7 @@ export const calculate = async (swap: {
 
                 }
             }
+            await tgBot.sendMessage(hashes.join('\n'));
             const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
 
             let blockInfoMy, blockInfoTarget = '';
@@ -310,7 +311,7 @@ export const calculate = async (swap: {
                     blockInfoTarget = ' [error]';
                 }
             }
-            const message = items.map((item, index) => {
+            const message = items.filter((item, index)=>index === 0).map((item, index) => {
                 return (index + 1) + ') ' + (hash && index === 0 ? 'hash: ' + hash + blockInfoMy + "\n" : '') + "\n"
                     + 'target: ' + swap.target.hash + blockInfoTarget + "\n"
                     + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
@@ -475,6 +476,66 @@ export const calculateswap = async (success, multiSwapContract: Contract, gasPri
 }
 
 const calculateswapRaw = async (success, multiSwapContract: Contract,
+                                 gasPrice: BigNumber, nonce: number,
+                                 providers: JsonRpcProvider[], chainId: number) => {
+
+    const timeStart = new Date().getTime();
+    const timing: any = {};
+    let params = {
+        nonce,
+        gasLimit: BigNumber.from((2500000).toString()),
+        gasPrice: gasPrice,
+    };
+
+    let fee1 = success.fees[0];
+    let fee2 = success.fees[1];
+
+    const txNotSigned = await multiSwapContract.populateTransaction.swap(
+        success.amountIn,
+        success.pairs,
+        success.path,
+        [fee1, fee2],
+        success.feeScales,
+        params
+    );
+    txNotSigned.chainId = chainId;
+    const signedTx = await multiSwapContract.signer.signTransaction(txNotSigned);
+
+    timing.sign = (new Date().getTime() - timeStart) / 1000;
+
+    const time = new Date().getTime();
+
+    const json = await Promise.all(providers.map(provider => {
+        console.log('send', provider.connection.url);
+        return new Promise(done => {
+            axios.post(provider.connection.url, {
+                method: 'eth_sendRawTransaction',
+                params: [signedTx],
+                id: 46,
+                jsonrpc: '2.0'
+            }).then(({data}) => {
+                console.log('data', new Date().getTime() - time, provider.connection.url, data);
+                if (!timing.send)
+                    timing.send = (new Date().getTime() - timeStart) / 1000;
+                done(data);
+            }).catch(error => {
+                console.log('error', error);
+                done('error');
+            })
+        });
+    }));
+    console.log('json', json);
+    //process.exit(1);
+    const hashes: string[] = json.filter((item: any) => item.result).map((item: any) => item.result);
+    //const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
+    //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
+    if (hashes.length) {
+        console.log('tx send', hashes);
+        return {hashes, timing};
+    }
+}
+
+const calculateswapRaw2 = async (success, multiSwapContract: Contract,
                                 gasPrice: BigNumber, nonce: number,
                                 providers: JsonRpcProvider[], chainId: number) => {
 
