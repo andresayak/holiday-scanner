@@ -177,7 +177,7 @@ export class ScanArbitrageCommand {
                         console.log(new Date().getTime(), 'my tx', target);
                         this.tgBot.sendMessage(
                             '[' + (this.lastBlockTime) + '] Block: ' + this.currentBlock + "\n"
-                            + '[' + (new Date().getTime()) + '] my tx in mempool: ' + target.hash
+                            + '[' + (new Date().getTime()) + '] my tx in mempool: ' + target.hash+' nonce: '+target.nonce
                         );
                         return;
                     }

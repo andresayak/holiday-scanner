@@ -248,6 +248,7 @@ export const calculate = async (swap: {
         if (items.length) {
             const success = items[0];
             let hashes: string[] = [];
+            let hash = '';
             let timing;
             let bundle_id;
             if (isTestMode) {
@@ -256,30 +257,20 @@ export const calculate = async (swap: {
                 const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
                 if (sendResult) {
                     upNonce();
-                    hashes = sendResult.hashes;
+                    hash = sendResult.hash;
                     timing = sendResult.timing;
                     //bundle_id = sendResult.data.result;
                     //await tgBot.sendMessage(JSON.stringify(sendResult.data));
 
                 }
             }
-            await tgBot.sendMessage(hashes.join('\n'));
             const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
 
             let blockInfoMy, blockInfoTarget = '';
-            let hash = '';
-            if (hashes.length) {
+            if (hash) {
                 try {
-                    await new Promise((done) => setTimeout(done, 100));
-                    const txMy = await Promise.any((hashes.map(async (hash) => {
-                        const tx = await multiSwapContract.provider.getTransaction(hash);
-                        if (tx) {
-                            return tx;
-                        }
-                        throw new Error(`Hash not found: ${hash}`);
-                    })));
+                    const txMy = await multiSwapContract.provider.getTransaction(hash);
                     if (txMy) {
-                        hash = txMy.hash;
                         const receiptMy = await txMy.wait();
                         if (receiptMy) {
                             blockInfoMy = " [" + receiptMy.blockNumber + ': ' + receiptMy.transactionIndex + "]";
@@ -299,7 +290,7 @@ export const calculate = async (swap: {
                     if (txTarget) {
                         const receiptTarget = await txTarget.wait();
                         if (receiptTarget) {
-                            blockInfoTarget = " [" + receiptTarget.blockNumber + ': ' + receiptTarget.transactionIndex + "]";
+                            blockInfoTarget = " [" + receiptTarget.blockNumber + ': ' + receiptTarget.transactionIndex + "] nonce: "+txTarget.nonce;
                         } else {
                             blockInfoTarget = " [receipt empty]";
                         }
@@ -312,7 +303,7 @@ export const calculate = async (swap: {
                 }
             }
             const message = items.filter((item, index)=>index === 0).map((item, index) => {
-                return (index + 1) + ') ' + (hash && index === 0 ? 'hash: ' + hash + blockInfoMy + "\n" : '') + "\n"
+                return (hash && index === 0 ? 'hash: ' + hash + blockInfoMy + "\n" : '') + "\n"
                     + 'target: ' + swap.target.hash + blockInfoTarget + "\n"
                     + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
                     + 'tokens: ' + item.path[0] + ' / ' + item.path[1] + "\n"
@@ -531,7 +522,7 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
     if (hashes.length) {
         console.log('tx send', hashes);
-        return {hashes, timing};
+        return {hash: hashes[0], timing};
     }
 }
 
