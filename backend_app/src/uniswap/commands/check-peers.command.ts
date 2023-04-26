@@ -1,17 +1,10 @@
 import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {Repository} from "typeorm";
-import {PairEntity} from "../entities/pair.entity";
-import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
-import {RedisClient} from 'redis';
 import {EthProviderFactoryType} from "../uniswap.providers";
-import {RouterEntity} from "../entities/router.entity";
-import {TransactionEntity} from "../entities/transaction.entity";
 import axios from "axios";
-import * as fs from "fs";
 import * as geoip from 'geoip-lite';
-import * as nmap from 'libnmap';
 import {PeerEntity} from "../entities/peer.entity";
 
 @Injectable()

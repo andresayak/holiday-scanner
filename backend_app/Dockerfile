@@ -2,6 +2,9 @@ FROM node:17 as base
 
 # Install dependencies
 RUN apt-get update
+
+RUN apt-get install -y iputils-ping
+
 # Set working directory
 WORKDIR /var/www/app
 
