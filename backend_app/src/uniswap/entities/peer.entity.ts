@@ -6,6 +6,9 @@ export class PeerEntity extends BaseEntity<PeerEntity> {
     @PrimaryGeneratedColumn()
     id: number;
 
+    @Column({type: 'varchar', length: 128, nullable: true})
+    name: string;
+
     @Column({type: 'varchar', length: 42, unique: true})
     ip_address: string;
 
