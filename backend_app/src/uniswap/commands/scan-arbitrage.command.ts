@@ -158,10 +158,10 @@ export class ScanArbitrageCommand {
         console.log(' - account balance: ' + balanceHuman(balance));
 
         const providers = [
-            //provider
+            provider
         ];
         //for (const url of urls) {
-            providers.push(new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/bsc/ae34d626dfb166a8007f6fd218cfb2b89a233601f34801f7b2a3462f950b487b'));
+            //providers.push(new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/bsc/ae34d626dfb166a8007f6fd218cfb2b89a233601f34801f7b2a3462f950b487b'));
         //}
 
         const multiSwapAddress = this.envService.get('MULTI_SWAP_ADDRESS');
