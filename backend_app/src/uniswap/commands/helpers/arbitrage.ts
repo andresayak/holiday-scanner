@@ -273,12 +273,12 @@ export const calculate = async (swap: {
                     if (txMy) {
                         const receiptMy = await txMy.wait();
                         if (receiptMy) {
-                            blockInfoMy = " [" + receiptMy.blockNumber + ': ' + receiptMy.transactionIndex + "]";
+                            blockInfoMy = " [" + receiptMy.blockNumber + ': ' + receiptMy.transactionIndex + "] nonce: "+txMy.nonce;
                         } else {
-                            blockInfoMy = " [receipt empty]";
+                            blockInfoMy = " [receipt empty] nonce: "+txMy.nonce;
                         }
                     } else {
-                        blockInfoMy = ' [tx empty]';
+                        blockInfoMy = ' [tx empty] nonce: '+nonce;
                     }
                 } catch (e) {
                     console.log(target.hash, 'error ', e);
