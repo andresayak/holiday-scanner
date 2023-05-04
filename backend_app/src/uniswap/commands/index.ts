@@ -24,6 +24,7 @@ import {ScanMinersCommand} from "./scan-miners.command";
 import {ScanReservesIpcCommand} from "./scan-reserves-ipc.command";
 import {CheckPeersCommand} from "./check-peers.command";
 import {ScanValidatorsCommand} from "./scan-validators.command";
+import {CheckPeersValidatorsCommand} from "./check-peers-validators.command";
 
 export default [
     ScanTransactionsCommand,
@@ -51,5 +52,6 @@ export default [
     ScanPendingCommand,
     ScanMinersCommand,
     CheckPeersCommand,
-    ScanValidatorsCommand
+    ScanValidatorsCommand,
+    CheckPeersValidatorsCommand
 ];

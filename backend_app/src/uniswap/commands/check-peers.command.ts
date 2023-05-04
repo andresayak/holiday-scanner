@@ -49,6 +49,7 @@ export class CheckPeersCommand {
             await Promise.all(chunk.map((peer, index) => {
                 return new Promise(async (done) => {
                     const name = peer.name;
+                    const enode = peer.enode;
                     const [ip_address, port] = peer.network.remoteAddress.split(':');
                     const geo = await geoip.lookup(ip_address);
                     const ping = await new Promise<number | null>(done => exec("ping -c 3 " + ip_address, function (err, stdout, stderr) {
@@ -77,7 +78,8 @@ export class CheckPeersCommand {
                         city: geo?.city,
                         latitude: geo?.ll[0],
                         longitude: geo?.ll[1],
-                        ping
+                        ping,
+                        enode
                     });
                     await this.peerRepository.save(peerEntity);
                     done(true)

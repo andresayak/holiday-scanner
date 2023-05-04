@@ -9,6 +9,9 @@ export class PeerEntity extends BaseEntity<PeerEntity> {
     @Column({type: 'varchar', length: 128, nullable: true})
     name: string;
 
+    @Column({type: 'text', nullable: true})
+    enode: string;
+
     @Column({type: 'varchar', length: 42, unique: true})
     ip_address: string;
 
