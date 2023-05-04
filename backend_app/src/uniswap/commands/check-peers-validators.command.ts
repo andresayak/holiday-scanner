@@ -28,8 +28,8 @@ export class CheckPeersValidatorsCommand {
 
         const stats = {};
 
-        for(const peer of peers){
-            if(!stats[peer.ip_address]){
+        for (const peer of peers) {
+            if (!stats[peer.ip_address]) {
                 stats[peer.ip_address] = {
                     count: 0,
                     validators: 0,
@@ -37,30 +37,42 @@ export class CheckPeersValidatorsCommand {
                 };
             }
             stats[peer.ip_address]['count']++;
-            for(const validator of validators){
+            for (const validator of validators) {
                 const match = validator.extra.match(/go([\d\.]+)/);
-                if(match && peer.name){
+                if (match && peer.name) {
                     const version = match[1];
-                    const reg = 'go'+version.replaceAll('.','\\.');
-                    const result = peer.name.match(new RegExp(reg,  'ig'));
-                    if(result){
+                    const reg = 'go' + version.replaceAll('.', '\\.');
+                    const result = peer.name.match(new RegExp(reg, 'ig'));
+                    if (result) {
                         stats[peer.ip_address]['validators']++;
                     }
                 }
             }
         }
         console.log('items', Object.values(stats).length);
-        const items = Object.fromEntries(Object.entries(stats).filter(([index,item]:any)=>{
-            return item.validators>0;
+        const items = Object.fromEntries(Object.entries(stats).filter(([index, item]: any) => {
+            return item.validators > 0;
         }));
-        let list:any = [];
-        for(const peer of peers){
-            if(items[peer.ip_address]){
-                //list.push();
+        let list: any = [];
+        for (const peer of peers) {
+            if (items[peer.ip_address] && peer.enode) {
+                if(peer.ping && peer.ping > 1){
+                    continue;
+                }
+                let status = false;
+                for (const validator of validators) {
+                    const match = validator.extra.match(/go([\d\.]+)/);
+                    if (match && peer.name) {
+                        status = true;
+                        continue;
+                    }
+                }
+                if(status){
+                    list.push(peer.enode);
+                }
             }
-//console.log('peer', peer);
         }
-        console.log('items', Object.values(items).length);
+        console.log(list.join("\n"));
         console.log('Done!');
     }
 }

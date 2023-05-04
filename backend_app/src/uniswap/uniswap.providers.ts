@@ -7,7 +7,9 @@ import {RedisClient} from 'redis';
 import {ethers} from "ethers";
 import {RouterEntity} from "./entities/router.entity";
 import {PeerEntity} from "./entities/peer.entity";
+import {PeerHistoryEntity} from './entities/peer-history.entity';
 import {ValidatorEntity} from "./entities/validator.entity";
+import {PeerActiveEntity} from "./entities/peer-active.entity";
 
 export type EthProviderFactoryType = (type: 'ws' | 'http', network?: string, provider?: string)
     => (ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider);
@@ -39,6 +41,16 @@ export const providers = [
     {
         provide: 'PEER_REPOSITORY',
         useFactory: (connection: Connection) => connection.getRepository(PeerEntity),
+        inject: ['DATABASE_CONNECTION'],
+    },
+    {
+        provide: 'PEER_HISTORY_REPOSITORY',
+        useFactory: (connection: Connection) => connection.getRepository(PeerHistoryEntity),
+        inject: ['DATABASE_CONNECTION'],
+    },
+    {
+        provide: 'PEER_ACTIVE_REPOSITORY',
+        useFactory: (connection: Connection) => connection.getRepository(PeerActiveEntity),
         inject: ['DATABASE_CONNECTION'],
     },
     {

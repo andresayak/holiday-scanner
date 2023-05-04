@@ -4,7 +4,6 @@ import axios from 'axios';
 import {EnvService} from "../../env/env.service";
 import {EthProviderFactoryType} from "../uniswap.providers";
 import {Repository} from "typeorm";
-import {PeerEntity} from "../entities/peer.entity";
 import {ValidatorEntity} from "../entities/validator.entity";
 
 const scanValidators = async ()=>{
@@ -66,7 +65,7 @@ export class ScanValidatorsCommand {
 
             let lastBlock = parseInt(result[1]);
 
-            const {data} = await axios.get('https://bscscan.com/block/'+lastBlock, {headers});
+            const {data} = await axios.get('https://bscscan.com/block/'+lastBlock, {});
             result = data.match(/ExtraVanity : ([^\n]+)/);
             let extra = '';
             if(result){
