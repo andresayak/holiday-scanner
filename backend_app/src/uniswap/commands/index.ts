@@ -2,7 +2,6 @@ import {ScanTransactionsCommand} from "./scan-transactions.command";
 import {ScanReservesCommand} from "./scan-reserves.command";
 import {ScanTradeCommand} from "./scan-trade.command";
 import {ScanPairsContractsCommand} from "./scan-pairs-contracts.command";
-import {WalletCheckCommand} from "./wallet-check.command";
 import {ScanSandwichCommand} from "./scan-sandwich.command";
 import {ProvidersCheckCommand} from "./providers-check.command";
 import {ScanPairsCommand} from "./scan-pairs.command";
@@ -33,7 +32,6 @@ export default [
     ScanReservesIpcCommand,
     ScanTradeCommand,
     ScanPairsContractsCommand,
-    WalletCheckCommand,
     ScanSandwichCommand,
     ProvidersCheckCommand,
     ScanPairsCommand,

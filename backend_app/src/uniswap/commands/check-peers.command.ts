@@ -17,8 +17,8 @@ export class CheckPeersCommand {
                 private readonly peerRepository: Repository<PeerEntity>,
                 @Inject('PEER_HISTORY_REPOSITORY')
                 private readonly peerHistoryRepository: Repository<PeerHistoryEntity>,
-                @Inject('PEER_ACTIVE_REPOSITORY')
-                private readonly peerActiveRepository: Repository<PeerActiveEntity>,
+                //@Inject('PEER_ACTIVE_REPOSITORY')
+                //private readonly peerActiveRepository: Repository<PeerActiveEntity>,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType
     ) {
@@ -99,9 +99,9 @@ export class CheckPeersCommand {
                             peer_id: peerEntity.id,
                         }));
                     }
-                    await this.peerActiveRepository.save(new PeerActiveEntity({
+                    /*await this.peerActiveRepository.save(new PeerActiveEntity({
                         peer_id: peerEntity.id,
-                    }));
+                    }));*/
                     done(true)
                 });
             }));
