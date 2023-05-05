@@ -14,7 +14,7 @@ export const request = async function(url: string) {
             console.log('url', url);
             await driver.get(url);
             response = await driver.getPageSource();
-            if (response.match('/Ray ID: <strong/')) {
+            if (response.match(/Ray ID:/)) {
                 console.log('Ray ID');
                 await new Promise((done)=>setTimeout(done, 1000));
                 count++;
