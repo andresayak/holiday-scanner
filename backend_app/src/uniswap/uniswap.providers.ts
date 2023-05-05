@@ -10,6 +10,8 @@ import {PeerEntity} from "./entities/peer.entity";
 import {PeerHistoryEntity} from './entities/peer-history.entity';
 import {ValidatorEntity} from "./entities/validator.entity";
 import {PeerActiveEntity} from "./entities/peer-active.entity";
+import {ProxyList} from "./commands/helpers/ProxtList";
+import {RequestService} from "./commands/helpers/webdriveClient";
 
 export type EthProviderFactoryType = (type: 'ws' | 'http', network?: string, provider?: string)
     => (ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider);
@@ -186,4 +188,6 @@ export const providers = [
         },
         inject: [EnvService]
     },
+    ProxyList,
+    RequestService
 ];

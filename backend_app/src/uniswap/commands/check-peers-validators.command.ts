@@ -14,7 +14,8 @@ export class CheckPeersValidatorsCommand {
                 @Inject('VALIDATOR_REPOSITORY')
                 private readonly validatorRepository: Repository<ValidatorEntity>,
                 @Inject('ETH_PROVIDERS')
-                private readonly providers: EthProviderFactoryType
+                private readonly providers: EthProviderFactoryType,
+
     ) {
     }
 

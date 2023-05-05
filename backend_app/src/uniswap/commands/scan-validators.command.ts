@@ -5,19 +5,8 @@ import {EnvService} from "../../env/env.service";
 import {EthProviderFactoryType} from "../uniswap.providers";
 import {Repository} from "typeorm";
 import {ValidatorEntity} from "../entities/validator.entity";
-import {request} from "./helpers/webdriveClient";
-
-const scanValidators = async ()=>{
-    const {data} = await axios.get('https://bscscan.com/datasourceHandler?q=getvalidators&draw=2&columns%5B0%5D%5Bdata%5D=rank&columns%5B0%5D%5Bname%5D=&columns%5B0%5D%5Bsearchable%5D=true&columns%5B0%5D%5Borderable%5D=false&columns%5B0%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B0%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B1%5D%5Bdata%5D=consensusAddress&columns%5B1%5D%5Bname%5D=&columns%5B1%5D%5Bsearchable%5D=true&columns%5B1%5D%5Borderable%5D=false&columns%5B1%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B1%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B2%5D%5Bdata%5D=votingpower&columns%5B2%5D%5Bname%5D=&columns%5B2%5D%5Bsearchable%5D=true&columns%5B2%5D%5Borderable%5D=true&columns%5B2%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B2%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B3%5D%5Bdata%5D=blockFirstValidated&columns%5B3%5D%5Bname%5D=&columns%5B3%5D%5Bsearchable%5D=true&columns%5B3%5D%5Borderable%5D=true&columns%5B3%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B3%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B4%5D%5Bdata%5D=blockLastValidated&columns%5B4%5D%5Bname%5D=&columns%5B4%5D%5Bsearchable%5D=true&columns%5B4%5D%5Borderable%5D=true&columns%5B4%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B4%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B5%5D%5Bdata%5D=validated1d&columns%5B5%5D%5Bname%5D=&columns%5B5%5D%5Bsearchable%5D=true&columns%5B5%5D%5Borderable%5D=true&columns%5B5%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B5%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B6%5D%5Bdata%5D=validated7d&columns%5B6%5D%5Bname%5D=&columns%5B6%5D%5Bsearchable%5D=true&columns%5B6%5D%5Borderable%5D=true&columns%5B6%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B6%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B7%5D%5Bdata%5D=validated30d&columns%5B7%5D%5Bname%5D=&columns%5B7%5D%5Bsearchable%5D=true&columns%5B7%5D%5Borderable%5D=true&columns%5B7%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B7%5D%5Bsearch%5D%5Bregex%5D=false&columns%5B8%5D%5Bdata%5D=active&columns%5B8%5D%5Bname%5D=&columns%5B8%5D%5Bsearchable%5D=true&columns%5B8%5D%5Borderable%5D=false&columns%5B8%5D%5Bsearch%5D%5Bvalue%5D=&columns%5B8%5D%5Bsearch%5D%5Bregex%5D=false&order%5B0%5D%5Bcolumn%5D=2&order%5B0%5D%5Bdir%5D=desc&start=0&length=100&search%5Bvalue%5D=&search%5Bregex%5D=false&_='+(new Date().getTime()));
-
-    const items = [];
-    for(const item of data.data){
-        const result = item['consensusAddress'].match(/<a href='\/address\/(0x[\d\w]+)' class='hash-tag text-truncate' data-toggle='tooltip' title='0x[\d\w]+'>/);
-        console.log('result', result[1]);
-        items.push(result[1]);
-    }
-    return items;
-}
+import {RequestService} from "./helpers/webdriveClient";
+import {ProxyList} from "./helpers/ProxtList";
 
 @Injectable()
 export class ScanValidatorsCommand {
@@ -25,6 +14,8 @@ export class ScanValidatorsCommand {
     constructor(private readonly envService: EnvService,
                 @Inject('VALIDATOR_REPOSITORY')
                 private readonly validatorRepository: Repository<ValidatorEntity>,
+                private readonly proxyList: ProxyList,
+                private readonly requestService: RequestService,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType) {
 
@@ -42,7 +33,8 @@ export class ScanValidatorsCommand {
         })
             providerName: string,
     ) {
-        const response = await request('https://bscscan.com/validators');
+        await this.proxyList.fetch();
+        const response = await this.requestService.request('https://bscscan.com/validators');
         console.log('response', response);
         return;
         const data = {

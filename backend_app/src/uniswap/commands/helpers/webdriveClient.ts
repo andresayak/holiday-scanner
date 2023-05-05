@@ -1,30 +1,49 @@
 import {Builder} from "selenium-webdriver";
+import {Injectable} from "@nestjs/common";
+import {EnvService} from "../../../env/env.service";
+import {ProxyList} from "./ProxtList";
 
-export const request = async function(url: string) {
-    let driver = await new Builder()
-        .forBrowser("firefox")
-        .usingServer("http://selenium:4444/wd/hub/")
-        .build();
+@Injectable()
+export class RequestService {
+    constructor(private readonly envService: EnvService,
+                private readonly proxyList: ProxyList) {
 
-    let response;
-    try {
-        let status = false;
-        let count = 0;
-        while (!status && count < 15) {
+    }
+
+    async request(url: string) {
+        const proxyData = this.proxyList.getRand();
+        if(!proxyData){
+            throw new Error('proxyData empty');
+        }
+        const chrome = require('selenium-webdriver/chrome');
+        let proxyAddress = (proxyData.username?proxyData.username+':'+proxyData.password+'@':'')+proxyData.host+':'+proxyData.port;
+        let option = new chrome.Options()
+            .addArguments(`--proxy-server=socks://${proxyAddress}`);
+        let driver = await new Builder()
+            .forBrowser("chrome")
+            .setChromeOptions(option)
+            .usingServer("http://selenium:4444/wd/hub/")
+            .build();
+        console.log('build');
+        let response;
+        try {
+            let status = false;
+            let count = 0;
             console.log('url', url);
             await driver.get(url);
-            response = await driver.getPageSource();
-            if (response.match(/Ray ID:/)) {
-                console.log('Ray ID');
-                await new Promise((done)=>setTimeout(done, 1000));
-                count++;
-            }else{
-                status = true;
+            while (!status && count < 15) {
+                response = await driver.getPageSource();
+                if (response.match(/Ray ID:/)) {
+                    console.log('Ray ID');
+                    await new Promise((done) => setTimeout(done, 1000));
+                    count++;
+                } else {
+                    status = true;
+                }
             }
+        } finally {
+            await driver.quit();
         }
-    } finally {
-        driver.quit();
+        return response;
     }
-    driver.quit();
-    return response;
-};
+}
