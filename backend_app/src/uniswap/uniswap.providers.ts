@@ -99,7 +99,7 @@ export const providers = [
                     return new ethers.providers.WebSocketProvider(url, 56);
                 }
                 if (network === 'local') {
-                    const url = 'ws://host:8545';
+                    const url = envService.get('LOCAL_PROVIDER_WS_URL');
                     console.log('PROVIDER: ' + url);
                     return new ethers.providers.WebSocketProvider(url);
                 }
@@ -148,7 +148,7 @@ export const providers = [
                     return new ethers.providers.JsonRpcProvider(url, 56);
                 }
                 if (network === 'local') {
-                    const url = 'http://host:8545';
+                    const url = envService.get('LOCAL_PROVIDER_HTTP_URL');
                     console.log('PROVIDER: ' + url);
                     return new ethers.providers.JsonRpcProvider(url);
                 }
