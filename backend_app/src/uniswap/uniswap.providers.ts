@@ -92,6 +92,8 @@ export const providers = [
                         url = envService.get("GETBLOCK_WS_URL");
                     } else if (provider == 'zeeve') {
                         url = envService.get("ZEEVE_WS_URL");
+                    } else if (provider == 'local') {
+                        url = envService.get("LOCAL_PROVIDER_WS_URL");
                     } else {
                         url = provider;
                     }
@@ -140,6 +142,8 @@ export const providers = [
                         url = envService.get("BLOCKVISION_HTTP_URL");
                     } else if (provider == 'zeeve') {
                         url = envService.get("ZEEVE_HTTP_URL");
+                    }  else if (provider == 'local') {
+                        url = envService.get("LOCAL_PROVIDER_HTTP_URL");
                     } else {
                         url = provider;
                     }
