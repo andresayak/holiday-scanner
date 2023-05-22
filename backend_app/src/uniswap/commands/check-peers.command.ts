@@ -8,7 +8,6 @@ import * as geoip from 'geoip-lite';
 import {PeerEntity} from "../entities/peer.entity";
 import {PeerHistoryEntity} from '../entities/peer-history.entity';
 import { Cron } from '@nestjs/schedule';
-import { PeerActiveEntity } from '../entities/peer-active.entity';
 
 @Injectable()
 export class CheckPeersCommand {
@@ -17,8 +16,6 @@ export class CheckPeersCommand {
                 private readonly peerRepository: Repository<PeerEntity>,
                 @Inject('PEER_HISTORY_REPOSITORY')
                 private readonly peerHistoryRepository: Repository<PeerHistoryEntity>,
-                //@Inject('PEER_ACTIVE_REPOSITORY')
-                //private readonly peerActiveRepository: Repository<PeerActiveEntity>,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType
     ) {
@@ -58,7 +55,7 @@ export class CheckPeersCommand {
             console.log('page', i, i + chunkSize);
             await Promise.all(chunk.map((peer, index) => {
                 return new Promise(async (done) => {
-                    const name = peer.name;
+                    let name = peer.name;
                     let enode = '';
                     const enodeResult = peer.enode.match(/\:\/\/([^@]+)@/);
                     if (enodeResult) {
@@ -80,28 +77,28 @@ export class CheckPeersCommand {
                         insert = true;
                     }
                     const prevName = peerEntity.name;
-                    peerEntity.fill({
-                        ip_address,
-                        name,
-                        port,
-                        country: geo?.country,
-                        region: geo?.region,
-                        city: geo?.city,
-                        latitude: geo?.ll[0],
-                        longitude: geo?.ll[1],
-                        enode
-                    });
-                    peerEntity = await this.peerRepository.save(peerEntity);
-
-                    if(insert || prevName!==name){
-                        await this.peerHistoryRepository.save(new PeerHistoryEntity({
+                    const extraMath = name.match(/go[\.\d]+/);
+                    if(extraMath){
+                        name = extraMath[0];
+                        peerEntity.fill({
+                            ip_address,
                             name,
-                            peer_id: peerEntity.id,
-                        }));
+                            port,
+                            country: geo?.country,
+                            region: geo?.region,
+                            city: geo?.city,
+                            latitude: geo?.ll[0],
+                            longitude: geo?.ll[1],
+                            enode
+                        });
+                        peerEntity = await this.peerRepository.save(peerEntity);
+                        if(insert || prevName!==name){
+                            await this.peerHistoryRepository.save(new PeerHistoryEntity({
+                                name,
+                                peer_id: peerEntity.id,
+                            }));
+                        }
                     }
-                    /*await this.peerActiveRepository.save(new PeerActiveEntity({
-                        peer_id: peerEntity.id,
-                    }));*/
                     done(true)
                 });
             }));

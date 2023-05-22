@@ -99,23 +99,6 @@ services:
     networks:
       - app-network
 
-  selenium:
-    image: selenium/standalone-chrome:latest
-    privileged: true
-    environment:
-      - SCREEN_WIDTH=1366
-      - SCREEN_HEIGHT=768
-      - SCREEN_DEPTH=24
-      - SCREEN_DPI=74
-      - GRID_BROWSER_TIMEOUT=30
-      - NODE_MAX_INSTANCES=5
-      - NODE_MAX_SESSION=5
-      - START_XVFB=true
-      - shm-size=2g
-      - JAVA_OPTS=-Dselenium.LOGGER.level=WARNING -Dwebdriver.chrome.whitelistedIps=
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge

@@ -1,21 +1,25 @@
 import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
-import axios from 'axios';
 import {EnvService} from "../../env/env.service";
 import {EthProviderFactoryType} from "../uniswap.providers";
 import {Repository} from "typeorm";
 import {ValidatorEntity} from "../entities/validator.entity";
-import {RequestService} from "./helpers/webdriveClient";
+import {ValidatorHistoryEntity} from "../entities/validator-history.entity";
 import {ProxyList} from "./helpers/ProxtList";
+import * as utils from 'web3-utils';
+import {RedisClient} from "redis";
 
 @Injectable()
 export class ScanValidatorsCommand {
 
     constructor(private readonly envService: EnvService,
+                @Inject('REDIS_PUBLISHER_CLIENT')
+                private readonly redisPublisherClient: RedisClient,
                 @Inject('VALIDATOR_REPOSITORY')
                 private readonly validatorRepository: Repository<ValidatorEntity>,
+                @Inject('VALIDATOR_HISTORY_REPOSITORY')
+                private readonly validatorHistoryRepository: Repository<ValidatorHistoryEntity>,
                 private readonly proxyList: ProxyList,
-                private readonly requestService: RequestService,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType) {
 
@@ -24,7 +28,7 @@ export class ScanValidatorsCommand {
     @Command({
         command: 'scan:validators <providerName>',
         describe: '',
-        autoExit: true
+        autoExit: false
     })
     async create(
         @Positional({
@@ -33,67 +37,68 @@ export class ScanValidatorsCommand {
         })
             providerName: string,
     ) {
-        await this.proxyList.fetch();
-        const response = await this.requestService.request('https://bscscan.com/validators');
-        console.log('response', response);
-        return;
-        const data = {
-            data: []
-        };
-        const items = [];
-        let count = 0;
-        for(const item of data.data){
-            if(!item['active'].match(/Yes/)){
-                continue;
+
+        let lastValidatorIndex: number = await new Promise(done => this.redisPublisherClient.get('lastValidatorIndex', (err, reply) => {
+            const number = parseInt(reply);
+            if (number) {
+                return done(number);
             }
-            count++;
-            let result = item['consensusAddress'].match(/<a href='\/address\/(0x[\d\w]+)' class='hash-tag text-truncate' data-toggle='tooltip' title='0x[\d\w]+'>([^<]+)</);
-            let address = result[1];
-            let name = result[2];
+            done(0);
+        }));
 
-            result = item['blockLastValidated'].match(/<a href='\/block\/\d+'>(\d+)<\/a>/);
+        const jsonProvider = this.providers('http', this.envService.get('ETH_NETWORK'), providerName);
+        const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), providerName);
 
-            let lastBlock = parseInt(result[1]);
+        wsProvider.on("block", (blockNumber) => {
+            const timeStart = new Date();
+            console.log(timeStart, ' --------- new block [' + blockNumber + ']');
+            processBlock(blockNumber);
+        });
 
-            const {data} = await axios.get('https://bscscan.com/block/'+lastBlock, {});
-            result = data.match(/ExtraVanity : ([^\n]+)/);
-            let extra = '';
-            if(result){
-                extra = result[1];
+        const processBlock = async (lastBlock: number) => {
+            let blockData;
+            while(true){
+                blockData = await jsonProvider.getBlock(lastBlock);
+                if(blockData){
+                    break;
+                }
             }
-
-            console.log({
-                extra,
-                name,
-                address,
-                lastBlock
-            })
-            items.push({
-                name,
-                address,
-                lastBlock
-            });
-
-            let validator = await this.validatorRepository.findOne({
-                address
-            });
-            if(!validator){
-                validator = new ValidatorEntity({
+            const address = blockData.miner;
+            const data = '0x' + blockData.extraData.substring(2, 66);
+            const extraMath = utils.hexToAscii(data).toString().match(/go[\.\d]+/);
+            if (extraMath) {
+                console.log('extraMath', extraMath);
+                const extra = extraMath[0];
+                let validator = await this.validatorRepository.findOne({
                     address
                 });
-            }
-            validator.fill({
-                extra,
-                name,
-                address,
-                lastBlock
-            });
-            await this.validatorRepository.save(validator);
-        }
+                if (!validator) {
+                    validator = new ValidatorEntity({
+                        address
+                    });
+                }
+                const prevName = validator.extra;
+                validator.fill({
+                    extra,
+                    address,
+                    lastBlock
+                });
+                console.log('validator', validator);
+                console.log({
+                    extra,
+                    address,
+                    lastBlock
+                });
+                await this.validatorRepository.save(validator);
 
-        //const result = data.matchAll(/<a href='\/address\/(0x[\d\w]+)' class='hash-tag text-truncate' data-toggle='tooltip' title='0x[\d\w]+'>/ig);
-        //for(const item of result){
-        //    console.log('item', item[1]);
-        //}
+                if (prevName !== extra) {
+                    await this.validatorHistoryRepository.save(new ValidatorHistoryEntity({
+                        extra,
+                        validator_id: validator.id,
+                    }));
+                }
+            }
+            await new Promise(done => this.redisPublisherClient.set('lastValidatorIndex', lastBlock.toString(), done));
+        }
     }
 }
