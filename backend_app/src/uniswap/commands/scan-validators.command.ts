@@ -5,9 +5,9 @@ import {EthProviderFactoryType} from "../uniswap.providers";
 import {Repository} from "typeorm";
 import {ValidatorEntity} from "../entities/validator.entity";
 import {ValidatorHistoryEntity} from "../entities/validator-history.entity";
-import {ProxyList} from "./helpers/ProxtList";
 import * as utils from 'web3-utils';
 import {RedisClient} from "redis";
+import {TgBot} from "../TgBot";
 
 @Injectable()
 export class ScanValidatorsCommand {
@@ -19,10 +19,9 @@ export class ScanValidatorsCommand {
                 private readonly validatorRepository: Repository<ValidatorEntity>,
                 @Inject('VALIDATOR_HISTORY_REPOSITORY')
                 private readonly validatorHistoryRepository: Repository<ValidatorHistoryEntity>,
-                private readonly proxyList: ProxyList,
+                private readonly tgBot: TgBot,
                 @Inject('ETH_PROVIDERS')
                 private readonly providers: EthProviderFactoryType) {
-
     }
 
     @Command({
@@ -37,15 +36,6 @@ export class ScanValidatorsCommand {
         })
             providerName: string,
     ) {
-
-        let lastValidatorIndex: number = await new Promise(done => this.redisPublisherClient.get('lastValidatorIndex', (err, reply) => {
-            const number = parseInt(reply);
-            if (number) {
-                return done(number);
-            }
-            done(0);
-        }));
-
         const jsonProvider = this.providers('http', this.envService.get('ETH_NETWORK'), providerName);
         const wsProvider = this.providers('ws', this.envService.get('ETH_NETWORK'), providerName);
 
@@ -96,9 +86,9 @@ export class ScanValidatorsCommand {
                         extra,
                         validator_id: validator.id,
                     }));
+                    await this.tgBot.sendMessage('Validator: '+validator.address+' updated to '+extra +' Block: '+lastBlock);
                 }
             }
-            await new Promise(done => this.redisPublisherClient.set('lastValidatorIndex', lastBlock.toString(), done));
         }
     }
 }
