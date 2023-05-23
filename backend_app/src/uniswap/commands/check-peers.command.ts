@@ -23,7 +23,7 @@ export class CheckPeersCommand {
 
     @Cron('0 * * * * *')
     async handleCron() {
-        await this.create('node2');
+        await this.create('local');
     }
     @Command({
         command: 'check:peers <providerName>',
