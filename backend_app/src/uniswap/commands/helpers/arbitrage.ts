@@ -255,13 +255,15 @@ export const calculate = async (swap: {
                 console.log(target.hash, 'TEST MODE ENABLED');
             } else {
                 const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
-                if (sendResult) {
+                if (sendResult.hash) {
                     upNonce();
                     hash = sendResult.hash;
                     timing = sendResult.timing;
                     //bundle_id = sendResult.data.result;
                     //await tgBot.sendMessage(JSON.stringify(sendResult.data));
-
+                }
+                if(sendResult.errors.length){
+                    await tgBot.sendMessage(JSON.stringify(sendResult.errors, null, "\t"));
                 }
             }
             const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
@@ -496,6 +498,7 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
 
     const time = new Date().getTime();
 
+    const errors = [];
     const json = await Promise.all(providers.map(provider => {
         console.log('send', provider.connection.url);
         return new Promise(done => {
@@ -511,19 +514,23 @@ const calculateswapRaw = async (success, multiSwapContract: Contract,
                 done(data);
             }).catch(error => {
                 console.log('error', error);
+                errors.push({provider: provider.connection.url, error});
                 done('error');
             })
         });
     }));
     console.log('json', json);
-    //process.exit(1);
+    process.exit(1);
     const hashes: string[] = json.filter((item: any) => item.result).map((item: any) => item.result);
     //const tx = await Promise.any(providers.map(provider => provider.sendTransaction(signedTx)))
     //const tx = await multiSwapContract.provider.sendTransaction(signedTx);
     if (hashes.length) {
         console.log('tx send', hashes);
-        return {hash: hashes[0], timing};
+        return {hash: hashes[0], timing, errors};
     }
+    return {
+        errors
+    };
 }
 
 const calculateswapRaw2 = async (success, multiSwapContract: Contract,
