@@ -146,7 +146,7 @@ export class ScanArbitrageCommand {
 
         //const providerForSend = new ethers.providers.JsonRpcProvider(this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
 
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
+        let wallet= Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
 
         let nonce = await wallet.provider.getTransactionCount(wallet.address);
 
@@ -160,9 +160,9 @@ export class ScanArbitrageCommand {
         const providers = [
             provider
         ];
-        //for (const url of urls) {
-            //providers.push(new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/bsc/ae34d626dfb166a8007f6fd218cfb2b89a233601f34801f7b2a3462f950b487b'));
-        //}
+        for (const url of urls) {
+            providers.push(new ethers.providers.JsonRpcProvider(url));
+        }
 
         const multiSwapAddress = this.envService.get('MULTI_SWAP_ADDRESS');
         const multiSwapContract = ContractFactory.getContract(multiSwapAddress, MultiSwapAbi.abi, wallet);
