@@ -161,6 +161,7 @@ export class ScanReservesCommand {
                         }
                     isSyncOld = true;
                     console.log('SYNC OK');
+                    this.tgBot.sendMessage('reserves sync completed');
                 });
 
                 const forceLogs = false;

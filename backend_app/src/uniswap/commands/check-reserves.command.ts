@@ -7,9 +7,8 @@ import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
-import {EthProviderFactoryType, EthWebsocketProviderFactoryType} from "../uniswap.providers";
+import {EthProviderFactoryType} from "../uniswap.providers";
 import {Timeout} from '@nestjs/schedule';
-import * as process from "process";
 import {TgBot} from "../TgBot";
 import * as UniswapV2PairAbi from "../../contracts/UniswapV2Pair.json";
 

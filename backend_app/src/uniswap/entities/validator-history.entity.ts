@@ -12,6 +12,9 @@ export class ValidatorHistoryEntity extends BaseEntity<ValidatorHistoryEntity> {
     @Column({type: 'int'})
     validator_id: number;
 
+    @Column({type: 'int'})
+    block_number: number;
+
     @CreateDateColumn({name: 'created_at', type: 'timestamp'})
     createdAt: Date;
 
