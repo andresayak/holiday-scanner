@@ -90,6 +90,7 @@ export class ScanValidatorsRangeCommand {
                     console.log('update', address, extra, prevName);
                 }
             }else{
+                this.tgBot.sendMessage('extra not found, block='+blockData.number);
                 throw Error('extra not found, block='+blockData.number);
             }
         }
@@ -99,6 +100,7 @@ export class ScanValidatorsRangeCommand {
             await processBlock(await jsonProvider.getBlock(lastBlock));
         }
 
+        this.tgBot.sendMessage('Scan blocks '+blockStart+'-'+blockEnd+' finished');
         console.log('Done');
     }
 }
