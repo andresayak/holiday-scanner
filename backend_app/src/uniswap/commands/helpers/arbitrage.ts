@@ -254,17 +254,19 @@ export const calculate = async (swap: {
             if (isTestMode) {
                 console.log(target.hash, 'TEST MODE ENABLED');
             } else {
-                const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
-                if (sendResult.hash) {
-                    upNonce();
-                    hash = sendResult.hash;
-                    timing = sendResult.timing;
-                    //bundle_id = sendResult.data.result;
-                    //await tgBot.sendMessage(JSON.stringify(sendResult.data));
-                }
-                if(sendResult.errors.length){
-                    await tgBot.sendMessage(JSON.stringify(sendResult.errors, null, "\t"));
-                }
+                //if(timeProcessing < 0.01){
+                    const sendResult = await calculateswapRaw(success, multiSwapContract, swap.target.gasPrice, nonce, providers, chainId);
+                    if (sendResult.hash) {
+                        upNonce();
+                        hash = sendResult.hash;
+                        timing = sendResult.timing;
+                        //bundle_id = sendResult.data.result;
+                        //await tgBot.sendMessage(JSON.stringify(sendResult.data));
+                    }
+                    if(sendResult.errors.length){
+                        await tgBot.sendMessage(JSON.stringify(sendResult.errors, null, "\t"));
+                    }
+                //}
             }
             const timeDiff2 = (new Date().getTime() - timeStart.getTime()) / 1000;
 
