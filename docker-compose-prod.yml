@@ -19,10 +19,10 @@ services:
       - ./backend_app:/var/www/app:z
       - ./volumes/logs:/var/www/logs:z
       - ./volumes/storage:/var/www/backend_app/storage:z
-      - type: bind
-        source: ${GETH_DATA}
-        target:
-          /var/www/geth-data
+#      - type: bind
+#        source: ${GETH_DATA}
+#        target:
+#          /var/www/geth-data
     extra_hosts:
       - "host:host-gateway"
     links:

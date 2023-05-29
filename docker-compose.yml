@@ -30,26 +30,26 @@ services:
     networks:
       - app-network
 
-  hardhat:
-    build:
-      context: ./blockchain
-      dockerfile: Dockerfile
-      target: base
-    container_name: hardhat
-    restart: unless-stopped
-    tty: true
-    user: "1000:1000"
-    working_dir: /var/www/app
-    expose:
-      - "8545"
-    volumes:
-      - ./blockchain:/var/www/app:z
-      - ./volumes/logs:/var/www/logs:z
-      - ./volumes/storage:/var/www/backend_app/storage:z
-    extra_hosts:
-      - "host:host-gateway"
-    networks:
-      - app-network
+#  hardhat:
+#    build:
+#      context: ./blockchain
+#      dockerfile: Dockerfile
+#      target: base
+#    container_name: hardhat
+#    restart: unless-stopped
+#    tty: true
+#    user: "1000:1000"
+#    working_dir: /var/www/app
+#    expose:
+#      - "8545"
+#    volumes:
+#      - ./blockchain:/var/www/app:z
+#      - ./volumes/logs:/var/www/logs:z
+#      - ./volumes/storage:/var/www/backend_app/storage:z
+#    extra_hosts:
+#      - "host:host-gateway"
+#    networks:
+#      - app-network
 
   db:
     image: mariadb:latest
