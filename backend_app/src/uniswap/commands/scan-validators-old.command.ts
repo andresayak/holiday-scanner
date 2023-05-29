@@ -72,8 +72,6 @@ export class ScanValidatorsRangeCommand {
                     },
                 });
                 if(current){
-                    current.last_block_number = blockData.number;
-                    await this.validatorHistoryRepository.save(current);
                     return;
                 }
                 const prev = await this.validatorHistoryRepository.findOne({
@@ -94,6 +92,9 @@ export class ScanValidatorsRangeCommand {
                         last_block_number: blockData.number,
                     }));
                     console.log('update', address, extra, prevName);
+                }else{
+                    prev.last_block_number = blockData.number;
+                    await this.validatorHistoryRepository.save(prev);
                 }
             }else{
                 this.tgBot.sendMessage('extra not found, block='+blockData.number);
