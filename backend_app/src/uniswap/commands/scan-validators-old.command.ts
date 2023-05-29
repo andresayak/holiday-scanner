@@ -61,6 +61,9 @@ export class ScanValidatorsRangeCommand {
                     validator = await this.validatorRepository.save(new ValidatorEntity({
                         address
                     }));
+                }else{
+                    validator.updatedAt = new Date();
+                    await this.validatorRepository.save(validator);
                 }
                 const current = await this.validatorHistoryRepository.findOne({
                     where: {
