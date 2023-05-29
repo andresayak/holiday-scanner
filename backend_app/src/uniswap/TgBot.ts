@@ -15,7 +15,7 @@ export class TgBot {
         console.log('[TG]: ' + message);
         if (this.chatId && this.tg) {
             try {
-                await this.tg.sendMessage(this.chatId, message);
+                await this.tg.sendMessage(this.chatId, this.envService.get('APP_NAME')+'\n'+message);
             } catch (e) {
                 console.log(e);
             }
