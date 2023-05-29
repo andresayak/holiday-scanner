@@ -26,6 +26,9 @@ import {ScanValidatorsCommand} from "./scan-validators.command";
 import {CheckPeersValidatorsCommand} from "./check-peers-validators.command";
 import {CheckPeersPingCommand} from "./check-peers-ping.command";
 import {ScanValidatorsRangeCommand} from "./scan-validators-old.command";
+import {PeersListCommand} from "./peers-list.command";
+import {PeersAddCommand} from "./peers-add.command";
+import {PeersRemoveCommand} from "./peers-remove.command";
 
 export default [
     ScanTransactionsCommand,
@@ -55,5 +58,8 @@ export default [
     ScanValidatorsCommand,
     ScanValidatorsRangeCommand,
     CheckPeersValidatorsCommand,
-    CheckPeersPingCommand
+    CheckPeersPingCommand,
+    PeersListCommand,
+    PeersAddCommand,
+    PeersRemoveCommand
 ];

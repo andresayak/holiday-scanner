@@ -65,10 +65,12 @@ export class ScanValidatorsRangeCommand {
                 const current = await this.validatorHistoryRepository.findOne({
                     where: {
                         validator_id: validator.id,
-                        block_number: blockData.number
+                        block_number: blockData.number,
                     },
                 });
                 if(current){
+                    current.last_block_number = blockData.number;
+                    await this.validatorHistoryRepository.save(current);
                     return;
                 }
                 const prev = await this.validatorHistoryRepository.findOne({
@@ -85,7 +87,8 @@ export class ScanValidatorsRangeCommand {
                     await this.validatorHistoryRepository.save(new ValidatorHistoryEntity({
                         extra,
                         validator_id: validator.id,
-                        block_number: blockData.number
+                        block_number: blockData.number,
+                        last_block_number: blockData.number,
                     }));
                     console.log('update', address, extra, prevName);
                 }
