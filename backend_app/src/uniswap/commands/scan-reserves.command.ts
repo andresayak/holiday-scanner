@@ -64,7 +64,6 @@ export class ScanReservesCommand {
             const forceInLoop = (loop === 1) ? force : false;
             await new Promise(async (errorWebsocket) => {
                 const provider = this.providers(this.envService.get('ETH_HOST'), providerName);
-                const providers = [provider];
                 const startWork = new Date();
                 let lastBlock: number = await new Promise(done => this.redisPublisherClient.get('lastBlock', (err, reply) => {
                     const number = parseInt(reply);
@@ -153,10 +152,10 @@ export class ScanReservesCommand {
                 new Promise(async () => {
                     if (lastBlock > 0 && forceInLoop === false)
                         for (let blockNumber = lastBlock; blockNumber <= currentBlock; blockNumber++) {
-                            const logs = await Promise.any(providers.map(provider => provider.getLogs({
+                            const logs = await provider.getLogs({
                                 fromBlock: blockNumber,
                                 toBlock: blockNumber
-                            })));
+                            });
                             processLogs(blockNumber, logs, new Date());
                         }
                     isSyncOld = true;
@@ -174,10 +173,10 @@ export class ScanReservesCommand {
                             while (attempt <= 10) {
                                 attempt++;
                                 try {
-                                    const logs = await Promise.any(providers.map(provider => provider.getLogs({
+                                    const logs = await provider.getLogs({
                                         fromBlock: blockNumber,
                                         toBlock: blockNumber
-                                    })));
+                                    });
                                     if (!logs || !logs.length) {
                                         console.log('attems', attempt);
                                         continue;
