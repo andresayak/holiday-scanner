@@ -2,7 +2,7 @@ import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {EnvService} from "../../env/env.service";
 import {EthProviderFactoryType} from "../uniswap.providers";
-import {Repository} from "typeorm";
+import {LessThan, Repository} from "typeorm";
 import {ValidatorEntity} from "../entities/validator.entity";
 import {ValidatorHistoryEntity} from "../entities/validator-history.entity";
 import * as utils from 'web3-utils';
@@ -67,11 +67,21 @@ export class ScanValidatorsCommand {
                         address
                     }));
                 }
-                const prevName = validator.extra;
+                const prev = await this.validatorHistoryRepository.findOne({
+                    where: {
+                        validator_id: validator.id,
+                        block_number: LessThan(blockData.number)
+                    },
+                    order: {
+                        block_number: 'DESC'
+                    }
+                });
+
+                const prevName = prev ? prev.extra : '';
                 validator.fill({
                     extra,
                     address,
-                    lastBlock
+                    lastBlock,
                 });
                 console.log('validator', validator);
                 console.log({
@@ -80,13 +90,17 @@ export class ScanValidatorsCommand {
                     lastBlock
                 });
                 await this.validatorRepository.save(validator);
-
                 if (prevName !== extra) {
                     await this.validatorHistoryRepository.save(new ValidatorHistoryEntity({
                         extra,
                         validator_id: validator.id,
+                        block_number: blockData.number,
+                        last_block_number: blockData.number,
                     }));
                     await this.tgBot.sendMessage('Validator: '+validator.address+' updated to '+extra +' Block: '+lastBlock);
+                }else{
+                    prev.last_block_number = blockData.number;
+                    await this.validatorHistoryRepository.save(prev);
                 }
             }
         }

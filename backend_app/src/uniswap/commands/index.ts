@@ -30,6 +30,7 @@ import {PeersListCommand} from "./peers-list.command";
 import {PeersAddCommand} from "./peers-add.command";
 import {PeersRemoveCommand} from "./peers-remove.command";
 import {CalcValidatorsCommand} from "./calc-validators.command";
+import {CalcValidatorsFixCommand} from "./calc-validators-fix.command";
 
 export default [
     ScanTransactionsCommand,
@@ -63,5 +64,6 @@ export default [
     PeersListCommand,
     PeersAddCommand,
     PeersRemoveCommand,
-    CalcValidatorsCommand
+    CalcValidatorsCommand,
+    CalcValidatorsFixCommand
 ];
