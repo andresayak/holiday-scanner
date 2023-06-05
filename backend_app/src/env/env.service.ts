@@ -1,6 +1,25 @@
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as process from "process";
+import * as CryptoJS from "crypto-js";
+import {isUndefined} from "@nestjs/common/utils/shared.utils";
+
+const encrypt = (text, key) => {
+    let str = CryptoJS.AES.encrypt(text, key, {mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.ZeroPadding});
+    return str.ciphertext.toString();
+}
+
+const decrypt = (encrypted, key) => {
+    try{
+        return CryptoJS.AES.decrypt({ciphertext: CryptoJS.enc.Hex.parse(encrypted)}, key, {
+            mode: CryptoJS.mode.ECB,
+            padding: CryptoJS.pad.ZeroPadding
+        }).toString(CryptoJS.enc.Utf8);
+    }catch (e) {
+        console.log(e);
+        throw new Error('invalid secret');
+    }
+}
 
 export interface EnvData {
     // application
@@ -28,15 +47,12 @@ export interface EnvData {
     ETH_HOST: string;
 }
 
+const SECRET_SUFFIX = '_ENCRYPTED';
 export class EnvService {
-    vars: EnvData | null = null;
+     _vars: EnvData | null = null;
 
     constructor() {
-        const environment = process.env.NODE_ENV || 'development';
-        let data: any = this.filter(dotenv.parse(fs.readFileSync(`.env`)));
-        data.APP_ENV = environment;
-
-        this.vars = data as EnvData;
+        this.read();
         return this;
     }
 
@@ -57,25 +73,38 @@ export class EnvService {
         return data;
     }
 
-    get(name: string) {
-        if (this.vars === null) {
-            this.read();
-        }
-        return this.vars[name];
+    decrypt(data: any, secret: string): EnvData {
+        Object.entries(data).map(([col, value]) => {
+            if(col.match(/_ENCRYPTED/)){
+                data[col.replace(/_ENCRYPTED$/, '')] = decrypt(value, secret);
+            }else
+            data[col] = value;
+        });
+        return data;
     }
 
-    read(): EnvData {
-        if (this.vars === null) {
-            throw "configs not init";
+    get(name: string) {
+        if(isUndefined(this._vars[name]) && this._vars[name+SECRET_SUFFIX]){
+            throw new Error('secret not set');
         }
-        return this.vars;
+        return this._vars[name];
+    }
+
+    read(secret?: string): EnvData {
+        const environment = process.env.NODE_ENV || 'development';
+        let data: any = this.filter(dotenv.parse(fs.readFileSync(`.env`)));
+        if(secret)
+            data = this.decrypt(data, CryptoJS.enc.Utf8.parse(secret));
+        data.APP_ENV = environment;
+        this._vars = data as EnvData;
+        return this._vars;
     }
 
     isDev(): boolean {
-        return this.vars.APP_ENV === 'development';
+        return this._vars.APP_ENV === 'development';
     }
 
     isProd(): boolean {
-        return this.vars.APP_ENV === 'production';
+        return this._vars.APP_ENV === 'production';
     }
 }

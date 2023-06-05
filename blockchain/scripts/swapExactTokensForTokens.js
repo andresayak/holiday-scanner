@@ -14,7 +14,7 @@ async function main() {
     const router = await ethers.getContractAt("UniswapV2Router02", '0x10ed43c718714eb63d5aa57b78b54704e256024e');
     const factoryAddress = await router.factory();
     const factory = await ethers.getContractAt("UniswapV2Factory", factoryAddress);
-    const WETH = await ethers.getContractAt("WETH9", '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c');
+    const WETH = await ethers.getContractAt("WETH9", '0xba2ae424d960c26247dd6c32edc70b295c744c43');
     const token = await ethers.getContractAt("Token", '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56');
 
     const pairAddress = await factory.getPair(WETH.address, token.address);
@@ -28,11 +28,11 @@ async function main() {
     console.log('reserves1 = ', reservers[1].toString(), balanceHuman(reservers[1]));
 
 
-    const amountIn = utils.parseEther("0.300430250916331324");
+    const amountIn = utils.parseEther("100");
     const amountOutMin = (await router.getAmountOut(amountIn, reservers[0], reservers[1])).mul(996).div(1000);//0.4% slipping
     console.log('amountIn = '+amountIn);
     console.log('amountOutMin = '+amountOutMin);
-    ///return;
+    //return;
 
     const approveTx = await WETH.approve(router.address, amountIn);
     const receiptTx = await approveTx.wait();

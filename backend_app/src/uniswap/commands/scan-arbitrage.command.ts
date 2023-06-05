@@ -16,6 +16,7 @@ import {calculate} from './helpers/arbitrage';
 import {urls} from "../helpers/provider";
 import {TgBot} from "../TgBot";
 import {TransactionEntity} from '../entities/transaction.entity';
+import {secretPrompt} from "../../env/secret.prompt";
 
 const swapInterface = [
     'function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)',
@@ -129,7 +130,7 @@ export class ScanArbitrageCommand {
         })
             amount1: string,
     ) {
-
+        await secretPrompt(this.envService);
         console.log('sync pairs...');
         const allPairs = await this.pairRepository.find({
             where: {
@@ -144,9 +145,7 @@ export class ScanArbitrageCommand {
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
         const provider = this.providers('http', this.envService.get('ETH_NETWORK'), provider1Name);
 
-        //const providerForSend = new ethers.providers.JsonRpcProvider(this.envService.get('CHAINSTACK_WARP_URL'), parseInt(this.envService.get('ETH_NETWORK_CHAIN_ID')));
-
-        let wallet= Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
+        const wallet= new Wallet(this.envService.get('ETH_PRIVATE_KEY'), provider);
 
         let nonce = await wallet.provider.getTransactionCount(wallet.address);
 

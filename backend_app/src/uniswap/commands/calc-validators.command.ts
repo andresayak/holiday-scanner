@@ -8,6 +8,7 @@ import {PeerHistoryEntity} from "../entities/peer-history.entity";
 import {ValidatorHistoryEntity} from "../entities/validator-history.entity";
 import { LessThan, MoreThan, Between } from 'typeorm'
 import { format, addMinutes, subMinutes } from 'date-fns'
+import {secretPrompt} from "../../env/secret.prompt";
 export const MoreThanDate = (date: Date) => MoreThan(format(date, 'YYYY-MM-DD HH:MM:SS'))
 export const LessThanDate = (date: Date) => LessThan(format(date, 'YYYY-MM-DD HH:MM:SS'))
 
@@ -27,6 +28,7 @@ export class CalcValidatorsCommand {
                 @Inject('VALIDATOR_HISTORY_REPOSITORY')
                 private readonly validatorHistoryRepository: Repository<ValidatorHistoryEntity>,
     ) {
+
     }
 
     @Command({

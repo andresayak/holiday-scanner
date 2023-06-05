@@ -10,6 +10,7 @@ import * as UniswapV2PairAbi from "../../contracts/UniswapV2Pair.json";
 import {EthProviderFactoryType} from "../uniswap.providers";
 import {RedisClient} from "redis";
 import axios from "axios";
+import {secretPrompt} from "../../env/secret.prompt";
 
 const getContractSource = async (address, apiKey: string) => {
     const url = 'https://api.bscscan.com/api' +
@@ -77,6 +78,7 @@ export class ScanPairsCommand {
         })
             providerName: string,
     ) {
+        await secretPrompt(this.envService);
         const network = this.envService.get('ETH_NETWORK');
         const provider = this.providers('http', network, providerName);
         let currentBlock = await provider.getBlockNumber();

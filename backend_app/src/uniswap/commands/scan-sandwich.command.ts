@@ -87,7 +87,7 @@ export class ScanSandwichCommand {
         const multiSwapAddress = this.envService.get('MULTI_SWAP_ADDRESS');
         console.log('multiSwapAddress', multiSwapAddress);
         //let wallet = new Wallet(this.envService.get('ETH_PRIVATE_KEY'), provider);
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
+        const wallet= new Wallet(this.envService.get('ETH_PRIVATE_KEY'), provider);
         const balance = await wallet.getBalance();
         console.log(' - account address: ' + wallet.address);
         console.log(' - account balance: ' + balanceHuman(balance));

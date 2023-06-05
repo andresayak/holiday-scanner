@@ -3,8 +3,8 @@ const {balanceHuman} = require("./helpers/calc");
 
 async function main() {
 
-    const swapAddress = '0x3e958e0212b659cecf20e1a8de40cc24ceff83df';//process.env['MULTI_SWAP_ADDRESS'];
-    const wethAddress = '0xe9e7cea3dedca5984780bafc599bd69add087d56';//process.env['WETH_ADDRESS'];
+    const swapAddress = '0x12b4bedb20b2bdacaf6bc06d173d73cadbc138dd';//process.env['MULTI_SWAP_ADDRESS'];
+    const wethAddress = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';//process.env['WETH_ADDRESS'];
     const [owner] = await ethers.getSigners();
 
     const balance = await owner.getBalance();
@@ -17,10 +17,10 @@ async function main() {
 
     const balanceSwapBefore = await WETH.balanceOf(swapAddress);
     console.log(' - multiSwap balance: ' + balanceHuman(balanceSwapBefore));
-return;
+
     const multiSwap = await ethers.getContractAt('MultiSwap', swapAddress, owner);
     const tx1 = await multiSwap.withdraw(WETH.address, balanceSwapBefore, {
-        gasLimit: '50000'
+        gasLimit: '500000'
     });
 
     await tx1.wait();

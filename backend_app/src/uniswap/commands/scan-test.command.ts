@@ -43,8 +43,7 @@ export class ScanTestCommand {
 
         const provider = this.providers('http', this.envService.get('ETH_NETWORK'), 'ankr');
 
-        let wallet = Wallet.fromMnemonic(this.envService.get('ETH_PRIVAT_KEY_OR_MNEMONIC')).connect(provider);
-
+        const wallet= new Wallet(this.envService.get('ETH_PRIVATE_KEY'), provider);
         const success = json['success'];
         const pairs = await this.pairRepository.find();
         console.log('pairs', pairs.length);
