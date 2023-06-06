@@ -131,17 +131,9 @@ export class ScanArbitrageCommand {
             amount1: string,
     ) {
         await secretPrompt(this.envService);
-        console.log('sync pairs...');
-        const allPairs = await this.pairRepository.find({
-            where: {
-                fee: Not(IsNull())
-            }
-        });
-        for(const pair of allPairs) {
-            this.pairs[pair.address] = pair;
-        }
 
-        const routers = (await this.routerRepository.find());//.map((item)=>item.address.toLowerCase());
+
+        const routers = await this.routerRepository.find();
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
         const provider = this.providers('http', this.envService.get('ETH_NETWORK'), provider1Name);
 
@@ -153,9 +145,12 @@ export class ScanArbitrageCommand {
             nonce++;
         }
         const balance = await wallet.getBalance();
-        console.log(' - account address: ' + wallet.address);
-        console.log(' - account balance: ' + balanceHuman(balance));
+        console.log(' - wallet address: ' + wallet.address);
+        console.log(' - wallet balance: ' + balanceHuman(balance));
 
+        if(balance.eq(0)){
+            return;
+        }
         const providers = [
             provider
         ];
@@ -167,6 +162,7 @@ export class ScanArbitrageCommand {
         const multiSwapContract = ContractFactory.getContract(multiSwapAddress, MultiSwapAbi.abi, wallet);
 
         console.log('multiSwapAddress=', multiSwapAddress);
+
         const getTransaction = async (hash, addedBlock: number, timeStart: Date) => {
             let attems = 0;
             while (attems < 10) {
@@ -246,6 +242,16 @@ export class ScanArbitrageCommand {
                     return;
                 }
             }
+        }
+
+        console.log('sync pairs...');
+        const allPairs = await this.pairRepository.find({
+            where: {
+                fee: Not(IsNull())
+            }
+        });
+        for(const pair of allPairs) {
+            this.pairs[pair.address] = pair;
         }
 
         wsProvider.on("pending", (hash) => {
