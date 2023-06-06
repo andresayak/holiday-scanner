@@ -11,10 +11,6 @@ import {EthProviderFactoryType} from "../uniswap.providers";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {RouterEntity} from "../entities/router.entity";
 import {getVariants, PairsType, VariantType} from "./helpers/getVariants";
-import * as MultiSwapAbi from "../../contracts/MultiSwapV2.json";
-import {calculate} from './helpers/arbitrage';
-import {urls} from "../helpers/provider";
-
 
 const swapInterface = [
     'function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)',

@@ -11,7 +11,7 @@ import {EthProviderFactoryType, EthWebsocketProviderFactoryType} from "../uniswa
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {RouterEntity} from "../entities/router.entity";
 import {PairsType} from "./helpers/getVariants";
-import * as MultiSwapAbi from "../../contracts/MultiSwapV2.json";
+import * as MultiSwapAbi from "../../contracts/MultiSwapV3.json";
 import {calculate} from './helpers/arbitrage';
 import {urls} from "../helpers/provider";
 import {TgBot} from "../TgBot";

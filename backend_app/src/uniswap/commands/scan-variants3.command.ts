@@ -6,15 +6,8 @@ import {PairEntity} from "../entities/pair.entity";
 import {TokenEntity} from "../entities/token.entity";
 import {EnvService} from "../../env/env.service";
 import {RedisClient} from 'redis';
-import {balanceHuman, BNB_CONTRACT, getAmountIn, getAmountOut, sortTokens, tokens} from "../helpers/calc";
-import {EthProviderFactoryType} from "../uniswap.providers";
-import {TransactionResponse} from "@ethersproject/abstract-provider";
+import {tokens} from "../helpers/calc";
 import {RouterEntity} from "../entities/router.entity";
-import {getVariants, PairsType, VariantType} from "./helpers/getVariants";
-import * as MultiSwapAbi from "../../contracts/MultiSwapV2.json";
-import {calculate} from './helpers/arbitrage';
-import {urls} from "../helpers/provider";
-
 
 const swapInterface = [
     'function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)',
