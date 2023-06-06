@@ -3,7 +3,7 @@ import {EnvService} from "./env.service";
 
 export const secretPrompt = async(envService:EnvService) =>{
     const response: {secret: string} = await prompt({
-        type: 'input',
+        type: 'password',
         name: 'secret',
         required: true,
         message: 'What secret?'

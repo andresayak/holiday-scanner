@@ -36,7 +36,6 @@ export class CalcValidatorsCommand {
         autoExit: true
     })
     async create() {
-
         const items = await this.validatorHistoryRepository.createQueryBuilder()
             .select('validator_id',)
             .addSelect("COUNT(id)", "c")

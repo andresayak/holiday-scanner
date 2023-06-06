@@ -2,10 +2,12 @@ const {ethers} = require("hardhat");
 const {balanceHuman} = require("./helpers/calc");
 const Confirm = require('prompt-confirm');
 const {Wallet} = require("ethers");
+const {secretPromptAndDecrypt} = require("./helpers/secret");
 
 async function main() {
 
-    const [ account] = await ethers.getSigners();
+    const decrypted = await secretPromptAndDecrypt();
+    const account = new Wallet(decrypted, ethers.provider);
 
     const balance = await account.getBalance();
     console.log(' - account address: ' + account.address);
