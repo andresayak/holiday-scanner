@@ -130,8 +130,7 @@ export class ScanArbitrageCommand {
         })
             amount1: string,
     ) {
-        if(!isTestMode)
-            await secretPrompt(this.envService);
+        await secretPrompt(this.envService);
 
         const routers = await this.routerRepository.find();
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
