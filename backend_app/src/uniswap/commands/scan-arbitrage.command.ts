@@ -130,8 +130,8 @@ export class ScanArbitrageCommand {
         })
             amount1: string,
     ) {
-        await secretPrompt(this.envService);
-
+        if(!isTestMode)
+            await secretPrompt(this.envService);
 
         const routers = await this.routerRepository.find();
         const wsProvider = this.wsProviders(this.envService.get('ETH_NETWORK'), provider1Name);
@@ -352,7 +352,7 @@ export class ScanArbitrageCommand {
         this.tgBot.sendMessage('Bot started\n'+
             ' - wallet address: ' + wallet.address+'\n'+
             ' - wallet balance: ' + balanceHuman(balance)+'\n'+
-            ' variants...['+countVariant+'/'+allTokens.length+']'
+            ' - variants: '+countVariant
         );
     }
 
