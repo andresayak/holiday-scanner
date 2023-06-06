@@ -349,6 +349,11 @@ export class ScanArbitrageCommand {
         process.stdout.clearLine(0);
         process.stdout.cursorTo(0);
         this.cacheInned = true;
+        this.tgBot.sendMessage('Bot started\n'+
+            ' - wallet address: ' + wallet.address+'\n'+
+            ' - wallet balance: ' + balanceHuman(balance)+'\n'+
+            ' variants...['+countVariant+'/'+allTokens.length+']'
+        );
     }
 
 }

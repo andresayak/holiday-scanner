@@ -315,7 +315,6 @@ export const calculate = async (swap: {
                     + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' / ' + timeDiff2 + ' sec.' + "\n"
             }).join("\n");
             await tgBot.sendMessage(message);
-            process.exit(1);
             if (pair1)
                 before.pair0 = JSON.parse(JSON.stringify(pair1));
             if (pair2)
