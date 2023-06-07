@@ -8,7 +8,6 @@ import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
 import {EthWebsocketProviderFactoryType} from "../uniswap.providers";
-import {Timeout} from '@nestjs/schedule';
 import * as process from "process";
 import {TgBot} from "../TgBot";
 
@@ -33,12 +32,6 @@ export class ScanReservesIpcCommand {
         ];
 
         this.iface = new utils.Interface(swapInterface);
-    }
-
-    @Timeout(5000)
-    async cron() {
-        //if (process.env.NODE_ENV == 'production')
-        //    await this.create('chainstack');
     }
 
     @Command({

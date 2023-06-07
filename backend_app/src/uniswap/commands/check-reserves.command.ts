@@ -1,4 +1,4 @@
-import {Command, Positional, Option} from 'nestjs-command';
+import {Command, Positional} from 'nestjs-command';
 import {Inject, Injectable} from '@nestjs/common';
 import {ContractFactory, utils, Wallet} from 'ethers';
 import {Repository} from "typeorm";
@@ -8,7 +8,6 @@ import {EnvService} from "../../env/env.service";
 import {Interface} from "@ethersproject/abi/src.ts/interface";
 import {RedisClient} from 'redis';
 import {EthProviderFactoryType} from "../uniswap.providers";
-import {Timeout} from '@nestjs/schedule';
 import {TgBot} from "../TgBot";
 import * as UniswapV2PairAbi from "../../contracts/UniswapV2Pair.json";
 
@@ -33,12 +32,6 @@ export class CheckReservesCommand {
         ];
 
         this.iface = new utils.Interface(swapInterface);
-    }
-
-    @Timeout(5000)
-    async cron() {
-        //if (process.env.NODE_ENV == 'production')
-        //    await this.create('chainstack');
     }
 
     @Command({
