@@ -311,6 +311,9 @@ export const calculate = async (swap: {
                     + 'target: ' + swap.target.hash + blockInfoTarget + "\n"
                     + 'amount: ' + balanceHuman(item.amountIn, item.path[0]) + "\n"
                     + 'tokens: ' + item.path[0] + ' / ' + item.path[1] + "\n"
+                    + 'pairs: ' + item.pairs[0] + ' / ' + item.pairs[1] + "\n"
+                    + 'fee: ' + item.fees[0] + ' / ' + item.fees[1] + "\n"
+                    + 'fee scale: ' + item.feeScales[0] + ' / ' + item.feeScales[1] + "\n"
                     + 'profit: ' + item.profit + '%, ' + item.amountInUsd + " USD\n"
                     + 'timing: ' + timeProcessing + ' / ' + timeFetch + ' / ' + timeDiff0 + ' / ' + timeDiff2 + ' sec.' + "\n"
             }).join("\n");
