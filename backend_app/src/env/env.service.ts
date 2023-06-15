@@ -4,11 +4,6 @@ import * as process from "process";
 import * as CryptoJS from "crypto-js";
 import {isUndefined} from "@nestjs/common/utils/shared.utils";
 
-const encrypt = (text, key) => {
-    let str = CryptoJS.AES.encrypt(text, key, {mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.ZeroPadding});
-    return str.ciphertext.toString();
-}
-
 const decrypt = (encrypted, key) => {
     try{
         return CryptoJS.AES.decrypt({ciphertext: CryptoJS.enc.Hex.parse(encrypted)}, key, {
